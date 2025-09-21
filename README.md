@@ -1,11 +1,11 @@
-﻿# GridBoss
+# GridBoss
 
 GridBoss is an app-centric SaaS platform for managing sim racing leagues. The product unifies league administration, event scheduling, result tracking, Discord announcements, and Stripe based subscriptions into a single experience tailored for competitive communities.
 
 ## Current Status
 - MVP scope captured in `docs/MasterSpec.md`.
 - Product backlog items tracked in `docs/AppPBIs.md`.
-- Repository scaffolding and services will be implemented incrementally following PBIs.
+- Repository scaffolding, tooling, and baseline services established under PBI-001.
 
 ## Core Objectives
 - Replace spreadsheet workflows with structured league management tools.
@@ -15,30 +15,53 @@ GridBoss is an app-centric SaaS platform for managing sim racing leagues. The pr
 
 ## Technology Stack
 - Frontend: Vite, React, TypeScript, Tailwind CSS, React Query.
-- Backend: FastAPI (Python 3.11), SQLAlchemy, Alembic, Dramatiq or RQ workers.
+- Backend: FastAPI (Python 3.11+), SQLAlchemy, Alembic, Dramatiq or RQ workers.
 - Data: PostgreSQL, Redis.
 - Integrations: Stripe Billing, Discord OAuth2 and Bot (discord.py).
 - Tooling: Docker Compose, Prettier, ESLint, Ruff, Black, Pytest, Vitest, Playwright or Cypress.
 
-## Monorepo Layout (planned)
+## Monorepo Layout
 ```
 gridboss/
-  frontend/
-  api/
-  worker/
-  bot/
-  infra/
-  scripts/
-  docs/
+  frontend/   # React app
+  api/        # FastAPI service
+  worker/     # Background job processors (future PBI)
+  bot/        # Discord bot (future PBI)
+  infra/      # Docker, deployment, IaC
+  scripts/    # Automation scripts
+  docs/       # Specs, API docs, prompts
 ```
 Each package will carry its own README or docs as functionality is implemented. Refer to the master spec for file-level expectations.
 
 ## Getting Started
-1. Install prerequisites: Node 18+, pnpm or npm, Python 3.11, Docker Desktop.
+1. Install prerequisites: Node 18+, npm 10+, Python 3.11+, Docker Desktop.
 2. Clone the repository and review `docs/MasterSpec.md` for domain context.
-3. Follow PBIs in `docs/AppPBIs.md`, starting with PBI-001 to establish tooling and scaffolding.
+3. Bootstrap the frontend:
+   ```powershell
+   cd frontend
+   npm install
+   npm run lint
+   npm run format
+   ```
+4. Bootstrap the API service:
+   ```powershell
+   cd ..\api
+   python -m venv .venv
+   .venv\Scripts\pip install -r requirements-dev.txt
+   .venv\Scripts\ruff check
+   .venv\Scripts\black --check .
+   ```
+5. Follow PBIs in `docs/AppPBIs.md`, starting with `pbi/001-foundation-tooling` for scaffolding.
 
-An `.env.example` file and Docker Compose stack will be introduced in PBI-002. Until then, environment variables are documented in the master spec.
+Docker Compose, environment templates, and additional services arrive with future PBIs.
+
+## Tooling Commands
+- Frontend lint: `npm run lint`
+- Frontend format check: `npm run format`
+- Frontend format write: `npm run format:fix`
+- API lint: `.venv\Scripts\ruff check`
+- API format: `.venv\Scripts\black .`
+- API unit tests (placeholder): `.venv\Scripts\pytest`
 
 ## Development Workflow
 - Work progresses PBI by PBI. Create a feature branch matching the branch name listed in the backlog (for example `pbi/001-foundation-tooling`).
@@ -61,3 +84,4 @@ An `.env.example` file and Docker Compose stack will be introduced in PBI-002. U
 - Ensure audit logging, observability, and security considerations are addressed per acceptance criteria where applicable.
 
 For questions or clarifications, update the relevant PBI or expand the documentation so decisions remain transparent to the team.
+
