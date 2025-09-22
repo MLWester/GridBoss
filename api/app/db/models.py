@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import enum
 from datetime import datetime
@@ -77,6 +77,8 @@ class League(Base):
     slug: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     plan: Mapped[str] = mapped_column(String, nullable=False, server_default=text("'FREE'"))
     driver_limit: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("20"))
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     owner: Mapped[User | None] = relationship(back_populates="leagues_owned")
     memberships: Mapped[list[Membership]] = relationship(back_populates="league")

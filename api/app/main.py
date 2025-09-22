@@ -1,10 +1,10 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.settings import get_settings
-from app.routes import auth, memberships
+from app.routes import auth, leagues, memberships
 
 settings = get_settings()
 
@@ -21,6 +21,7 @@ if allowed_origins:
     )
 
 app.include_router(auth.router)
+app.include_router(leagues.router)
 app.include_router(memberships.router)
 
 
@@ -28,4 +29,3 @@ app.include_router(memberships.router)
 async def healthcheck() -> dict[str, str]:
     """Lightweight health check endpoint for local development."""
     return {"status": "ok"}
-
