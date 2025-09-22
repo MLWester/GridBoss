@@ -1,8 +1,8 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import enum
 from datetime import datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
@@ -37,6 +37,7 @@ class User(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -63,6 +64,7 @@ class League(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -94,6 +96,7 @@ class Membership(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     league_id: Mapped[UUID] = mapped_column(
@@ -117,6 +120,7 @@ class Team(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     league_id: Mapped[UUID] = mapped_column(
@@ -137,6 +141,7 @@ class Driver(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     league_id: Mapped[UUID] = mapped_column(
@@ -163,6 +168,7 @@ class Season(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     league_id: Mapped[UUID] = mapped_column(
@@ -188,6 +194,7 @@ class Event(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     league_id: Mapped[UUID] = mapped_column(
@@ -224,6 +231,7 @@ class PointsScheme(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     league_id: Mapped[UUID] = mapped_column(
@@ -248,6 +256,7 @@ class PointsRule(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     scheme_id: Mapped[UUID] = mapped_column(
@@ -273,6 +282,7 @@ class Result(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     event_id: Mapped[UUID] = mapped_column(
@@ -306,6 +316,7 @@ class DiscordIntegration(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     league_id: Mapped[UUID] = mapped_column(
@@ -328,6 +339,7 @@ class BillingAccount(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     owner_user_id: Mapped[UUID] = mapped_column(
@@ -347,6 +359,7 @@ class Subscription(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     billing_account_id: Mapped[UUID] = mapped_column(
@@ -370,6 +383,7 @@ class AuditLog(Base):
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     timestamp: Mapped[datetime] = mapped_column(
