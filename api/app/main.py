@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.settings import get_settings
-from app.routes import auth
+from app.routes import auth, memberships
 
 settings = get_settings()
 
@@ -21,9 +21,11 @@ if allowed_origins:
     )
 
 app.include_router(auth.router)
+app.include_router(memberships.router)
 
 
 @app.get("/healthz", tags=["health"])
 async def healthcheck() -> dict[str, str]:
     """Lightweight health check endpoint for local development."""
     return {"status": "ok"}
+
