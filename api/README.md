@@ -37,3 +37,10 @@ Future PBIs will introduce:
 - Auth, RBAC, and API routes.
 - Background workers, Stripe integration, and Discord bot communication.
 - Automated tests and seed data.
+
+## Authentication
+- `GET /auth/discord/start` – begins the PKCE-based Discord OAuth flow.
+- `GET /auth/discord/callback` – exchanges the authorization code, persists the user, issues JWTs, and redirects to `APP_URL`.
+- `POST /auth/refresh` – rotates the refresh token cookie and returns a fresh access token.
+- `POST /auth/logout` – clears the refresh cookie.
+- `GET /auth/me` – returns the authenticated user profile, memberships, and billing snapshot.
