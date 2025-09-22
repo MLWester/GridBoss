@@ -1,5 +1,5 @@
 """API route modules."""
 
-from . import auth, memberships
+from . import auth, leagues, memberships
 
-__all__ = ["auth", "memberships"]
+__all__ = ["auth", "leagues", "memberships"]
