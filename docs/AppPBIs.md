@@ -1,6 +1,6 @@
 ﻿# GridBoss Product Backlog
 
-## PBI-001 - Platform Foundation and Tooling
+## PBI-001 - Platform Foundation and Tooling (complete)
 Summary: Establish the monorepo scaffold with baseline tooling and shared configuration.
 Scope: Backend, Frontend, Ops
 Acceptance Criteria:
@@ -10,7 +10,7 @@ Acceptance Criteria:
 Dependencies: none
 Branch: pbi/001-foundation-tooling
 
-## PBI-002 - Environment Configuration and Docker
+## PBI-002 - Environment Configuration and Docker (complete)
 Summary: Provide environment variable templates and Docker Compose for local development parity.
 Scope: Backend, Frontend, Ops
 Acceptance Criteria:
@@ -20,7 +20,7 @@ Acceptance Criteria:
 Dependencies: PBI-001
 Branch: pbi/002-env-and-docker
 
-## PBI-003 - Database Schema and ORM Baseline
+## PBI-003 - Database Schema and ORM Baseline (complete)
 Summary: Implement the SQLAlchemy models and migration tooling for core domain tables.
 Scope: Backend
 Acceptance Criteria:
@@ -30,7 +30,7 @@ Acceptance Criteria:
 Dependencies: PBI-001, PBI-002
 Branch: pbi/003-db-schema
 
-## PBI-004 - Authentication and Session Service
+## PBI-004 - Authentication and Session Service (complete)
 Summary: Deliver Discord OAuth login, JWT issuance, and session management endpoints.
 Scope: Backend, Frontend
 Acceptance Criteria:
@@ -40,7 +40,7 @@ Acceptance Criteria:
 Dependencies: PBI-003
 Branch: pbi/004-auth-sessions
 
-## PBI-005 - RBAC and Membership Management
+## PBI-005 - RBAC and Membership Management (complete)
 Summary: Implement league membership roles and enforcement helpers.
 Scope: Backend
 Acceptance Criteria:
@@ -60,7 +60,7 @@ Acceptance Criteria:
 Dependencies: PBI-005
 Branch: pbi/006-league-api
 
-## PBI-007 - Drivers and Teams API
+## PBI-007 - Drivers and Teams API (complete)
 Summary: Manage league drivers and teams with bulk operations.
 Scope: Backend
 Acceptance Criteria:
@@ -70,7 +70,7 @@ Acceptance Criteria:
 Dependencies: PBI-006
 Branch: pbi/007-drivers-teams
 
-## PBI-008 - Seasons and Points Scheme Management
+## PBI-008 - Seasons and Points Scheme Management (complete)
 Summary: Control season lifecycle and customizable points tables per league.
 Scope: Backend
 Acceptance Criteria:
@@ -80,7 +80,7 @@ Acceptance Criteria:
 Dependencies: PBI-006, PBI-003
 Branch: pbi/008-seasons-points
 
-## PBI-009 - Events Scheduling API
+## PBI-009 - Events Scheduling API (complete)
 Summary: Enable creation and management of league events with timezone aware responses.
 Scope: Backend
 Acceptance Criteria:
@@ -90,7 +90,7 @@ Acceptance Criteria:
 Dependencies: PBI-008
 Branch: pbi/009-events-api
 
-## PBI-010 - Background Worker Framework
+## PBI-010 - Background Worker Framework (complete)
 Summary: Stand up the asynchronous job runner with Redis-backed queues.
 Scope: Backend, Ops
 Acceptance Criteria:

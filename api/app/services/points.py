@@ -32,3 +32,9 @@ def normalize_points_entries(entries: Iterable[tuple[int, int]]) -> list[tuple[i
         normalized.append((position, points))
     normalized.sort(key=lambda item: item[0])
     return normalized
+
+
+def build_points_map(entries: Iterable[tuple[int, int]]) -> dict[int, int]:
+    """Convert normalized point entries into a lookup map."""
+    return {position: points for position, points in entries}
+

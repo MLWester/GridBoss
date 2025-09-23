@@ -38,3 +38,7 @@ heartbeat.send(message="ping")
 ```
 
 Logs appear in the worker output confirming the job ran.
+
+Additional actors:
+- `worker.jobs.standings.recompute_standings` recompute standings stub.
+- `worker.jobs.standings.announce_results` placeholder for Discord notifications.
