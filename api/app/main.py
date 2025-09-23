@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.settings import get_settings
-from app.routes import auth, leagues, memberships
+from app.routes import auth, drivers, leagues, memberships, teams
 
 settings = get_settings()
 
@@ -23,6 +26,22 @@ if allowed_origins:
 app.include_router(auth.router)
 app.include_router(leagues.router)
 app.include_router(memberships.router)
+app.include_router(drivers.router)
+app.include_router(teams.router)
+
+
+@app.exception_handler(FastAPIHTTPException)
+async def api_http_exception_handler(
+    request: Request,
+    exc: FastAPIHTTPException,
+):
+    detail = exc.detail
+    if isinstance(detail, dict):
+        if "error" in detail and isinstance(detail["error"], dict):
+            return JSONResponse(status_code=exc.status_code, content=detail)
+        if "code" in detail:
+            return JSONResponse(status_code=exc.status_code, content={"error": detail})
+    return await http_exception_handler(request, exc)
 
 
 @app.get("/healthz", tags=["health"])

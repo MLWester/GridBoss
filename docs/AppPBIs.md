@@ -50,7 +50,7 @@ Acceptance Criteria:
 Dependencies: PBI-004
 Branch: pbi/005-rbac-memberships
 
-## PBI-006 - League Management API
+## PBI-006 - League Management API (Still needs to be completed)
 Summary: Provide CRUD operations for leagues including default season creation and soft delete.
 Scope: Backend
 Acceptance Criteria:
