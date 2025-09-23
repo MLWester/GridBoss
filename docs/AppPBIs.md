@@ -100,7 +100,7 @@ Acceptance Criteria:
 Dependencies: PBI-002, PBI-003
 Branch: pbi/010-worker-framework
 
-## PBI-011 - Results Processing API
+## PBI-011 - Results Processing API (complete)
 Summary: Accept race results, compute points, and enqueue downstream jobs.
 Scope: Backend
 Acceptance Criteria:
