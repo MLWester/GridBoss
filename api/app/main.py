@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.settings import get_settings
-from app.routes import auth, drivers, events, leagues, memberships, points, seasons, teams
+from app.routes import auth, drivers, events, leagues, memberships, points, results, seasons, teams
 
 settings = get_settings()
 
@@ -28,6 +28,7 @@ app.include_router(leagues.router)
 app.include_router(memberships.router)
 app.include_router(drivers.router)
 app.include_router(events.router)
+app.include_router(results.router)
 app.include_router(seasons.router)
 app.include_router(points.router)
 app.include_router(teams.router)

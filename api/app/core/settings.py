@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from functools import lru_cache
 from typing import Literal
@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     )
     app_url: AnyHttpUrl = Field(default="http://localhost:5173", alias="APP_URL")
     api_url: AnyHttpUrl = Field(default="http://localhost:8000", alias="API_URL")
+
+    redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
 
     discord_client_id: str = Field(alias="DISCORD_CLIENT_ID")
     discord_client_secret: str = Field(alias="DISCORD_CLIENT_SECRET")
