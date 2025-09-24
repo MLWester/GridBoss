@@ -1,4 +1,4 @@
-"""Dramatiq worker entrypoint for GridBoss."""
+﻿"""Dramatiq worker entrypoint for GridBoss."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def main() -> None:
     dramatiq.set_broker(broker)
 
     # Import actors so Dramatiq registers them with the broker.
-    from worker.jobs import announce_results, heartbeat, recompute_standings  # noqa: F401  # pylint: disable=unused-import
+    from worker.jobs import announce_results, heartbeat, recompute_standings, send_test_message  # noqa: F401  # pylint: disable=unused-import
 
     worker = Worker(broker, worker_threads=config.worker_threads, worker_name=config.worker_name)
 
@@ -70,3 +70,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
