@@ -12,6 +12,7 @@ from . import (
     results,
     seasons,
     standings,
+    webhooks,
     teams,
 )
 
@@ -27,5 +28,6 @@ __all__ = [
     "results",
     "seasons",
     "standings",
+    "webhooks",
     "teams",
 ]
