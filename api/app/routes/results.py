@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import logging
@@ -30,6 +30,7 @@ from app.schemas.results import EventResultsRead, ResultEntryRead, ResultSubmiss
 from app.services.idempotency import IdempotencyConfig, get_idempotency_service
 from app.services.points import build_points_map, default_points_entries
 from app.services.rbac import require_membership, require_role_at_least
+from app.services.standings import StandingsCacheConfig, get_standings_cache
 
 try:
     from worker.jobs import standings
@@ -281,6 +282,8 @@ async def submit_results(
         raise
 
     session.refresh(event)
+    cache = get_standings_cache(StandingsCacheConfig(redis_url=settings.redis_url))
+    cache.invalidate(league_id=event.league_id, season_id=event.season_id)
     refreshed_results = (
         session.execute(
             select(Result).where(Result.event_id == event.id).order_by(Result.finish_position)
@@ -335,5 +338,6 @@ async def read_results(
         .all()
     )
     return _build_response(event, results)
+
 
 

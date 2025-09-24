@@ -1,6 +1,17 @@
-"""API route modules."""
+﻿"""API route modules."""
 
-from . import auth, drivers, events, leagues, memberships, points, results, seasons, teams
+from . import (
+    auth,
+    drivers,
+    events,
+    leagues,
+    memberships,
+    points,
+    results,
+    seasons,
+    standings,
+    teams,
+)
 
 __all__ = [
     "auth",
@@ -11,5 +22,6 @@ __all__ = [
     "points",
     "results",
     "seasons",
+    "standings",
     "teams",
 ]

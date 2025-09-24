@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
@@ -7,7 +7,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.settings import get_settings
-from app.routes import auth, drivers, events, leagues, memberships, points, results, seasons, teams
+from app.routes import (
+    auth,
+    drivers,
+    events,
+    leagues,
+    memberships,
+    points,
+    results,
+    seasons,
+    standings,
+    teams,
+)
 
 settings = get_settings()
 
@@ -29,6 +40,7 @@ app.include_router(memberships.router)
 app.include_router(drivers.router)
 app.include_router(events.router)
 app.include_router(results.router)
+app.include_router(standings.router)
 app.include_router(seasons.router)
 app.include_router(points.router)
 app.include_router(teams.router)
