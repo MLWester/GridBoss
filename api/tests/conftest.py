@@ -23,3 +23,12 @@ if "dramatiq" not in sys.modules:
     module = types.ModuleType("dramatiq")
     module.actor = _actor
     sys.modules["dramatiq"] = module
+
+
+if "stripe" not in sys.modules:
+    stripe_module = types.ModuleType("stripe")
+    stripe_module.Customer = types.SimpleNamespace(create=lambda **kwargs: {"id": "stub_customer"})
+    stripe_module.checkout = types.SimpleNamespace(Session=types.SimpleNamespace(create=lambda **kwargs: {"url": "stub_checkout"}))
+    stripe_module.billing_portal = types.SimpleNamespace(Session=types.SimpleNamespace(create=lambda **kwargs: {"url": "stub_portal"}))
+    stripe_module.error = types.SimpleNamespace(StripeError=Exception)
+    sys.modules["stripe"] = stripe_module

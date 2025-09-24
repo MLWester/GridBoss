@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from app.core.settings import get_settings
 from app.routes import (
     auth,
+    billing,
     discord,
     drivers,
     events,
@@ -36,6 +37,7 @@ if allowed_origins:
     )
 
 app.include_router(auth.router)
+app.include_router(billing.router)
 app.include_router(leagues.router)
 app.include_router(memberships.router)
 app.include_router(drivers.router)

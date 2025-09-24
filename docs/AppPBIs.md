@@ -140,7 +140,7 @@ Acceptance Criteria:
 Dependencies: PBI-013, PBI-010
 Branch: pbi/014-discord-bot
 
-## PBI-015 - Stripe Checkout and Portal API
+## PBI-015 - Stripe Checkout and Portal API (complete)
 Summary: Implement subscription checkout and customer portal endpoints.
 Scope: Backend
 Acceptance Criteria:

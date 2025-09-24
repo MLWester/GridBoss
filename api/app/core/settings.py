@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from functools import lru_cache
 from typing import Literal
@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     api_url: AnyHttpUrl = Field(default="http://localhost:8000", alias="API_URL")
 
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
+
+    stripe_secret_key: str = Field(default="", alias="STRIPE_SECRET_KEY")
+    stripe_price_pro: str = Field(default="", alias="STRIPE_PRICE_PRO")
+    stripe_price_elite: str = Field(default="", alias="STRIPE_PRICE_ELITE")
 
     discord_client_id: str = Field(alias="DISCORD_CLIENT_ID")
     discord_client_secret: str = Field(alias="DISCORD_CLIENT_SECRET")

@@ -1,0 +1,187 @@
+﻿from __future__ import annotations
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.errors import api_error
+from app.core.settings import Settings, get_settings
+from app.db.models import BillingAccount, League, LeagueRole, Membership, User
+from app.db.session import get_session
+from app.dependencies.auth import get_current_user
+from app.schemas.billing import CheckoutRequest, CheckoutResponse, PortalResponse
+from app.services.stripe import StripeClient, StripeConfigurationError
+
+router = APIRouter(tags=["billing"])
+
+SessionDep = Annotated[Session, Depends(get_session)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
+SettingsDep = Annotated[Settings, Depends(get_settings)]
+
+
+def provide_stripe_client(settings: Settings = Depends(get_settings)) -> StripeClient:
+    return StripeClient(settings.stripe_secret_key)
+
+
+StripeClientDep = Annotated[StripeClient, Depends(provide_stripe_client)]
+
+SUPPORTED_PLANS = {"PRO", "ELITE"}
+PLAN_DRIVER_LIMITS = {"FREE": 20, "PRO": 100, "ELITE": 9999}
+
+
+def _owner_leagues(session: Session, user_id: str) -> list[League]:
+    return (
+        session.execute(select(League).where(League.owner_id == user_id)).scalars().all()
+    )
+
+
+def _ensure_owner_role(session: Session, user_id: str) -> None:
+    membership = session.execute(
+        select(Membership).where(
+            Membership.user_id == user_id,
+            Membership.role == LeagueRole.OWNER,
+        )
+    ).first()
+    if membership is None:
+        raise api_error(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="INSUFFICIENT_ROLE",
+            message="Only league owners can manage billing",
+        )
+
+
+def _plan_price(plan: str, settings: Settings) -> str:
+    if plan == "PRO":
+        price = settings.stripe_price_pro
+    else:
+        price = settings.stripe_price_elite
+    if not price:
+        raise StripeConfigurationError("Stripe price IDs are not configured")
+    return price
+
+
+def _app_url(settings: Settings) -> str:
+    return str(settings.app_url).rstrip("/")
+
+
+@router.post("/billing/checkout", response_model=CheckoutResponse)
+async def create_checkout_session(
+    payload: CheckoutRequest,
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    settings: SettingsDep,
+    stripe_client: StripeClientDep,
+) -> CheckoutResponse:
+    plan = payload.plan.upper()
+    if plan not in SUPPORTED_PLANS:
+        raise api_error(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="INVALID_PLAN",
+            message="Plan must be PRO or ELITE",
+        )
+
+    _ensure_owner_role(session, current_user.id)
+
+    leagues = _owner_leagues(session, current_user.id)
+    if not leagues:
+        raise api_error(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="NO_LEAGUES",
+            message="Create a league before managing billing",
+        )
+
+    billing_account = (
+        session.execute(
+            select(BillingAccount).where(BillingAccount.owner_user_id == current_user.id)
+        )
+        .scalars()
+        .first()
+    )
+    if billing_account is None:
+        billing_account = BillingAccount(owner_user_id=current_user.id, plan=plan)
+        session.add(billing_account)
+
+    price_id = _plan_price(plan, settings)
+    try:
+        customer_id = stripe_client.ensure_customer(
+            customer_id=billing_account.stripe_customer_id,
+            email=current_user.email,
+        )
+        base_url = _app_url(settings)
+        checkout_url = stripe_client.create_checkout_session(
+            customer_id=customer_id,
+            price_id=price_id,
+            success_url=f"{base_url}/billing/success",
+            cancel_url=f"{base_url}/billing",
+        )
+    except StripeConfigurationError as exc:
+        raise api_error(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            code="BILLING_CONFIG",
+            message=str(exc),
+        ) from exc
+    except Exception as exc:  # pragma: no cover - Stripe SDK error
+        raise api_error(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            code="STRIPE_ERROR",
+            message="Unable to initiate checkout",
+        ) from exc
+
+    billing_account.stripe_customer_id = customer_id
+    billing_account.plan = plan
+    driver_limit = PLAN_DRIVER_LIMITS.get(plan, PLAN_DRIVER_LIMITS["FREE"])
+    for league in leagues:
+        league.plan = plan
+        league.driver_limit = driver_limit
+
+    session.commit()
+
+    return CheckoutResponse(url=checkout_url)
+
+
+@router.post("/billing/portal", response_model=PortalResponse)
+async def create_portal_session(
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    settings: SettingsDep,
+    stripe_client: StripeClientDep,
+) -> PortalResponse:
+    _ensure_owner_role(session, current_user.id)
+
+    billing_account = (
+        session.execute(
+            select(BillingAccount).where(BillingAccount.owner_user_id == current_user.id)
+        )
+        .scalars()
+        .first()
+    )
+    if billing_account is None or not billing_account.stripe_customer_id:
+        raise api_error(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="BILLING_NOT_CONFIGURED",
+            message="Billing account is not configured with a Stripe customer",
+        )
+
+    try:
+        base_url = _app_url(settings)
+        portal_url = stripe_client.create_billing_portal_session(
+            customer_id=billing_account.stripe_customer_id,
+            return_url=f"{base_url}/billing",
+        )
+    except StripeConfigurationError as exc:
+        raise api_error(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            code="BILLING_CONFIG",
+            message=str(exc),
+        ) from exc
+    except Exception as exc:  # pragma: no cover - Stripe SDK error
+        raise api_error(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            code="STRIPE_ERROR",
+            message="Unable to create billing portal session",
+        ) from exc
+
+    return PortalResponse(url=portal_url)
+
