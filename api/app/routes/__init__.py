@@ -2,6 +2,7 @@
 
 from . import (
     auth,
+    discord,
     drivers,
     events,
     leagues,
@@ -15,6 +16,7 @@ from . import (
 
 __all__ = [
     "auth",
+    "discord",
     "drivers",
     "events",
     "leagues",
