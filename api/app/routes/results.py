@@ -33,9 +33,10 @@ from app.services.rbac import require_membership, require_role_at_least
 from app.services.standings import StandingsCacheConfig, get_standings_cache
 
 try:
-    from worker.jobs import standings
+    from worker.jobs import standings, discord as discord_jobs
 except Exception:  # pragma: no cover - worker optional during testing
     standings = None  # type: ignore
+    discord_jobs = None  # type: ignore
 
 logger = logging.getLogger("app.results")
 
@@ -312,6 +313,15 @@ def _trigger_standings_jobs(event: Event) -> None:
     except Exception as exc:  # pragma: no cover - non-critical failure
         logger.warning("Failed to enqueue standings job: %s", exc)
 
+    if discord_jobs is not None:
+        try:
+            discord_jobs.announce_results.send(
+                str(event.league_id),
+                str(event.id),
+            )
+        except Exception as exc:  # pragma: no cover - best effort logging
+            logger.warning("Failed to enqueue Discord announcement: %s", exc)
+
 
 @router.get("/events/{event_id}/results", response_model=EventResultsRead)
 async def read_results(
@@ -338,6 +348,7 @@ async def read_results(
         .all()
     )
     return _build_response(event, results)
+
 
 
 

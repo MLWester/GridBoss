@@ -130,7 +130,7 @@ Acceptance Criteria:
 Dependencies: PBI-006, PBI-010, PBI-017
 Branch: pbi/013-discord-integration-api
 
-## PBI-014 - Discord Bot Service
+## PBI-014 - Discord Bot Service (complete)
 Summary: Build the discord.py bot that handles slash commands and queue driven announcements.
 Scope: Backend, Ops
 Acceptance Criteria:

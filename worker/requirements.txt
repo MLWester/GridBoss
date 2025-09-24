@@ -1,1 +1,3 @@
-dramatiq[redis]==1.15.0
+﻿dramatiq[redis]==1.15.0
+httpx==0.28.1
+
