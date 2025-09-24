@@ -110,7 +110,7 @@ Acceptance Criteria:
 Dependencies: PBI-009, PBI-008, PBI-010
 Branch: pbi/011-results-processing
 
-## PBI-012 - Standings Service and Cache
+## PBI-012 - Standings Service and Cache (complete)
 Summary: Provide season standings aggregation with caching and tie breakers.
 Scope: Backend
 Acceptance Criteria:
