@@ -19,6 +19,7 @@ from app.routes import (
     results,
     seasons,
     standings,
+    webhooks,
     teams,
 )
 
@@ -47,6 +48,7 @@ app.include_router(discord.router)
 app.include_router(standings.router)
 app.include_router(seasons.router)
 app.include_router(points.router)
+app.include_router(webhooks.router)
 app.include_router(teams.router)
 
 
