@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from app.core.settings import get_settings
 from app.routes import (
     auth,
+    discord,
     drivers,
     events,
     leagues,
@@ -40,6 +41,7 @@ app.include_router(memberships.router)
 app.include_router(drivers.router)
 app.include_router(events.router)
 app.include_router(results.router)
+app.include_router(discord.router)
 app.include_router(standings.router)
 app.include_router(seasons.router)
 app.include_router(points.router)

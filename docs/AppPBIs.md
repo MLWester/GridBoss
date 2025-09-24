@@ -120,7 +120,7 @@ Acceptance Criteria:
 Dependencies: PBI-011
 Branch: pbi/012-standings-service
 
-## PBI-013 - Discord Integration API
+## PBI-013 - Discord Integration API (complete)
 Summary: Allow leagues to link Discord guilds and configure announcement channels.
 Scope: Backend
 Acceptance Criteria:
