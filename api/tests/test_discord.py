@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 from uuid import uuid4
+from datetime import datetime, timedelta, timezone
 
 from pathlib import Path
 import sys
@@ -20,7 +21,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.settings import Settings, get_settings
 from app.db import Base
-from app.db.models import AuditLog, DiscordIntegration, League, LeagueRole, Membership, User
+from app.db.models import AuditLog, BillingAccount, DiscordIntegration, League, LeagueRole, Membership, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.main import app
@@ -241,6 +242,59 @@ class TestDiscordIntegrationRoutes:
         assert response.status_code == HTTPStatus.FORBIDDEN
         payload = response.json()
         assert payload["error"]["code"] == "PLAN_LIMIT"
+
+    def test_link_allows_during_plan_grace(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = create_user(database_session, "owner")
+        admin = create_user(database_session, "admin")
+        league = create_league(database_session, owner=owner, plan="FREE")
+        add_member(database_session, league=league, user=admin, role=LeagueRole.ADMIN)
+
+        grace_expiration = datetime.now(timezone.utc) + timedelta(days=3)
+        billing = BillingAccount(
+            owner_user_id=owner.id,
+            plan="FREE",
+            plan_grace_plan="PRO",
+            plan_grace_expires_at=grace_expiration,
+        )
+        database_session.add(billing)
+        database_session.commit()
+
+        payload = {"guild_id": "123", "channel_id": "456"}
+        with override_user(admin):
+            response = client.post(f"/leagues/{league.id}/discord/link", json=payload)
+
+        assert response.status_code == HTTPStatus.CREATED, response.text
+
+    def test_link_requires_plan_after_grace_expires(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = create_user(database_session, "owner")
+        admin = create_user(database_session, "admin")
+        league = create_league(database_session, owner=owner, plan="FREE")
+        add_member(database_session, league=league, user=admin, role=LeagueRole.ADMIN)
+
+        billing = BillingAccount(
+            owner_user_id=owner.id,
+            plan="FREE",
+            plan_grace_plan="PRO",
+            plan_grace_expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+        database_session.add(billing)
+        database_session.commit()
+
+        payload = {"guild_id": "123", "channel_id": "456"}
+        with override_user(admin):
+            response = client.post(f"/leagues/{league.id}/discord/link", json=payload)
+
+        assert response.status_code == HTTPStatus.FORBIDDEN
+        data = response.json()
+        assert data["error"]["code"] == "PLAN_LIMIT"
 
     def test_test_endpoint_enqueues_job(
         self,

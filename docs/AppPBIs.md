@@ -150,7 +150,7 @@ Acceptance Criteria:
 Dependencies: PBI-004, PBI-003
 Branch: pbi/015-stripe-checkout
 
-## PBI-016 - Stripe Webhooks and Plan Sync
+## PBI-016 - Stripe Webhooks and Plan Sync (complete)
 Summary: Process Stripe webhook events to align subscription state and grace periods.
 Scope: Backend
 Acceptance Criteria:
@@ -210,6 +210,7 @@ Acceptance Criteria:
 Dependencies: PBI-011, PBI-012
 Branch: pbi/021-seed-data
 
+## FRONTEND --------------------------------------------------------------------
 ## PBI-022 - Frontend Shell and Auth Flow
 Summary: Build React shell with routing, state, and authentication handling.
 Scope: Frontend
@@ -339,6 +340,8 @@ Acceptance Criteria:
 - Accessibility tooling integrated with CI and high severity issues resolved.
 Dependencies: PBI-028, PBI-032
 Branch: pbi/034-frontend-tests
+
+## OPS & CI -----------------------------------------------------------------------------------
 
 ## PBI-035 - CI Pipeline and Quality Gates
 Summary: Configure continuous integration workflows for linting, testing, and builds.

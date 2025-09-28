@@ -1,4 +1,4 @@
-﻿"""create stripe events table"""
+"""create stripe events table"""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "20250924_0003_stripe_events"
-down_revision: str | None = "20250921_0002_add_soft_delete"
+down_revision: str | None = "20250921_0002"
 branch_labels: Sequence[str] | None = None
 depends_on: Sequence[str] | None = None
 

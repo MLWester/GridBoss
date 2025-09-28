@@ -350,6 +350,8 @@ class BillingAccount(Base):
     stripe_customer_id: Mapped[str | None] = mapped_column(String, unique=True)
     plan: Mapped[str] = mapped_column(String, nullable=False, server_default=text("'FREE'"))
     current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    plan_grace_plan: Mapped[str | None] = mapped_column(String)
+    plan_grace_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     owner: Mapped[User] = relationship(back_populates="billing_account")
     subscriptions: Mapped[list[Subscription]] = relationship(back_populates="billing_account")

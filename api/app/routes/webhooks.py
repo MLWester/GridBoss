@@ -1,7 +1,7 @@
 ﻿from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from uuid import UUID
 
@@ -16,6 +16,13 @@ from app.core.settings import Settings, get_settings
 from app.db.models import BillingAccount, League, StripeEvent, Subscription
 from app.db.session import get_session
 
+from app.services.plan import (
+    GRACE_PERIOD_DAYS,
+    PLAN_DRIVER_LIMITS,
+    is_plan_sufficient,
+    normalize_plan,
+)
+
 try:
     from worker.jobs import stripe as stripe_jobs
 except Exception:  # pragma: no cover - worker optional during testing
@@ -26,7 +33,6 @@ router = APIRouter(tags=["webhooks"])
 SessionDep = Annotated[Session, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
-PLAN_DRIVER_LIMITS = {"FREE": 20, "PRO": 100, "ELITE": 9999}
 
 
 def _map_price_to_plan(price_id: str, settings: Settings) -> str | None:
@@ -38,13 +44,26 @@ def _map_price_to_plan(price_id: str, settings: Settings) -> str | None:
 
 
 def _update_leagues_for_plan(session: Session, billing_account: BillingAccount, plan: str) -> None:
-    driver_limit = PLAN_DRIVER_LIMITS.get(plan, PLAN_DRIVER_LIMITS["FREE"])
-    billing_account.plan = plan
+    previous_plan = normalize_plan(billing_account.plan)
+    new_plan = normalize_plan(plan)
+
+    if previous_plan != new_plan:
+        downgraded = is_plan_sufficient(previous_plan, new_plan) and not is_plan_sufficient(new_plan, previous_plan)
+        if downgraded:
+            billing_account.plan_grace_plan = previous_plan
+            billing_account.plan_grace_expires_at = datetime.now(UTC) + timedelta(days=GRACE_PERIOD_DAYS)
+        else:
+            billing_account.plan_grace_plan = None
+            billing_account.plan_grace_expires_at = None
+
+    billing_account.plan = new_plan
+
+    driver_limit = PLAN_DRIVER_LIMITS.get(new_plan, PLAN_DRIVER_LIMITS["FREE"])
     leagues = session.execute(
         select(League).where(League.owner_id == billing_account.owner_user_id)
     ).scalars().all()
     for league in leagues:
-        league.plan = plan
+        league.plan = new_plan
         league.driver_limit = driver_limit
 
 
