@@ -14,13 +14,15 @@ from app.dependencies.auth import get_current_user
 from app.schemas.drivers import DriverBulkCreate, DriverRead, DriverUpdate
 from app.services.rbac import require_membership, require_role_at_least
 
+from app.services.plan import effective_driver_limit, get_billing_account_for_owner
+
 router = APIRouter(tags=["drivers"])
 
 SessionDep = Annotated[Session, Depends(get_session)]
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
-def _get_league(session: Session, league_id: UUID) -> League:
+def _get_league(league_id: UUID, session: SessionDep) -> League:
     league = session.get(League, league_id)
     if league is None or league.is_deleted:
         raise api_error(
@@ -49,7 +51,7 @@ async def list_drivers(
     session: SessionDep,
     current_user: CurrentUserDep,
 ) -> list[DriverRead]:
-    _get_league(session, league_id)
+    _get_league(league_id, session)
     require_membership(session, league_id=league_id, user_id=current_user.id)
 
     drivers = (
@@ -76,7 +78,7 @@ async def bulk_create_drivers(
     session: SessionDep,
     current_user: CurrentUserDep,
 ) -> list[DriverRead]:
-    league = _get_league(session, league_id)
+    league = _get_league(league_id, session)
     membership = require_membership(session, league_id=league_id, user_id=current_user.id)
     require_role_at_least(membership, minimum=LeagueRole.ADMIN)
 
@@ -137,7 +139,9 @@ async def bulk_create_drivers(
     current_count = session.execute(
         select(func.count(Driver.id)).where(Driver.league_id == league_id)
     ).scalar_one()
-    if current_count + len(sanitized_items) > league.driver_limit:
+    billing_account = get_billing_account_for_owner(session, league.owner_id)
+    driver_limit = effective_driver_limit(league, billing_account)
+    if current_count + len(sanitized_items) > driver_limit:
         raise api_error(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             code="PLAN_LIMIT",

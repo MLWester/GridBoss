@@ -12,7 +12,6 @@ depends_on = None
 
 def upgrade() -> None:
     league_role = sa.Enum("OWNER", "ADMIN", "STEWARD", "DRIVER", name="league_role")
-    league_role.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
         "users",
@@ -68,7 +67,7 @@ def upgrade() -> None:
         ),
         sa.Column("league_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("role", sa.Enum(name="league_role"), nullable=False),
+        sa.Column("role", league_role, nullable=False),
         sa.ForeignKeyConstraint(
             ["league_id"],
             ["leagues.id"],

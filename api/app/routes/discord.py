@@ -13,6 +13,7 @@ from app.core.settings import Settings, get_settings
 from app.db.models import AuditLog, DiscordIntegration, League, LeagueRole, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
+from app.dependencies.plan import requires_plan
 from app.schemas.discord import DiscordIntegrationRead, DiscordLinkRequest
 from app.services.rbac import require_membership, require_role_at_least
 
@@ -30,10 +31,7 @@ CurrentUserDep = Annotated[User, Depends(get_current_user)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-PRO_PLANS = {"PRO", "ELITE"}
-
-
-def _get_league(session: Session, league_id: UUID) -> League:
+def _get_league(league_id: UUID, session: SessionDep) -> League:
     league = session.get(League, league_id)
     if league is None or league.is_deleted:
         raise api_error(
@@ -42,15 +40,6 @@ def _get_league(session: Session, league_id: UUID) -> League:
             message="League not found",
         )
     return league
-
-
-def _ensure_plan(league: League) -> None:
-    if league.plan.upper() not in PRO_PLANS:
-        raise api_error(
-            status_code=status.HTTP_403_FORBIDDEN,
-            code="PLAN_LIMIT",
-            message="Discord integration is available on the Pro plan",
-        )
 
 
 def _integration_to_read(integration: DiscordIntegration) -> DiscordIntegrationRead:
@@ -73,16 +62,16 @@ def _state_from_integration(integration: DiscordIntegration | None) -> dict[str,
     response_model=DiscordIntegrationRead,
     status_code=status.HTTP_201_CREATED,
 )
+@requires_plan("PRO", message="Discord integration is available on the Pro plan")
 async def link_discord_integration(
     league_id: UUID,
     payload: DiscordLinkRequest,
     session: SessionDep,
     current_user: CurrentUserDep,
 ) -> DiscordIntegrationRead:
-    league = _get_league(session, league_id)
+    league = _get_league(league_id, session)
     membership = require_membership(session, league_id=league_id, user_id=current_user.id)
     require_role_at_least(membership, minimum=LeagueRole.ADMIN)
-    _ensure_plan(league)
 
     existing = (
         session.execute(
@@ -120,19 +109,22 @@ async def link_discord_integration(
     return _integration_to_read(integration)
 
 
+
+
+
 @router.post(
     "/leagues/{league_id}/discord/test",
     status_code=status.HTTP_202_ACCEPTED,
 )
+@requires_plan("PRO", message="Discord integration is available on the Pro plan")
 async def trigger_discord_test(
     league_id: UUID,
     session: SessionDep,
     current_user: CurrentUserDep,
 ) -> dict[str, str]:
-    league = _get_league(session, league_id)
+    league = _get_league(league_id, session)
     membership = require_membership(session, league_id=league_id, user_id=current_user.id)
     require_role_at_least(membership, minimum=LeagueRole.ADMIN)
-    _ensure_plan(league)
 
     integration = (
         session.execute(
@@ -193,3 +185,5 @@ async def trigger_discord_test(
         ) from exc
 
     return {"status": "queued"}
+
+

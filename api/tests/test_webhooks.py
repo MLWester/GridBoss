@@ -1,7 +1,7 @@
 ﻿from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 
 import pytest
@@ -21,6 +21,7 @@ from app.db.models import (
     Subscription,
     User,
 )
+from app.services.plan import GRACE_PERIOD_DAYS
 from app.db.session import get_session
 from app.main import app
 
@@ -238,6 +239,8 @@ def test_subscription_updated_updates_plan_and_enqueues_sync(client: TestClient,
     assert subscription.status == "active"
     billing = verify.execute(select(BillingAccount).where(BillingAccount.owner_user_id == owner.id)).scalar_one()
     assert billing.plan == "ELITE"
+    assert billing.plan_grace_plan is None
+    assert billing.plan_grace_expires_at is None
     league = verify.execute(select(League).where(League.owner_id == owner.id)).scalar_one()
     assert league.driver_limit == 9999
     stored_end = billing.current_period_end
@@ -284,6 +287,14 @@ def test_subscription_deleted_sets_free(client: TestClient) -> None:
     assert subscription.status == "canceled"
     billing = verify.execute(select(BillingAccount).where(BillingAccount.owner_user_id == owner.id)).scalar_one()
     assert billing.plan == "FREE"
+    assert billing.plan_grace_plan == "PRO"
+    assert billing.plan_grace_expires_at is not None
+    grace_expires = billing.plan_grace_expires_at
+    if grace_expires.tzinfo is None:
+        grace_expires = grace_expires.replace(tzinfo=timezone.utc)
+    remaining = grace_expires - datetime.now(timezone.utc)
+    assert remaining.total_seconds() > 0
+    assert remaining <= timedelta(days=GRACE_PERIOD_DAYS, seconds=5)
     league = verify.execute(select(League).where(League.owner_id == owner.id)).scalar_one()
     assert league.driver_limit == 20
     verify.close()

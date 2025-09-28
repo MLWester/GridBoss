@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Annotated
 
@@ -12,6 +12,7 @@ from app.db.models import BillingAccount, League, LeagueRole, Membership, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.schemas.billing import CheckoutRequest, CheckoutResponse, PortalResponse
+from app.services.plan import PLAN_DRIVER_LIMITS
 from app.services.stripe import StripeClient, StripeConfigurationError
 
 router = APIRouter(tags=["billing"])
@@ -28,7 +29,6 @@ def provide_stripe_client(settings: Settings = Depends(get_settings)) -> StripeC
 StripeClientDep = Annotated[StripeClient, Depends(provide_stripe_client)]
 
 SUPPORTED_PLANS = {"PRO", "ELITE"}
-PLAN_DRIVER_LIMITS = {"FREE": 20, "PRO": 100, "ELITE": 9999}
 
 
 def _owner_leagues(session: Session, user_id: str) -> list[League]:
@@ -131,6 +131,8 @@ async def create_checkout_session(
 
     billing_account.stripe_customer_id = customer_id
     billing_account.plan = plan
+    billing_account.plan_grace_plan = None
+    billing_account.plan_grace_expires_at = None
     driver_limit = PLAN_DRIVER_LIMITS.get(plan, PLAN_DRIVER_LIMITS["FREE"])
     for league in leagues:
         league.plan = plan
@@ -184,4 +186,3 @@ async def create_portal_session(
         ) from exc
 
     return PortalResponse(url=portal_url)
-
