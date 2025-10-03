@@ -190,7 +190,7 @@ Acceptance Criteria:
 Dependencies: PBI-003, PBI-010
 Branch: pbi/019-observability
 
-## PBI-020 - Backend Automated Test Suite
+## PBI-020 - Backend Automated Test Suite (complete)
 Summary: Establish pytest-based unit and integration tests for critical services.
 Scope: Backend
 Acceptance Criteria:
