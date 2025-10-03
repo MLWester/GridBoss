@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Annotated
@@ -13,6 +13,7 @@ from app.core.settings import Settings, get_settings
 from app.db.models import League, LeagueRole, Membership, Season, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
+from app.services.audit import record_audit_log
 from app.schemas.leagues import LeagueCreate, LeagueRead, LeagueUpdate
 
 router = APIRouter(prefix="/leagues", tags=["leagues"])
@@ -111,12 +112,26 @@ async def update_league(
             status_code=status.HTTP_403_FORBIDDEN, detail="Only the owner may update"
         )
 
+    before_state = {"name": league.name, "slug": league.slug}
+
     if payload.slug and payload.slug != league.slug:
         _ensure_slug_available(session, payload.slug)
         league.slug = payload.slug
 
     if payload.name:
         league.name = payload.name
+
+    if before_state != {"name": league.name, "slug": league.slug}:
+        record_audit_log(
+            session,
+            actor_id=current_user.id,
+            league_id=league.id,
+            entity="league",
+            entity_id=str(league.id),
+            action="update",
+            before=before_state,
+            after={"name": league.name, "slug": league.slug},
+        )
 
     session.commit()
     session.refresh(league)
@@ -138,7 +153,18 @@ async def delete_league(
             status_code=status.HTTP_403_FORBIDDEN, detail="Only the owner may delete"
         )
 
+    before_state = {"name": league.name, "slug": league.slug}
     league.is_deleted = True
     league.deleted_at = datetime.now(timezone.utc)  # noqa: UP017
+    record_audit_log(
+        session,
+        actor_id=current_user.id,
+        league_id=league.id,
+        entity="league",
+        entity_id=str(league.id),
+        action="delete",
+        before=before_state,
+        after={"is_deleted": league.is_deleted, "deleted_at": league.deleted_at},
+    )
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -15,6 +15,7 @@ from app.core.errors import api_error
 from app.core.settings import Settings, get_settings
 from app.db.models import BillingAccount, League, StripeEvent, Subscription
 from app.db.session import get_session
+from app.services.audit import record_audit_log
 
 from app.services.plan import (
     GRACE_PERIOD_DAYS,
@@ -47,6 +48,19 @@ def _update_leagues_for_plan(session: Session, billing_account: BillingAccount, 
     previous_plan = normalize_plan(billing_account.plan)
     new_plan = normalize_plan(plan)
 
+    leagues = session.execute(
+        select(League).where(League.owner_id == billing_account.owner_user_id)
+    ).scalars().all()
+    before_league_states = {
+        league.id: {"plan": league.plan, "driver_limit": league.driver_limit}
+        for league in leagues
+    }
+    before_account_state = {
+        "plan": billing_account.plan,
+        "plan_grace_plan": billing_account.plan_grace_plan,
+        "plan_grace_expires_at": billing_account.plan_grace_expires_at,
+    }
+
     if previous_plan != new_plan:
         downgraded = is_plan_sufficient(previous_plan, new_plan) and not is_plan_sufficient(new_plan, previous_plan)
         if downgraded:
@@ -57,14 +71,42 @@ def _update_leagues_for_plan(session: Session, billing_account: BillingAccount, 
             billing_account.plan_grace_expires_at = None
 
     billing_account.plan = new_plan
-
     driver_limit = PLAN_DRIVER_LIMITS.get(new_plan, PLAN_DRIVER_LIMITS["FREE"])
-    leagues = session.execute(
-        select(League).where(League.owner_id == billing_account.owner_user_id)
-    ).scalars().all()
     for league in leagues:
         league.plan = new_plan
         league.driver_limit = driver_limit
+
+    after_account_state = {
+        "plan": billing_account.plan,
+        "plan_grace_plan": billing_account.plan_grace_plan,
+        "plan_grace_expires_at": billing_account.plan_grace_expires_at,
+    }
+    if before_account_state != after_account_state:
+        record_audit_log(
+            session,
+            actor_id=None,
+            league_id=None,
+            entity="billing_account",
+            entity_id=str(billing_account.id),
+            action="plan_sync",
+            before=before_account_state,
+            after=after_account_state,
+        )
+
+    for league in leagues:
+        before_state = before_league_states.get(league.id)
+        after_state = {"plan": league.plan, "driver_limit": league.driver_limit}
+        if before_state != after_state:
+            record_audit_log(
+                session,
+                actor_id=None,
+                league_id=league.id,
+                entity="league",
+                entity_id=str(league.id),
+                action="plan_sync",
+                before=before_state,
+                after=after_state,
+            )
 
 
 def _ensure_subscription(

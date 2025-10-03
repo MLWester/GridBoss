@@ -1,12 +1,13 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Dict
+from typing import Any, Callable, Dict
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import DiscordIntegration
+from app.services.audit import record_audit_log
 from app.db.session import get_sessionmaker
 from worker.jobs import discord as discord_jobs
 
@@ -25,6 +26,36 @@ class InteractionContext:
 class CommandResponse:
     content: str
     ephemeral: bool = True
+
+
+
+def _integration_state(integration: DiscordIntegration) -> dict[str, Any]:
+    return {
+        "guild_id": integration.guild_id,
+        "channel_id": integration.channel_id,
+        "is_active": integration.is_active,
+    }
+
+
+def _record_bot_failure(
+    session: Session,
+    integration: DiscordIntegration,
+    *,
+    reason: str,
+    requested_by: str,
+) -> None:
+    state = _integration_state(integration)
+    record_audit_log(
+        session,
+        actor_id=None,
+        league_id=integration.league_id,
+        entity="discord_integration",
+        entity_id=str(integration.id),
+        action="bot_command_denied",
+        before=state,
+        after={**state, "reason": reason, "requested_by": requested_by},
+    )
+    session.commit()
 
 
 class GridBossBot:
@@ -87,11 +118,17 @@ class GridBossBot:
                     content="This server has not been linked to a GridBoss league yet.", ephemeral=True
                 )
             if not integration.is_active:
+                _record_bot_failure(
+                    session, integration, reason="integration_inactive", requested_by=context.user_id
+                )
                 return CommandResponse(
                     content="The Discord integration is currently inactive. An admin should relink it via GridBoss.",
                     ephemeral=True,
                 )
             if not integration.channel_id:
+                _record_bot_failure(
+                    session, integration, reason="channel_missing", requested_by=context.user_id
+                )
                 return CommandResponse(
                     content="No announcement channel is configured. Update the integration in GridBoss first.",
                     ephemeral=True,

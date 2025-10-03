@@ -7,8 +7,9 @@ import dramatiq
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from app.db.models import AuditLog, DiscordIntegration, Event, League, Result
+from app.db.models import DiscordIntegration, Event, League, Result
 from app.db.session import get_sessionmaker
+from app.services.audit import record_audit_log
 from worker.services.discord import (
     DiscordConfigurationError,
     DiscordMessage,
@@ -43,16 +44,16 @@ def _record_failure(session, integration: DiscordIntegration, *, reason: str) ->
         "guild_id": integration.guild_id,
     }
     integration.is_active = False
-    log_entry = AuditLog(
+    record_audit_log(
+        session,
         actor_id=None,
         league_id=integration.league_id,
         entity="discord_integration",
         entity_id=str(integration.id),
         action="discord_deactivated",
-        before_state=before_state,
-        after_state={**before_state, "is_active": False, "reason": reason},
+        before=before_state,
+        after={**before_state, "is_active": False, "reason": reason},
     )
-    session.add(log_entry)
 
 
 def _build_results_payload(session, event: Event) -> dict[str, str | list[dict[str, object]]]:

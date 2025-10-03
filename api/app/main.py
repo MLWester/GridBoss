@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.settings import get_settings
 from app.routes import (
+    audit,
     auth,
     billing,
     discord,
@@ -37,6 +38,7 @@ if allowed_origins:
         allow_headers=["*"],
     )
 
+app.include_router(audit.router)
 app.include_router(auth.router)
 app.include_router(billing.router)
 app.include_router(leagues.router)

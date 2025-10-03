@@ -296,6 +296,22 @@ class TestDiscordIntegrationRoutes:
         data = response.json()
         assert data["error"]["code"] == "PLAN_LIMIT"
 
+        logs = (
+            database_session.execute(
+                select(AuditLog)
+                .where(AuditLog.league_id == league.id)
+                .order_by(AuditLog.timestamp.desc())
+            )
+            .scalars()
+            .all()
+        )
+        assert logs
+        log = logs[0]
+        assert log.action == "plan_limit_enforced"
+        assert log.after_state is None
+        assert log.before_state == {"current_plan": "FREE", "required_plan": "PRO"}
+        assert log.actor_id == admin.id
+
     def test_test_endpoint_enqueues_job(
         self,
         client: TestClient,
