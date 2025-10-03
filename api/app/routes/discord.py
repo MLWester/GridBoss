@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.errors import api_error
+from app.core.observability import bind_league_id
 from app.core.settings import Settings, get_settings
 from app.db.models import DiscordIntegration, League, LeagueRole, User
 from app.db.session import get_session
@@ -40,6 +41,7 @@ def _get_league(league_id: UUID, session: SessionDep) -> League:
             code="LEAGUE_NOT_FOUND",
             message="League not found",
         )
+    bind_league_id(str(league.id))
     return league
 
 

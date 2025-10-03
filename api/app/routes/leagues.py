@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.settings import Settings, get_settings
+from app.core.observability import bind_league_id
 from app.db.models import League, LeagueRole, Membership, Season, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
@@ -84,6 +85,7 @@ async def get_league(
     league = session.get(League, league_id)
     if league is None or league.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+    bind_league_id(str(league.id))
 
     membership = session.execute(
         select(Membership).where(
@@ -106,6 +108,7 @@ async def update_league(
     league = session.get(League, league_id)
     if league is None or league.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+    bind_league_id(str(league.id))
 
     if league.owner_id != current_user.id:
         raise HTTPException(
@@ -147,6 +150,7 @@ async def delete_league(
     league = session.get(League, league_id)
     if league is None or league.is_deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+    bind_league_id(str(league.id))
 
     if league.owner_id != current_user.id:
         raise HTTPException(

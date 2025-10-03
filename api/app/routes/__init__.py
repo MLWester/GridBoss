@@ -7,14 +7,15 @@ from . import (
     discord,
     drivers,
     events,
+    health,
     leagues,
     memberships,
     points,
     results,
     seasons,
     standings,
-    webhooks,
     teams,
+    webhooks,
 )
 
 __all__ = [
@@ -24,12 +25,13 @@ __all__ = [
     "discord",
     "drivers",
     "events",
+    "health",
     "leagues",
     "memberships",
     "points",
     "results",
     "seasons",
     "standings",
-    "webhooks",
     "teams",
+    "webhooks",
 ]

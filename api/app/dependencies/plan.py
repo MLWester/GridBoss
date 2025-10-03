@@ -16,6 +16,7 @@ from app.services.plan import (
     is_plan_sufficient,
 )
 from app.services.audit import record_audit_log
+from app.core.observability import bind_league_id
 
 
 def _resolve_league(session: Session, kwargs: dict[str, Any]) -> League:
@@ -58,6 +59,7 @@ def _ensure_plan_access(
 ) -> None:
     billing_account = get_billing_account_for_owner(session, league.owner_id)
     current_plan = effective_plan(league.plan, billing_account)
+    bind_league_id(str(league.id))
     if not is_plan_sufficient(current_plan, required_plan):
         detail = message or f"This action requires the {required_plan.title()} plan"
         record_audit_log(
