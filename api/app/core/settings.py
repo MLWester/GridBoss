@@ -35,6 +35,13 @@ class Settings(BaseSettings):
 
     cors_origins: str = Field(default="http://localhost:5173", alias="CORS_ORIGINS")
 
+    sentry_dsn: str | None = Field(default=None, alias="SENTRY_DSN")
+    sentry_traces_sample_rate: float = Field(default=0.0, alias="SENTRY_TRACES_SAMPLE_RATE")
+    otel_enabled: bool = Field(default=False, alias="OTEL_ENABLED")
+    otel_exporter_endpoint: str | None = Field(default=None, alias="OTEL_EXPORTER_ENDPOINT")
+    otel_service_name: str = Field(default="gridboss-api", alias="OTEL_SERVICE_NAME")
+    health_cache_seconds: int = Field(default=0, alias="HEALTH_CACHE_SECONDS")
+
     def cookie_secure(self) -> bool:
         return self.app_env == "production"
 

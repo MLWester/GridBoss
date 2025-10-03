@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.errors import api_error
+from app.core.observability import bind_league_id
 from app.db.models import Driver, League, LeagueRole, Team, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
@@ -30,6 +31,7 @@ def _get_league(league_id: UUID, session: SessionDep) -> League:
             code="LEAGUE_NOT_FOUND",
             message="League not found",
         )
+    bind_league_id(str(league.id))
     return league
 
 

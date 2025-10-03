@@ -170,7 +170,7 @@ Acceptance Criteria:
 Dependencies: PBI-006, PBI-015, PBI-016
 Branch: pbi/017-plan-enforcement
 
-## PBI-018 - Audit Logging Service
+## PBI-018 - Audit Logging Service (complete)
 Summary: Capture audit events for key domain changes and expose retrieval API.
 Scope: Backend
 Acceptance Criteria:
@@ -180,7 +180,7 @@ Acceptance Criteria:
 Dependencies: PBI-006, PBI-011, PBI-017
 Branch: pbi/018-audit-logging
 
-## PBI-019 - Observability and Health Endpoints
+## PBI-019 - Observability and Health Endpoints (complete)
 Summary: Add structured logging, tracing hooks, and service health probes.
 Scope: Backend, Ops
 Acceptance Criteria:

@@ -12,6 +12,7 @@ from app.core.security import ACCESS_TOKEN_TYPE, decode_token
 from app.core.settings import Settings, get_settings
 from app.db.models import User
 from app.db.session import get_session
+from app.core.observability import bind_user_id
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -45,4 +46,7 @@ async def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is inactive")
+
+    request.state.user_id = str(user.id)
+    bind_user_id(str(user.id))
     return user
