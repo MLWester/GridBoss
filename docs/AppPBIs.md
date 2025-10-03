@@ -160,7 +160,7 @@ Acceptance Criteria:
 Dependencies: PBI-015, PBI-010
 Branch: pbi/016-stripe-webhooks
 
-## PBI-017 - Plan Enforcement Middleware
+## PBI-017 - Plan Enforcement Middleware (complete)
 Summary: Enforce plan entitlements and driver limits across gated routes.
 Scope: Backend
 Acceptance Criteria:

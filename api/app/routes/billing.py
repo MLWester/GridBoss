@@ -12,6 +12,7 @@ from app.db.models import BillingAccount, League, LeagueRole, Membership, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.schemas.billing import CheckoutRequest, CheckoutResponse, PortalResponse
+from app.services.audit import record_audit_log
 from app.services.plan import PLAN_DRIVER_LIMITS
 from app.services.stripe import StripeClient, StripeConfigurationError
 
@@ -92,6 +93,11 @@ async def create_checkout_session(
             message="Create a league before managing billing",
         )
 
+    league_states_before = {
+        league.id: {"plan": league.plan, "driver_limit": league.driver_limit}
+        for league in leagues
+    }
+
     billing_account = (
         session.execute(
             select(BillingAccount).where(BillingAccount.owner_user_id == current_user.id)
@@ -100,8 +106,15 @@ async def create_checkout_session(
         .first()
     )
     if billing_account is None:
+        before_billing = None
         billing_account = BillingAccount(owner_user_id=current_user.id, plan=plan)
         session.add(billing_account)
+    else:
+        before_billing = {
+            "plan": billing_account.plan,
+            "plan_grace_plan": billing_account.plan_grace_plan,
+            "plan_grace_expires_at": billing_account.plan_grace_expires_at,
+        }
 
     price_id = _plan_price(plan, settings)
     try:
@@ -137,6 +150,40 @@ async def create_checkout_session(
     for league in leagues:
         league.plan = plan
         league.driver_limit = driver_limit
+
+    session.flush()
+
+    after_billing = {
+        "plan": billing_account.plan,
+        "plan_grace_plan": billing_account.plan_grace_plan,
+        "plan_grace_expires_at": billing_account.plan_grace_expires_at,
+    }
+    if before_billing != after_billing:
+        record_audit_log(
+            session,
+            actor_id=current_user.id,
+            league_id=None,
+            entity="billing_account",
+            entity_id=str(billing_account.id),
+            action="plan_checkout",
+            before=before_billing,
+            after=after_billing,
+        )
+
+    for league in leagues:
+        before_state = league_states_before.get(league.id)
+        after_state = {"plan": league.plan, "driver_limit": league.driver_limit}
+        if before_state != after_state:
+            record_audit_log(
+                session,
+                actor_id=current_user.id,
+                league_id=league.id,
+                entity="league",
+                entity_id=str(league.id),
+                action="plan_checkout",
+                before=before_state,
+                after=after_state,
+            )
 
     session.commit()
 

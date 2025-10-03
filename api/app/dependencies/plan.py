@@ -15,6 +15,7 @@ from app.services.plan import (
     get_billing_account_for_owner,
     is_plan_sufficient,
 )
+from app.services.audit import record_audit_log
 
 
 def _resolve_league(session: Session, kwargs: dict[str, Any]) -> League:
@@ -53,11 +54,23 @@ def _ensure_plan_access(
     league: League,
     required_plan: str,
     message: str | None,
+    actor_id: UUID | None,
 ) -> None:
     billing_account = get_billing_account_for_owner(session, league.owner_id)
     current_plan = effective_plan(league.plan, billing_account)
     if not is_plan_sufficient(current_plan, required_plan):
         detail = message or f"This action requires the {required_plan.title()} plan"
+        record_audit_log(
+            session,
+            actor_id=actor_id,
+            league_id=league.id,
+            entity="plan",
+            entity_id=str(league.id),
+            action="plan_limit_enforced",
+            before={"current_plan": current_plan, "required_plan": required_plan},
+            after=None,
+        )
+        session.commit()
         raise api_error(
             status_code=status.HTTP_403_FORBIDDEN,
             code="PLAN_LIMIT",
@@ -77,11 +90,14 @@ def requires_plan(required_plan: str, *, message: str | None = None) -> Callable
                 if session is None:
                     raise RuntimeError("requires_plan decorator expects a 'session' argument")
                 league = _resolve_league(session, kwargs)
+                actor = kwargs.get("current_user")
+                actor_id = getattr(actor, "id", None) if actor is not None else None
                 _ensure_plan_access(
                     session=session,
                     league=league,
                     required_plan=normalized_required,
                     message=message,
+                    actor_id=actor_id,
                 )
                 return await func(*args, **kwargs)
 
@@ -94,11 +110,14 @@ def requires_plan(required_plan: str, *, message: str | None = None) -> Callable
             if session is None:
                 raise RuntimeError("requires_plan decorator expects a 'session' argument")
             league = _resolve_league(session, kwargs)
+            actor = kwargs.get("current_user")
+            actor_id = getattr(actor, "id", None) if actor is not None else None
             _ensure_plan_access(
                 session=session,
                 league=league,
                 required_plan=normalized_required,
                 message=message,
+                actor_id=actor_id,
             )
             return func(*args, **kwargs)
 

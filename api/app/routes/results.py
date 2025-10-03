@@ -27,6 +27,7 @@ from app.db.models import (
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.schemas.results import EventResultsRead, ResultEntryRead, ResultSubmission
+from app.services.audit import record_audit_log
 from app.services.idempotency import IdempotencyConfig, get_idempotency_service
 from app.services.points import build_points_map, default_points_entries
 from app.services.rbac import require_membership, require_role_at_least
@@ -135,6 +136,21 @@ def _serialize_payload(entries: list[dict[str, str | int]]) -> str:
     return json.dumps(entries, sort_keys=True)
 
 
+def _results_state(results: list[Result]) -> list[dict[str, object]]:
+    return [
+        {
+            "driver_id": str(result.driver_id),
+            "finish_position": result.finish_position,
+            "started_position": result.started_position,
+            "status": result.status,
+            "bonus_points": result.bonus_points,
+            "penalty_points": result.penalty_points,
+            "total_points": result.total_points,
+        }
+        for result in results
+    ]
+
+
 def _build_response(event: Event, results: list[Result]) -> EventResultsRead:
     items = [
         ResultEntryRead(
@@ -184,6 +200,8 @@ async def submit_results(
     membership = require_membership(session, league_id=event.league_id, user_id=current_user.id)
     require_role_at_least(membership, minimum=LeagueRole.STEWARD)
 
+    previous_event_status = event.status
+
     entries = payload.entries
     driver_ids = {item.driver_id for item in entries}
     if len(driver_ids) != len(entries):
@@ -217,6 +235,10 @@ async def submit_results(
         raise
     points_map = _load_points_scheme(session, event)
 
+    existing_results = session.execute(
+        select(Result).where(Result.event_id == event.id).order_by(Result.finish_position)
+    ).scalars().all()
+
     payload_hash = _serialize_payload([
         {
             "driver_id": str(item.driver_id),
@@ -237,14 +259,7 @@ async def submit_results(
             scope=f"{IDEMPOTENCY_SCOPE}:{event_id}", key=idempotency_key, payload_hash=payload_hash
         )
         if idem_status == "duplicate":
-            existing = (
-                session.execute(
-                    select(Result).where(Result.event_id == event.id).order_by(Result.finish_position)
-                )
-                .scalars()
-                .all()
-            )
-            return _build_response(event, existing)
+            return _build_response(event, existing_results)
         if idem_status == "conflict":
 
             raise api_error(
@@ -275,6 +290,21 @@ async def submit_results(
             results.append(result)
 
         event.status = EventStatus.COMPLETED.value
+
+        after_state = {"results": _results_state(results), "status": event.status}
+        before_state = {"results": _results_state(existing_results), "status": previous_event_status}
+        if before_state != after_state:
+            record_audit_log(
+                session,
+                actor_id=current_user.id,
+                league_id=event.league_id,
+                entity="event",
+                entity_id=str(event.id),
+                action="results_submitted",
+                before=before_state,
+                after=after_state,
+            )
+
         session.commit()
     except Exception:
         session.rollback()

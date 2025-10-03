@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import logging
 from typing import Annotated, Any
@@ -10,11 +10,12 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import api_error
 from app.core.settings import Settings, get_settings
-from app.db.models import AuditLog, DiscordIntegration, League, LeagueRole, User
+from app.db.models import DiscordIntegration, League, LeagueRole, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.dependencies.plan import requires_plan
 from app.schemas.discord import DiscordIntegrationRead, DiscordLinkRequest
+from app.services.audit import record_audit_log
 from app.services.rbac import require_membership, require_role_at_least
 
 try:
@@ -94,16 +95,16 @@ async def link_discord_integration(
     session.add(integration)
     session.flush()
 
-    log = AuditLog(
+    record_audit_log(
+        session,
         actor_id=current_user.id,
         league_id=league_id,
         entity="discord_integration",
         entity_id=str(integration.id),
         action="link",
-        before_state=before_state,
-        after_state=_state_from_integration(integration),
+        before=before_state,
+        after=_state_from_integration(integration),
     )
-    session.add(log)
     session.commit()
     session.refresh(integration)
     return _integration_to_read(integration)
@@ -152,16 +153,16 @@ async def trigger_discord_test(
             message="Discord channel is not configured",
         )
 
-    log = AuditLog(
+    record_audit_log(
+        session,
         actor_id=current_user.id,
         league_id=league_id,
         entity="discord_integration",
         entity_id=str(integration.id),
         action="test",
-        before_state=_state_from_integration(integration),
-        after_state=_state_from_integration(integration),
+        before=_state_from_integration(integration),
+        after=_state_from_integration(integration),
     )
-    session.add(log)
     session.commit()
 
     if discord_jobs is None:

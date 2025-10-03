@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from collections.abc import Generator
 from uuid import uuid4
@@ -33,12 +33,12 @@ if "dramatiq" not in sys.modules:
 
     sys.modules["dramatiq"] = types.SimpleNamespace(actor=_actor)
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db import Base
-from app.db.models import DiscordIntegration, League
+from app.db.models import AuditLog, DiscordIntegration, League
 import app.db.session as db_session
 from bot.config import BotConfig
 from bot.service import GridBossBot, InteractionContext
@@ -163,3 +163,42 @@ class TestGridBossBot:
 
         assert "inactive" in response.content.lower()
         assert not self.spied_actor.calls
+
+        check_session = TestingSessionLocal()
+        logs = check_session.execute(select(AuditLog)).scalars().all()
+        check_session.close()
+        assert len(logs) == 1
+        log = logs[0]
+        assert log.action == "bot_command_denied"
+        assert log.after_state["reason"] == "integration_inactive"
+        assert log.after_state["requested_by"] == "user"
+
+    def test_test_command_records_audit_when_channel_missing(self) -> None:
+        bot = GridBossBot(BotConfig(token="", app_url="http://local"))
+        session = TestingSessionLocal()
+        league = create_league(session)
+        integration = DiscordIntegration(
+            league_id=league.id,
+            guild_id="guild",
+            channel_id=None,
+            installed_by_user=None,
+            is_active=True,
+        )
+        session.add(integration)
+        session.commit()
+
+        context = InteractionContext(guild_id="guild", channel_id="channel", user_id="tester", is_admin=True)
+        response = bot.process_command("test", context)
+
+        assert "channel" in response.content.lower()
+        assert not self.spied_actor.calls
+
+        check_session = TestingSessionLocal()
+        logs = check_session.execute(select(AuditLog)).scalars().all()
+        check_session.close()
+        assert len(logs) == 1
+        log = logs[0]
+        assert log.action == "bot_command_denied"
+        assert log.after_state["reason"] == "channel_missing"
+        assert log.after_state["requested_by"] == "tester"
+

@@ -18,6 +18,7 @@ from app.schemas.points import (
     PointsSchemeRead,
     PointsSchemeUpdate,
 )
+from app.services.audit import record_audit_log
 from app.services.points import default_points_entries, normalize_points_entries
 from app.services.rbac import require_membership, require_role_at_least
 
@@ -100,6 +101,19 @@ def _set_rules_for_scheme(scheme: PointsScheme, entries: list[tuple[int, int]]) 
     scheme.rules[:] = [PointsRule(position=position, points=points) for position, points in entries]
 
 
+def _scheme_state(scheme: PointsScheme) -> dict[str, object]:
+    return {
+        "id": str(scheme.id),
+        "name": scheme.name,
+        "season_id": str(scheme.season_id) if scheme.season_id else None,
+        "is_default": scheme.is_default,
+        "rules": [
+            {"position": rule.position, "points": rule.points}
+            for rule in sorted(scheme.rules, key=lambda r: r.position)
+        ],
+    }
+
+
 
 @router.get(
     "/leagues/{league_id}/points-schemes",
@@ -174,11 +188,20 @@ async def create_points_scheme(
             .values(is_default=False)
         )
 
+    record_audit_log(
+        session,
+        actor_id=current_user.id,
+        league_id=league_id,
+        entity="points_scheme",
+        entity_id=str(scheme.id),
+        action="create",
+        before=None,
+        after=_scheme_state(scheme),
+    )
+
     session.commit()
     session.refresh(scheme)
     return _scheme_to_read(scheme)
-
-
 @router.patch("/points-schemes/{scheme_id}", response_model=PointsSchemeRead)
 async def update_points_scheme(
     scheme_id: UUID,
@@ -205,6 +228,7 @@ async def update_points_scheme(
     membership = require_membership(session, league_id=scheme.league_id, user_id=current_user.id)
     require_role_at_least(membership, minimum=LeagueRole.ADMIN)
 
+    before_state = _scheme_state(scheme)
     update_data = payload.model_dump(exclude_unset=True)
 
     if "name" in update_data and update_data["name"] is not None:
@@ -258,6 +282,19 @@ async def update_points_scheme(
                 )
             scheme.is_default = False
 
+    after_state = _scheme_state(scheme)
+    if before_state != after_state:
+        record_audit_log(
+            session,
+            actor_id=current_user.id,
+            league_id=scheme.league_id,
+            entity="points_scheme",
+            entity_id=str(scheme.id),
+            action="update",
+            before=before_state,
+            after=after_state,
+        )
+
     session.commit()
     session.refresh(scheme)
     return _scheme_to_read(scheme)
@@ -288,6 +325,8 @@ async def delete_points_scheme(
     membership = require_membership(session, league_id=scheme.league_id, user_id=current_user.id)
     require_role_at_least(membership, minimum=LeagueRole.ADMIN)
 
+    before_state = _scheme_state(scheme)
+
     if scheme.is_default:
         related_events = session.execute(
             select(Event.id).where(Event.season_id == scheme.season_id)
@@ -313,5 +352,15 @@ async def delete_points_scheme(
             )
 
     session.delete(scheme)
+    record_audit_log(
+        session,
+        actor_id=current_user.id,
+        league_id=scheme.league_id,
+        entity="points_scheme",
+        entity_id=str(scheme.id),
+        action="delete",
+        before=before_state,
+        after=None,
+    )
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
