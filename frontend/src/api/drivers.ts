@@ -1,7 +1,6 @@
 import { apiFetch } from './client'
 import { ApiError } from './auth'
 import type { DriverRead, DriverSummary, BulkDriverInput, UpdateDriverRequest } from '../types/drivers'
-import type { TeamRead, TeamSummary } from '../types/teams'
 
 function mapDriver(driver: DriverRead): DriverSummary {
   return {
@@ -12,13 +11,6 @@ function mapDriver(driver: DriverRead): DriverSummary {
     linkedUser: Boolean(driver.user?.id ?? driver.discord_id),
     discordId: driver.discord_id ?? null,
     userName: driver.user?.discord_username ?? null,
-  }
-}
-
-function mapTeam(team: TeamRead): TeamSummary {
-  return {
-    id: team.id,
-    name: team.name,
   }
 }
 
@@ -33,19 +25,6 @@ export async function fetchLeagueDrivers(token: string, slug: string): Promise<D
 
   const payload = (await response.json()) as DriverRead[]
   return payload.map(mapDriver)
-}
-
-export async function fetchLeagueTeams(token: string, slug: string): Promise<TeamSummary[]> {
-  const response = await apiFetch(`/leagues/${slug}/teams`, {
-    token,
-  })
-
-  if (!response.ok) {
-    throw new ApiError('Unable to load teams', response.status)
-  }
-
-  const payload = (await response.json()) as TeamRead[]
-  return payload.map(mapTeam)
 }
 
 export async function bulkCreateDrivers(
