@@ -221,7 +221,7 @@ Acceptance Criteria:
 Dependencies: PBI-004
 Branch: pbi/022-frontend-shell
 
-## PBI-023 - Dashboard Page
+## PBI-023 - Dashboard Page (complete)
 Summary: Implement main dashboard listing leagues and plan status.
 Scope: Frontend
 Acceptance Criteria:
