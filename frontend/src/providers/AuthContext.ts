@@ -6,6 +6,7 @@ export interface AuthContextValue {
   isLoading: boolean
   error: string | null
   isAuthenticated: boolean
+  isBypassAuth: boolean
   accessToken: string | null
   refreshProfile: () => Promise<void>
   logout: () => Promise<void>

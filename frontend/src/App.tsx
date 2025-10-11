@@ -1,6 +1,6 @@
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
-import { OverviewPlaceholder } from './pages/OverviewPlaceholder'
+import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 
@@ -15,7 +15,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <OverviewPlaceholder />,
+        element: <DashboardPage />,
       },
     ],
   },
