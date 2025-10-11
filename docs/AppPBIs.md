@@ -281,7 +281,7 @@ Acceptance Criteria:
 Dependencies: PBI-027, PBI-011, PBI-012
 Branch: pbi/028-results-ui
 
-## PBI-029 - Standings UI
+## PBI-029 - Standings UI (complete)
 Summary: Present season standings with tie break indicators and sharing.
 Scope: Frontend
 Acceptance Criteria:
