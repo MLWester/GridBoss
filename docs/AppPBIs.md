@@ -261,7 +261,7 @@ Acceptance Criteria:
 Dependencies: PBI-024, PBI-007
 Branch: pbi/026-teams-ui
 
-## PBI-027 - Events Management UI
+## PBI-027 - Events Management UI (complete)
 Summary: Manage event creation, list, and editing with timezone support.
 Scope: Frontend
 Acceptance Criteria:
