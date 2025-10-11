@@ -5,9 +5,10 @@ import { LeagueLayout } from './components/layout/LeagueLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { LeagueOverviewPage } from './pages/LeagueOverviewPage'
-import { LeagueEventsPlaceholder, LeagueSettingsPlaceholder, LeagueStandingsPlaceholder } from './pages/LeaguePlaceholders'
+import { LeagueSettingsPlaceholder, LeagueStandingsPlaceholder } from './pages/LeaguePlaceholders'
 import { LeagueDriversPage } from './pages/LeagueDriversPage'
 import { LeagueTeamsPage } from './pages/LeagueTeamsPage'
+import { LeagueEventsPage } from './pages/LeagueEventsPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 
 const router = createBrowserRouter([
@@ -51,7 +52,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'events',
-            element: <LeagueEventsPlaceholder />,
+            element: <LeagueEventsPage />,
           },
           {
             path: 'standings',
