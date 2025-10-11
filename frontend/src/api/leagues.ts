@@ -8,7 +8,7 @@ function toSummary(league: LeagueRead, role: LeagueRole | null = null): LeagueSu
     id: league.id,
     name: league.name,
     slug: league.slug,
-    plan: league.plan,
+    plan: league.plan ?? null,
     driverLimit: typeof league.driver_limit === 'number' ? league.driver_limit : null,
     role,
   }

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 
 interface FullScreenStateProps {
   icon?: ReactNode
@@ -14,7 +14,7 @@ export function FullScreenState({
   description,
   actionLabel,
   onAction,
-}: FullScreenStateProps): JSX.Element {
+}: FullScreenStateProps): ReactElement {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 text-center text-slate-100">
       <div className="flex max-w-md flex-col items-center gap-4">

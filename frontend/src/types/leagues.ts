@@ -4,11 +4,11 @@ export interface LeagueRead {
   id: string
   name: string
   slug: string
-  plan: string
-  driver_limit: number
-  owner_id: string | null
-  is_deleted: boolean
-  deleted_at: string | null
+  plan?: string | null
+  driver_limit?: number | null
+  owner_id?: string | null
+  is_deleted?: boolean
+  deleted_at?: string | null
 }
 
 export interface LeagueSummary {
@@ -23,4 +23,33 @@ export interface LeagueSummary {
 export interface CreateLeagueRequest {
   name: string
   slug: string
+}
+
+export interface LeagueEventSummary {
+  id: string
+  name: string
+  track: string
+  startTime: string
+  status: string
+}
+
+export interface LeagueResultPodiumEntry {
+  driverName: string
+  teamName?: string | null
+  position: number
+  points?: number | null
+}
+
+export interface LeagueResultSummary {
+  event: LeagueEventSummary
+  podium: LeagueResultPodiumEntry[]
+}
+
+export interface LeagueOverviewData {
+  league: LeagueSummary & {
+    description?: string | null
+  }
+  nextEvent?: LeagueEventSummary | null
+  recentResult?: LeagueResultSummary | null
+  discordLinked: boolean
 }

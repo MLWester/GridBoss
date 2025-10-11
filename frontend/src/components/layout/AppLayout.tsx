@@ -1,7 +1,8 @@
+import type { ReactElement } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
-export function AppLayout(): JSX.Element {
+export function AppLayout(): ReactElement {
   const { user, memberships, billingPlan, logout } = useAuth()
   const membershipCount = memberships.length
   const membershipLabel =
