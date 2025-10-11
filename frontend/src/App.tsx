@@ -5,13 +5,9 @@ import { LeagueLayout } from './components/layout/LeagueLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { LeagueOverviewPage } from './pages/LeagueOverviewPage'
-import {
-  LeagueEventsPlaceholder,
-  LeagueSettingsPlaceholder,
-  LeagueStandingsPlaceholder,
-  LeagueTeamsPlaceholder,
-} from './pages/LeaguePlaceholders'
+import { LeagueEventsPlaceholder, LeagueSettingsPlaceholder, LeagueStandingsPlaceholder } from './pages/LeaguePlaceholders'
 import { LeagueDriversPage } from './pages/LeagueDriversPage'
+import { LeagueTeamsPage } from './pages/LeagueTeamsPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 
 const router = createBrowserRouter([
@@ -51,7 +47,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'teams',
-            element: <LeagueTeamsPlaceholder />,
+            element: <LeagueTeamsPage />,
           },
           {
             path: 'events',

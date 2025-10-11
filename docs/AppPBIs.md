@@ -251,7 +251,7 @@ Acceptance Criteria:
 Dependencies: PBI-024, PBI-007
 Branch: pbi/025-drivers-ui
 
-## PBI-026 - Teams Management UI
+## PBI-026 - Teams Management UI (complete)
 Summary: Provide CRUD interface for teams and driver assignments.
 Scope: Frontend
 Acceptance Criteria:
