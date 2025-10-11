@@ -9,6 +9,7 @@ import { LeagueSettingsPlaceholder, LeagueStandingsPlaceholder } from './pages/L
 import { LeagueDriversPage } from './pages/LeagueDriversPage'
 import { LeagueTeamsPage } from './pages/LeagueTeamsPage'
 import { LeagueEventsPage } from './pages/LeagueEventsPage'
+import { LeagueResultsPage } from './pages/LeagueResultsPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 
 const router = createBrowserRouter([
@@ -53,6 +54,10 @@ const router = createBrowserRouter([
           {
             path: 'events',
             element: <LeagueEventsPage />,
+          },
+          {
+            path: 'results',
+            element: <LeagueResultsPage />,
           },
           {
             path: 'standings',

@@ -19,6 +19,7 @@ const tabs = [
   { label: 'Drivers', path: 'drivers' },
   { label: 'Teams', path: 'teams' },
   { label: 'Events', path: 'events' },
+  { label: 'Results', path: 'results' },
   { label: 'Standings', path: 'standings' },
   { label: 'Settings', path: 'settings' },
 ]
