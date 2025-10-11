@@ -6,12 +6,12 @@ import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { LeagueOverviewPage } from './pages/LeagueOverviewPage'
 import {
-  LeagueDriversPlaceholder,
   LeagueEventsPlaceholder,
   LeagueSettingsPlaceholder,
   LeagueStandingsPlaceholder,
   LeagueTeamsPlaceholder,
 } from './pages/LeaguePlaceholders'
+import { LeagueDriversPage } from './pages/LeagueDriversPage'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 
 const router = createBrowserRouter([
@@ -47,7 +47,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'drivers',
-            element: <LeagueDriversPlaceholder />,
+            element: <LeagueDriversPage />,
           },
           {
             path: 'teams',

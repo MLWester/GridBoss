@@ -241,7 +241,7 @@ Acceptance Criteria:
 Dependencies: PBI-022, PBI-009, PBI-011
 Branch: pbi/024-league-overview
 
-## PBI-025 - Drivers Management UI
+## PBI-025 - Drivers Management UI (complete)
 Summary: Build drivers tab with roster table and bulk import flow.
 Scope: Frontend
 Acceptance Criteria:
