@@ -271,7 +271,7 @@ Acceptance Criteria:
 Dependencies: PBI-024, PBI-009
 Branch: pbi/027-events-ui
 
-## PBI-028 - Event Results UI
+## PBI-028 - Event Results UI (complete)
 Summary: Allow stewards to enter race results with drag ordering and modifiers.
 Scope: Frontend
 Acceptance Criteria:
