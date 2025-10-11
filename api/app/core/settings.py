@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import AnyHttpUrl, Field
@@ -8,8 +9,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    _root_env = (Path(__file__).resolve().parents[3] / '.env').resolve()
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
+        env_file=(str(_root_env), '.env'),
+        env_file_encoding='utf-8',
+        case_sensitive=False,
+        extra='ignore',
     )
 
     app_env: Literal["development", "production", "test"] = Field(

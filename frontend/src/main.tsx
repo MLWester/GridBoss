@@ -12,8 +12,9 @@ if (!container) {
 }
 
 const queryClient = new QueryClient()
+const root = createRoot(container)
 
-createRoot(container).render(
+root.render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

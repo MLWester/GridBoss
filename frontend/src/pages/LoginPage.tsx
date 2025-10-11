@@ -3,6 +3,26 @@ import { useLocation, useNavigate, type Location } from 'react-router-dom'
 import { API_URL } from '../lib/env'
 import { useAuth } from '../hooks/useAuth'
 
+type RedirectState = {
+  from?: Pick<Location, 'pathname'>
+}
+
+function resolveRedirect(state: unknown): string {
+  if (state && typeof state === 'object') {
+    const record = state as Record<string, unknown>
+    const from = record.from
+    if (
+      from &&
+      typeof from === 'object' &&
+      'pathname' in from &&
+      typeof (from as Record<string, unknown>).pathname === 'string'
+    ) {
+      return (from as Record<'pathname', string>).pathname
+    }
+  }
+  return '/'
+}
+
 export function LoginPage(): JSX.Element {
   const { isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
@@ -10,8 +30,8 @@ export function LoginPage(): JSX.Element {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      const state = (location.state as { from?: Location } | null) ?? null
-      const redirect = state?.from?.pathname ?? '/'
+      const redirectState = location.state as RedirectState | null
+      const redirect = resolveRedirect(redirectState)
       void navigate(redirect, { replace: true })
     }
   }, [isAuthenticated, isLoading, location, navigate])
@@ -49,7 +69,7 @@ export function LoginPage(): JSX.Element {
           Continue with Discord
         </button>
         <p className="text-xs text-slate-500">
-          You will be redirected to Discord to authorise the GridBoss app. Once complete you&apos;ll return here with your session
+          You will be redirected to Discord to authorise the GridBoss app. Once complete you will return here with your session
           ready to go.
         </p>
       </div>

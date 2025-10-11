@@ -57,6 +57,9 @@ Each package will carry its own README or docs as functionality is implemented. 
    ```
 6. Follow PBIs in `docs/AppPBIs.md`, starting with `pbi/002-env-and-docker` for environment parity.
 
+### Frontend auth bypass during development
+- The shell can be loaded without Discord OAuth while backend wiring is pending. Set `VITE_BYPASS_AUTH=true` in `frontend/.env.local` to inject a mock profile; remove the flag once the real OAuth flow (see PBI-038) is reinstated.
+
 ## Docker Development Stack
 The Docker Compose setup lives in `infra/docker-compose.yml` and mirrors the production topology.
 

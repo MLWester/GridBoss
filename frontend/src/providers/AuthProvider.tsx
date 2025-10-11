@@ -1,14 +1,36 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { MeResponse } from '../types/auth'
 import { fetchCurrentUser, logoutRequest, UnauthorizedError } from '../api/auth'
 import { captureTokenFromUrl, clearAccessToken, readAccessToken, storeAccessToken } from '../lib/token-storage'
 import type { AuthContextValue } from './AuthContext'
 import { AuthContext } from './AuthContext'
+
+const MOCK_PROFILE: MeResponse = {
+  user: {
+    id: 'demo-user',
+    discord_id: null,
+    discord_username: 'Demo Driver',
+    avatar_url: null,
+    email: 'demo@gridboss.app',
+  },
+  memberships: [
+    {
+      league_id: 'demo-league',
+      league_slug: 'demo-gp',
+      league_name: 'Demo GP',
+      role: 'OWNER',
+    },
+  ],
+  billingPlan: { plan: 'PRO', current_period_end: null },
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }): JSX.Element {
   const [profile, setProfile] = useState<AuthContextValue['profile']>(null)
   const [accessToken, setAccessTokenState] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+
+  const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true'
 
   const assignAccessToken = useCallback((token: string | null) => {
     setAccessTokenState(token)
@@ -45,6 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }): JSX.E
   const initialize = useCallback(async () => {
     setIsLoading(true)
     setError(null)
+
+    if (bypassAuth) {
+      assignAccessToken(null)
+      setProfile(MOCK_PROFILE)
+      setIsLoading(false)
+      return
+    }
+
     const tokenFromUrl = captureTokenFromUrl()
     const token = tokenFromUrl ?? readAccessToken()
     assignAccessToken(token ?? null)
@@ -56,13 +86,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }): JSX.E
     }
 
     await loadProfile(token)
-  }, [assignAccessToken, loadProfile])
+  }, [assignAccessToken, loadProfile, bypassAuth])
 
   useEffect(() => {
     void initialize()
   }, [initialize])
 
   const refreshProfile = useCallback(async () => {
+    if (bypassAuth) {
+      setProfile(MOCK_PROFILE)
+      assignAccessToken(null)
+      return
+    }
+
     const token = accessToken ?? readAccessToken()
     if (!token) {
       setProfile(null)
@@ -71,9 +107,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }): JSX.E
     }
 
     await loadProfile(token)
-  }, [accessToken, assignAccessToken, loadProfile])
+  }, [accessToken, assignAccessToken, loadProfile, bypassAuth])
 
   const logout = useCallback(async () => {
+    if (bypassAuth) {
+      setProfile(MOCK_PROFILE)
+      assignAccessToken(null)
+      return
+    }
+
     try {
       await logoutRequest()
     } catch (err) {
@@ -82,18 +124,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }): JSX.E
       assignAccessToken(null)
       setProfile(null)
     }
-  }, [assignAccessToken])
+  }, [assignAccessToken, bypassAuth])
 
   const value = useMemo<AuthContextValue>(() => ({
     profile,
     isLoading,
     error,
-    isAuthenticated: Boolean(profile),
+    isAuthenticated: Boolean(profile) || bypassAuth,
     accessToken,
     refreshProfile,
     logout,
     setAccessToken: assignAccessToken,
-  }), [profile, isLoading, error, accessToken, refreshProfile, logout, assignAccessToken])
+  }), [profile, isLoading, error, accessToken, refreshProfile, logout, assignAccessToken, bypassAuth])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

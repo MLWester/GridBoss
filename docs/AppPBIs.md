@@ -200,7 +200,7 @@ Acceptance Criteria:
 Dependencies: PBI-011, PBI-012, PBI-017
 Branch: pbi/020-backend-tests
 
-## PBI-021 - Seed and Demo Data Script
+## PBI-021 - Seed and Demo Data Script (complete)
 Summary: Provide idempotent script to populate demo league data.
 Scope: Backend
 Acceptance Criteria:
@@ -211,7 +211,7 @@ Dependencies: PBI-011, PBI-012
 Branch: pbi/021-seed-data
 
 ## FRONTEND --------------------------------------------------------------------
-## PBI-022 - Frontend Shell and Auth Flow
+## PBI-022 - Frontend Shell and Auth Flow (complete)
 Summary: Build React shell with routing, state, and authentication handling.
 Scope: Frontend
 Acceptance Criteria:
@@ -372,3 +372,13 @@ Acceptance Criteria:
 - AppPBIs.md updated when PBIs close and docs/CURSOR_PROMPTS.md refreshed with relevant prompts.
 Dependencies: PBI-001, PBI-020
 Branch: pbi/037-documentation
+
+## PBI-038 - Discord Auth Reintegration
+Summary: Restore the full Discord OAuth flow after the temporary development bypass.
+Scope: Frontend, Backend
+Acceptance Criteria:
+- Remove the VITE_BYPASS_AUTH fallback and require live Discord authentication for protected routes.
+- Update login/refresh/logout flows and automated tests to cover happy-path and error states.
+- Document Discord credential setup and local testing steps now that bypass is gone.
+Dependencies: PBI-022, PBI-031
+Branch: pbi/038-discord-auth
