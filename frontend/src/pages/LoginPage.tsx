@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
+import type { ReactElement } from 'react'
 import { useLocation, useNavigate, type Location } from 'react-router-dom'
 import { API_URL } from '../lib/env'
 import { useAuth } from '../hooks/useAuth'
 
-export function LoginPage(): JSX.Element {
+export function LoginPage(): ReactElement {
   const { isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()

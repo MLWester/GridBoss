@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { ReactElement } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import type { MutationStatus } from '@tanstack/react-query'
 import { createLeague } from '../api/leagues'
 import { ApiError } from '../api/auth'
@@ -18,19 +19,19 @@ function slugify(source: string): string {
     .slice(0, 50)
 }
 
-const PlusIcon = (): JSX.Element => (
+const PlusIcon = (): ReactElement => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />
   </svg>
 )
 
-const RefreshIcon = (): JSX.Element => (
+const RefreshIcon = (): ReactElement => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0 0 9 3 9 9 0 0 0 6.36-15.36L20 4M4 20l1.64-1.64" />
   </svg>
 )
 
-function SkeletonCard(): JSX.Element {
+function SkeletonCard(): ReactElement {
   return (
     <div className="animate-pulse rounded-2xl border border-slate-800/70 bg-slate-900/40 p-4">
       <div className="h-5 w-32 rounded bg-slate-800" />
@@ -43,7 +44,7 @@ function SkeletonCard(): JSX.Element {
   )
 }
 
-function RoleBadge({ role }: { role: LeagueRole | null }): JSX.Element {
+function RoleBadge({ role }: { role: LeagueRole | null }): ReactElement {
   if (!role) {
     return (
       <span className="rounded-full border border-slate-700/70 px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -212,7 +213,7 @@ function CreateLeagueDialog({
   )
 }
 
-export function DashboardPage(): JSX.Element {
+export function DashboardPage(): ReactElement {
   const { leagues, isLoading, error, refetch, addLocalLeague } = useLeagues()
   const { refreshProfile, isBypassAuth, accessToken, billingPlan } = useAuth()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -249,6 +250,7 @@ export function DashboardPage(): JSX.Element {
       } else {
         await refetch()
       }
+      setIsDialogOpen(false)
     },
   })
 
@@ -304,7 +306,11 @@ export function DashboardPage(): JSX.Element {
     return (
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {leagues.map((league) => (
-          <div key={league.id} className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-5 shadow shadow-slate-950/40">
+          <Link
+            key={league.id}
+            to={`/leagues/${league.slug}`}
+            className="block rounded-2xl border border-slate-800/70 bg-slate-900/60 p-5 shadow shadow-slate-950/40 transition hover:border-sky-500/60 hover:text-sky-100"
+          >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-lg font-semibold text-slate-100">{league.name}</p>
@@ -322,7 +328,7 @@ export function DashboardPage(): JSX.Element {
                 <dd className="text-slate-200">{league.driverLimit ?? 'n/a'}</dd>
               </div>
             </dl>
-          </div>
+          </Link>
         ))}
       </div>
     )

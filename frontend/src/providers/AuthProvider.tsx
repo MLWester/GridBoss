@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { ReactElement } from 'react'
 import { fetchCurrentUser, logoutRequest, UnauthorizedError } from '../api/auth'
 import { captureTokenFromUrl, clearAccessToken, readAccessToken, storeAccessToken } from '../lib/token-storage'
 import type { MeResponse } from '../types/auth'
@@ -32,7 +33,7 @@ const createMockProfile = (): MeResponse => ({
     : null,
 })
 
-export function AuthProvider({ children }: { children: React.ReactNode }): JSX.Element {
+export function AuthProvider({ children }: { children: React.ReactNode }): ReactElement {
   const [profile, setProfile] = useState<AuthContextValue['profile']>(null)
   const [accessToken, setAccessTokenState] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)

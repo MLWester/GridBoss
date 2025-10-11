@@ -231,7 +231,7 @@ Acceptance Criteria:
 Dependencies: PBI-022, PBI-006
 Branch: pbi/023-dashboard
 
-## PBI-024 - League Overview Page
+## PBI-024 - League Overview Page (complete)
 Summary: Deliver league home overview with tabs and key widgets.
 Scope: Frontend
 Acceptance Criteria:

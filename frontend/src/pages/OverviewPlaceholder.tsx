@@ -1,4 +1,6 @@
-export function OverviewPlaceholder(): JSX.Element {
+import type { ReactElement } from 'react'
+
+export function OverviewPlaceholder(): ReactElement {
   return (
     <section className="grid gap-6 rounded-3xl border border-slate-800 bg-slate-900/40 p-6 shadow-lg shadow-slate-950/40">
       <h2 className="text-xl font-semibold tracking-tight">GridBoss roadmap in motion</h2>
