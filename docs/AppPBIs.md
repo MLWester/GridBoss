@@ -311,7 +311,7 @@ Acceptance Criteria:
 Dependencies: PBI-030, PBI-013
 Branch: pbi/031-discord-ui
 
-## PBI-032 - Billing UI
+## PBI-032 - Billing UI (complete)
 Summary: Implement billing page and upgrade actions.
 Scope: Frontend
 Acceptance Criteria:

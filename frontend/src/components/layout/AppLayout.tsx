@@ -1,6 +1,11 @@
 import type { ReactElement } from 'react'
-import { Outlet } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+
+const rootTabs = [
+  { label: 'Dashboard', path: '.' },
+  { label: 'Billing', path: 'billing' },
+]
 
 export function AppLayout(): ReactElement {
   const { user, memberships, billingPlan, logout } = useAuth()
@@ -50,6 +55,25 @@ export function AppLayout(): ReactElement {
               : 'Connect a Discord account, create a league, and keep an eye out for new modules as the build progresses.'}
           </p>
         </section>
+        <nav className="flex flex-wrap gap-2 text-sm">
+          {rootTabs.map((tab) => (
+            <NavLink
+              key={tab.label}
+              to={tab.path}
+              end={tab.path === '.'}
+              className={({ isActive }) =>
+                [
+                  'inline-flex items-center rounded-full border border-slate-800/70 bg-slate-900/50 px-4 py-2 transition hover:border-sky-500/60 hover:text-sky-100',
+                  isActive ? 'border-sky-500/60 bg-sky-500/10 text-sky-100' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')
+              }
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </nav>
         <Outlet />
       </main>
     </div>

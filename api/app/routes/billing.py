@@ -3,17 +3,23 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import api_error
 from app.core.settings import Settings, get_settings
-from app.db.models import BillingAccount, League, LeagueRole, Membership, User
+from app.db.models import BillingAccount, Driver, League, LeagueRole, Membership, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
-from app.schemas.billing import CheckoutRequest, CheckoutResponse, PortalResponse
+from app.schemas.billing import (
+    BillingLeagueUsage,
+    BillingOverviewResponse,
+    CheckoutRequest,
+    CheckoutResponse,
+    PortalResponse,
+)
 from app.services.audit import record_audit_log
-from app.services.plan import PLAN_DRIVER_LIMITS
+from app.services.plan import PLAN_DRIVER_LIMITS, normalize_plan
 from app.services.stripe import StripeClient, StripeConfigurationError
 
 router = APIRouter(tags=["billing"])
@@ -65,6 +71,53 @@ def _plan_price(plan: str, settings: Settings) -> str:
 
 def _app_url(settings: Settings) -> str:
     return str(settings.app_url).rstrip("/")
+
+
+@router.get("/billing/overview", response_model=BillingOverviewResponse)
+async def read_billing_overview(
+    session: SessionDep,
+    current_user: CurrentUserDep,
+) -> BillingOverviewResponse:
+    billing_account = (
+        session.execute(
+            select(BillingAccount).where(BillingAccount.owner_user_id == current_user.id)
+        )
+        .scalars()
+        .first()
+    )
+
+    leagues_query = (
+        select(League, func.count(Driver.id))
+        .outerjoin(Driver, Driver.league_id == League.id)
+        .where(League.owner_id == current_user.id, League.is_deleted.is_(False))
+        .group_by(League.id)
+    )
+    league_rows = session.execute(leagues_query).all()
+
+    leagues = [
+        BillingLeagueUsage(
+            id=league.id,
+            name=league.name,
+            slug=league.slug,
+            plan=normalize_plan(league.plan),
+            driver_limit=league.driver_limit,
+            driver_count=int(count or 0),
+        )
+        for league, count in league_rows
+    ]
+
+    plan = normalize_plan(billing_account.plan if billing_account else None)
+
+    return BillingOverviewResponse(
+        plan=plan,
+        current_period_end=billing_account.current_period_end if billing_account else None,
+        grace_plan=billing_account.plan_grace_plan if billing_account else None,
+        grace_expires_at=billing_account.plan_grace_expires_at if billing_account else None,
+        can_manage_subscription=bool(
+            billing_account and billing_account.stripe_customer_id
+        ),
+        leagues=leagues,
+    )
 
 
 @router.post("/billing/checkout", response_model=CheckoutResponse)

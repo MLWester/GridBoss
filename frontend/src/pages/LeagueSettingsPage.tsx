@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import type { ReactElement } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
