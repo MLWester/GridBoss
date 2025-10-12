@@ -8,6 +8,8 @@ services:
       - ../.env
     environment:
       VITE_API_URL: ${API_URL}
+      VITE_DEV_HOST: 0.0.0.0
+      VITE_DEV_PORT: 5173
     ports:
       - "5173:5173"
     volumes:

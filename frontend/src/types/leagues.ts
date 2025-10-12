@@ -20,6 +20,11 @@ export interface LeagueSummary {
   role: LeagueRole | null
 }
 
+export interface UpdateLeagueGeneralRequest {
+  name: string
+  slug: string
+}
+
 export interface CreateLeagueRequest {
   name: string
   slug: string
@@ -52,4 +57,9 @@ export interface LeagueOverviewData {
   nextEvent?: LeagueEventSummary | null
   recentResult?: LeagueResultSummary | null
   discordLinked: boolean
+}
+
+export interface PointsSchemeEntry {
+  position: number
+  points: number
 }

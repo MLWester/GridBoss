@@ -291,7 +291,7 @@ Acceptance Criteria:
 Dependencies: PBI-024, PBI-012
 Branch: pbi/029-standings-ui
 
-## PBI-030 - Settings General and Points UI
+## PBI-030 - Settings General and Points UI (complete)
 Summary: Support league settings updates and points table editing.
 Scope: Frontend
 Acceptance Criteria:
