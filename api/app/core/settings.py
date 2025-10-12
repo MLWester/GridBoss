@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     stripe_price_elite: str = Field(default="", alias="STRIPE_PRICE_ELITE")
     stripe_webhook_secret: str = Field(default="", alias="STRIPE_WEBHOOK_SECRET")
 
+    admin_mode: bool = Field(default=False, alias="ADMIN_MODE")
+
     discord_client_id: str = Field(alias="DISCORD_CLIENT_ID")
     discord_client_secret: str = Field(alias="DISCORD_CLIENT_SECRET")
     discord_redirect_uri: AnyHttpUrl = Field(alias="DISCORD_REDIRECT_URI")

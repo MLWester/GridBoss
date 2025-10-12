@@ -1,6 +1,7 @@
 """API route modules."""
 
 from . import (
+    admin,
     audit,
     auth,
     billing,
@@ -19,6 +20,7 @@ from . import (
 )
 
 __all__ = [
+    "admin",
     "audit",
     "auth",
     "billing",

@@ -6,6 +6,7 @@ export interface UserSummary {
   discord_username: string | null
   avatar_url: string | null
   email: string | null
+  is_founder: boolean
 }
 
 export interface MembershipSummary {

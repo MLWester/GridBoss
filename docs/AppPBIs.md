@@ -321,7 +321,7 @@ Acceptance Criteria:
 Dependencies: PBI-023, PBI-015, PBI-017
 Branch: pbi/032-billing-ui
 
-## PBI-033 - Admin Console MVP
+## PBI-033 - Admin Console MVP (complete)
 Summary: Build founder-only console to monitor users, leagues, and subscriptions.
 Scope: Frontend, Backend
 Acceptance Criteria:
