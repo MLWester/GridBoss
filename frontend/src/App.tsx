@@ -4,6 +4,7 @@ import { AppLayout } from './components/layout/AppLayout'
 import { LeagueLayout } from './components/layout/LeagueLayout'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
+import { BillingPage } from './pages/BillingPage'
 import { LeagueOverviewPage } from './pages/LeagueOverviewPage'
 import { LeagueDriversPage } from './pages/LeagueDriversPage'
 import { LeagueTeamsPage } from './pages/LeagueTeamsPage'
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <DashboardPage />,
+      },
+      {
+        path: 'billing',
+        element: <BillingPage />,
       },
     ],
   },
