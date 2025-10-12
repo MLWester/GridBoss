@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from uuid import uuid4
-from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -227,7 +227,9 @@ class TestDriverRoutes:
         assert response.status_code == HTTPStatus.PAYMENT_REQUIRED
         assert response.json()["error"]["code"] == "PLAN_LIMIT"
 
-    def test_bulk_create_drivers_allows_during_grace(self, client: TestClient, database_session: Session) -> None:
+    def test_bulk_create_drivers_allows_during_grace(
+        self, client: TestClient, database_session: Session
+    ) -> None:
         owner = stub_user(database_session, "owner")
         league = create_league_with_owner(database_session, owner, driver_limit=1)
         league.plan = "FREE"
@@ -237,7 +239,7 @@ class TestDriverRoutes:
             owner_user_id=owner.id,
             plan="FREE",
             plan_grace_plan="PRO",
-            plan_grace_expires_at=datetime.now(timezone.utc) + timedelta(days=2),
+            plan_grace_expires_at=datetime.now(UTC) + timedelta(days=2),
         )
         database_session.add(billing)
         database_session.commit()
@@ -256,7 +258,9 @@ class TestDriverRoutes:
         data = response.json()
         assert len(data) == 2
 
-    def test_bulk_create_drivers_denies_after_grace(self, client: TestClient, database_session: Session) -> None:
+    def test_bulk_create_drivers_denies_after_grace(
+        self, client: TestClient, database_session: Session
+    ) -> None:
         owner = stub_user(database_session, "owner")
         league = create_league_with_owner(database_session, owner, driver_limit=1)
         league.plan = "FREE"
@@ -266,7 +270,7 @@ class TestDriverRoutes:
             owner_user_id=owner.id,
             plan="FREE",
             plan_grace_plan="PRO",
-            plan_grace_expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+            plan_grace_expires_at=datetime.now(UTC) - timedelta(days=1),
         )
         database_session.add(billing)
         database_session.commit()

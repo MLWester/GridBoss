@@ -1,6 +1,10 @@
 import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchBillingOverview, openBillingPortal, startBillingCheckout } from '../api/billing'
+import {
+  fetchBillingOverview,
+  openBillingPortal,
+  startBillingCheckout,
+} from '../api/billing'
 import { useAuth } from './useAuth'
 import type { BillingOverview, BillingPlanTier } from '../types/billing'
 
@@ -54,7 +58,7 @@ export function useBilling(): UseBillingResult {
     staleTime: 60_000,
   })
 
-  const overview = shouldFetch ? query.data ?? null : MOCK_BILLING_OVERVIEW
+  const overview = shouldFetch ? (query.data ?? null) : MOCK_BILLING_OVERVIEW
 
   const refresh = useCallback(async () => {
     if (!shouldFetch) {
@@ -75,7 +79,10 @@ export function useBilling(): UseBillingResult {
       }
 
       const url = await startBillingCheckout(accessToken, plan)
-      await queryClient.invalidateQueries({ queryKey: ['billing-overview'], exact: true })
+      await queryClient.invalidateQueries({
+        queryKey: ['billing-overview'],
+        exact: true,
+      })
       return url
     },
     [shouldFetch, accessToken, queryClient],

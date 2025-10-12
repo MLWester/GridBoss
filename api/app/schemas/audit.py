@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, List
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -24,7 +24,7 @@ class AuditLogRead(BaseModel):
         from_attributes = True
 
     @classmethod
-    def from_orm_with_redaction(cls, log: Any) -> "AuditLogRead":  # type: ignore[override]
+    def from_orm_with_redaction(cls, log: Any) -> AuditLogRead:  # type: ignore[override]
         data = {
             "id": log.id,
             "timestamp": log.timestamp,
@@ -40,7 +40,7 @@ class AuditLogRead(BaseModel):
 
 
 class AuditLogPage(BaseModel):
-    items: List[AuditLogRead]
+    items: list[AuditLogRead]
     page: int
     page_size: int
     total: int

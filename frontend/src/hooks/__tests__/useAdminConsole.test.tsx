@@ -50,10 +50,12 @@ describe('useAdminConsole', () => {
   })
 
   it('returns mock data in bypass mode', () => {
-    const queryClient = new QueryClient();
+    const queryClient = new QueryClient()
     const { result } = renderHook(() => useAdminConsole(), {
       wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       ),
     })
 
@@ -63,10 +65,12 @@ describe('useAdminConsole', () => {
   })
 
   it('updates mock data when toggling discord', async () => {
-    const queryClient = new QueryClient();
+    const queryClient = new QueryClient()
     const { result } = renderHook(() => useAdminConsole(), {
       wrapper: ({ children }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       ),
     })
 
@@ -77,8 +81,9 @@ describe('useAdminConsole', () => {
       await result.current.toggleDiscord(league.id, false)
     })
 
-    const updated = result.current.data.leagues.find((item) => item.id === league.id)
+    const updated = result.current.data.leagues.find(
+      (item) => item.id === league.id,
+    )
     expect(updated?.discordActive).toBe(false)
   })
 })
-

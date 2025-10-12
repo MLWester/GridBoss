@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createEvent, deleteEvent, fetchLeagueEvents, updateEvent } from '../api/events'
+import {
+  createEvent,
+  deleteEvent,
+  fetchLeagueEvents,
+  updateEvent,
+} from '../api/events'
 import { useAuth } from './useAuth'
 import type { EventSummary, EventStatus } from '../types/events'
 
@@ -11,7 +16,10 @@ interface UseLeagueEventsResult {
   error: Error | null
   refetch: () => Promise<void>
   createEvent: (payload: CreateEventPayload) => Promise<EventSummary>
-  updateEvent: (eventId: string, payload: UpdateEventPayload) => Promise<EventSummary>
+  updateEvent: (
+    eventId: string,
+    payload: UpdateEventPayload,
+  ) => Promise<EventSummary>
   deleteEvent: (eventId: string) => Promise<void>
   isBypass: boolean
 }
@@ -76,7 +84,9 @@ export function useLeagueEvents(slug: string): UseLeagueEventsResult {
   const shouldFetch = Boolean(accessToken)
   const queryClient = useQueryClient()
 
-  const [localEvents, setLocalEvents] = useState<EventSummary[]>(createMockEvents(slug || 'demo'))
+  const [localEvents, setLocalEvents] = useState<EventSummary[]>(
+    createMockEvents(slug || 'demo'),
+  )
 
   useEffect(() => {
     setLocalEvents(createMockEvents(slug || 'demo'))
@@ -89,13 +99,16 @@ export function useLeagueEvents(slug: string): UseLeagueEventsResult {
     staleTime: 30_000,
   })
 
-  const events = shouldFetch ? eventsQuery.data ?? [] : localEvents
+  const events = shouldFetch ? (eventsQuery.data ?? []) : localEvents
 
   const refetch = useCallback(async () => {
     if (!shouldFetch) {
       return
     }
-    await queryClient.refetchQueries({ queryKey: ['league-events', slug], exact: true })
+    await queryClient.refetchQueries({
+      queryKey: ['league-events', slug],
+      exact: true,
+    })
   }, [queryClient, shouldFetch, slug])
 
   const createEventEntry = useCallback(
@@ -119,7 +132,10 @@ export function useLeagueEvents(slug: string): UseLeagueEventsResult {
           laps: payloadWithStatus.laps,
           distance_km: payloadWithStatus.distanceKm,
         })
-        queryClient.setQueryData<EventSummary[]>(['league-events', slug], (current = []) => [...current, created])
+        queryClient.setQueryData<EventSummary[]>(
+          ['league-events', slug],
+          (current = []) => [...current, created],
+        )
         return created
       }
 
@@ -154,8 +170,10 @@ export function useLeagueEvents(slug: string): UseLeagueEventsResult {
           laps: payload.laps,
           distance_km: payload.distanceKm,
         })
-        queryClient.setQueryData<EventSummary[]>(['league-events', slug], (current = []) =>
-          current.map((event) => (event.id === eventId ? updated : event)),
+        queryClient.setQueryData<EventSummary[]>(
+          ['league-events', slug],
+          (current = []) =>
+            current.map((event) => (event.id === eventId ? updated : event)),
         )
         return updated
       }
@@ -173,7 +191,9 @@ export function useLeagueEvents(slug: string): UseLeagueEventsResult {
         laps: payload.laps ?? existing.laps,
         distanceKm: payload.distanceKm ?? existing.distanceKm,
       }
-      setLocalEvents((current) => current.map((event) => (event.id === eventId ? updated : event)))
+      setLocalEvents((current) =>
+        current.map((event) => (event.id === eventId ? updated : event)),
+      )
       return updated
     },
     [slug, shouldFetch, accessToken, queryClient, localEvents],
@@ -188,13 +208,16 @@ export function useLeagueEvents(slug: string): UseLeagueEventsResult {
       if (shouldFetch) {
         const token = accessToken as string
         await deleteEvent(token, eventId)
-        queryClient.setQueryData<EventSummary[]>(['league-events', slug], (current = []) =>
-          current.filter((event) => event.id !== eventId),
+        queryClient.setQueryData<EventSummary[]>(
+          ['league-events', slug],
+          (current = []) => current.filter((event) => event.id !== eventId),
         )
         return
       }
 
-      setLocalEvents((current) => current.filter((event) => event.id !== eventId))
+      setLocalEvents((current) =>
+        current.filter((event) => event.id !== eventId),
+      )
     },
     [slug, shouldFetch, accessToken, queryClient],
   )
@@ -203,7 +226,7 @@ export function useLeagueEvents(slug: string): UseLeagueEventsResult {
     events,
     isLoading: shouldFetch ? eventsQuery.isLoading : false,
     isFetching: shouldFetch ? eventsQuery.isFetching : false,
-    error: shouldFetch ? eventsQuery.error ?? null : null,
+    error: shouldFetch ? (eventsQuery.error ?? null) : null,
     refetch,
     createEvent: createEventEntry,
     updateEvent: updateEventEntry,

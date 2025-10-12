@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchDiscordIntegration, startDiscordLink, unlinkDiscord, testDiscordIntegration } from '../api/discord'
+import {
+  fetchDiscordIntegration,
+  startDiscordLink,
+  unlinkDiscord,
+  testDiscordIntegration,
+} from '../api/discord'
 import { useAuth } from './useAuth'
 import type { DiscordIntegrationStatus } from '../types/discord'
 
@@ -25,7 +30,8 @@ export function useDiscordIntegration(slug: string | null) {
   const shouldFetch = Boolean(accessToken) && Boolean(slug)
   const queryClient = useQueryClient()
 
-  const [localStatus, setLocalStatus] = useState<DiscordIntegrationStatus>(MOCK_DISCONNECTED)
+  const [localStatus, setLocalStatus] =
+    useState<DiscordIntegrationStatus>(MOCK_DISCONNECTED)
 
   useEffect(() => {
     setLocalStatus(MOCK_DISCONNECTED)
@@ -38,7 +44,9 @@ export function useDiscordIntegration(slug: string | null) {
     staleTime: 60_000,
   })
 
-  const status = shouldFetch ? statusQuery.data ?? MOCK_DISCONNECTED : localStatus
+  const status = shouldFetch
+    ? (statusQuery.data ?? MOCK_DISCONNECTED)
+    : localStatus
 
   const refresh = useCallback(async () => {
     if (!slug) {
@@ -48,7 +56,10 @@ export function useDiscordIntegration(slug: string | null) {
       setLocalStatus((current) => current)
       return
     }
-    await queryClient.invalidateQueries({ queryKey: ['discord-integration', slug], exact: true })
+    await queryClient.invalidateQueries({
+      queryKey: ['discord-integration', slug],
+      exact: true,
+    })
   }, [slug, shouldFetch, queryClient])
 
   const beginLink = useCallback(async () => {
@@ -107,7 +118,7 @@ export function useDiscordIntegration(slug: string | null) {
   return {
     status,
     isLoading: shouldFetch ? statusQuery.isLoading : false,
-    error: shouldFetch ? statusQuery.error ?? null : null,
+    error: shouldFetch ? (statusQuery.error ?? null) : null,
     refresh,
     beginLink,
     disconnect,

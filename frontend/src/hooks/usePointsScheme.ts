@@ -26,7 +26,9 @@ export function usePointsScheme(slug: string | null) {
   const shouldFetch = Boolean(accessToken) && Boolean(slug)
   const queryClient = useQueryClient()
 
-  const [localScheme, setLocalScheme] = useState<PointsSchemeEntry[]>(clonePoints(DEFAULT_POINTS_SCHEME))
+  const [localScheme, setLocalScheme] = useState<PointsSchemeEntry[]>(
+    clonePoints(DEFAULT_POINTS_SCHEME),
+  )
 
   useEffect(() => {
     setLocalScheme(clonePoints(DEFAULT_POINTS_SCHEME))
@@ -59,7 +61,10 @@ export function usePointsScheme(slug: string | null) {
       if (shouldFetch) {
         const token = accessToken as string
         const saved = await updatePointsScheme(token, slug, next)
-        queryClient.setQueryData<PointsSchemeEntry[]>(['points-scheme', slug], saved)
+        queryClient.setQueryData<PointsSchemeEntry[]>(
+          ['points-scheme', slug],
+          saved,
+        )
         return clonePoints(saved)
       }
 
@@ -76,7 +81,10 @@ export function usePointsScheme(slug: string | null) {
     }
 
     if (shouldFetch) {
-      queryClient.setQueryData<PointsSchemeEntry[]>(['points-scheme', slug], clonePoints(DEFAULT_POINTS_SCHEME))
+      queryClient.setQueryData<PointsSchemeEntry[]>(
+        ['points-scheme', slug],
+        clonePoints(DEFAULT_POINTS_SCHEME),
+      )
     } else {
       setLocalScheme(clonePoints(DEFAULT_POINTS_SCHEME))
     }
@@ -87,7 +95,7 @@ export function usePointsScheme(slug: string | null) {
   return {
     entries,
     isLoading: shouldFetch ? schemeQuery.isLoading : false,
-    error: shouldFetch ? schemeQuery.error ?? null : null,
+    error: shouldFetch ? (schemeQuery.error ?? null) : null,
     save,
     resetToDefault,
     isBypass: isBypassAuth || !shouldFetch,

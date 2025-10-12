@@ -7,7 +7,9 @@ interface ProtectedRouteProps {
   children: ReactElement
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps): ReactElement {
+export function ProtectedRoute({
+  children,
+}: ProtectedRouteProps): ReactElement {
   const { isAuthenticated, isLoading, error, refreshProfile } = useAuth()
   const location = useLocation()
 

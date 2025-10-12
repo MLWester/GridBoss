@@ -3,22 +3,22 @@ from __future__ import annotations
 import json
 import logging
 from contextvars import ContextVar
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from app.core.settings import Settings
 
-_request_id: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
-_user_id: ContextVar[Optional[str]] = ContextVar("user_id", default=None)
-_league_id: ContextVar[Optional[str]] = ContextVar("league_id", default=None)
+_request_id: ContextVar[str | None] = ContextVar("request_id", default=None)
+_user_id: ContextVar[str | None] = ContextVar("user_id", default=None)
+_league_id: ContextVar[str | None] = ContextVar("league_id", default=None)
 
 
 class JsonLogFormatter(logging.Formatter):
     """Render log records as JSON with standard observability fields."""
 
-    def format(self, record: logging.LogRecord) -> str:  # noqa: D401 - behaviour documented by base class
+    def format(self, record: logging.LogRecord) -> str:
         base: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -79,19 +79,19 @@ def configure_logging(settings: Settings) -> None:
         logging.getLogger(name).setLevel(level)
 
 
-def bind_request_id(request_id: Optional[str]) -> None:
+def bind_request_id(request_id: str | None) -> None:
     _request_id.set(request_id)
 
 
-def bind_user_id(user_id: Optional[str]) -> None:
+def bind_user_id(user_id: str | None) -> None:
     _user_id.set(user_id)
 
 
-def bind_league_id(league_id: Optional[str]) -> None:
+def bind_league_id(league_id: str | None) -> None:
     _league_id.set(league_id)
 
 
-def get_request_id() -> Optional[str]:
+def get_request_id() -> str | None:
     return _request_id.get(None)
 
 

@@ -2,17 +2,26 @@
 
 import importlib
 from collections.abc import Generator
+from datetime import UTC, datetime
 from uuid import uuid4
-from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db import Base
-from app.db.models import AuditLog, DiscordIntegration, Driver, Event, EventStatus, League, Result, ResultStatus, Season
 import app.db.session as db_session
+from app.db import Base
+from app.db.models import (
+    AuditLog,
+    DiscordIntegration,
+    Driver,
+    Event,
+    EventStatus,
+    League,
+    Result,
+    Season,
+)
 
 # Configure shared in-memory database for worker job tests.
 engine = create_engine(
@@ -21,12 +30,18 @@ engine = create_engine(
     poolclass=StaticPool,
     future=True,
 )
-TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+TestingSessionLocal = sessionmaker(
+    bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
+)
 
 for table in Base.metadata.sorted_tables:
     for column in table.c:
         default = getattr(column, "server_default", None)
-        if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+        if (
+            default is not None
+            and hasattr(default, "arg")
+            and "gen_random_uuid" in str(default.arg)
+        ):
             column.server_default = None
 
 Base.metadata.create_all(bind=engine)
@@ -85,7 +100,7 @@ def create_event_with_results(session: Session, league: League) -> Event:
         season=season,
         name="Race 1",
         track="Monza",
-        start_time=datetime.now(timezone.utc),
+        start_time=datetime.now(UTC),
         status=EventStatus.COMPLETED.value,
     )
     driver = Driver(league_id=league.id, display_name="Driver A")
@@ -130,7 +145,9 @@ def test_send_test_message_posts(monkeypatch: pytest.MonkeyPatch) -> None:
     assert notifier.messages and notifier.messages[0][0] == "channel"
 
 
-def test_send_test_message_marks_inactive_on_permission_error(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_send_test_message_marks_inactive_on_permission_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     import worker.jobs.discord as discord_jobs_module
     from worker.services.discord import DiscordPermissionError
 
@@ -159,7 +176,9 @@ def test_send_test_message_marks_inactive_on_permission_error(monkeypatch: pytes
     ).scalar_one()
     assert refreshed.is_active is False
 
-    audit = check_session.execute(select(AuditLog).where(AuditLog.league_id == league.id)).scalar_one()
+    audit = check_session.execute(
+        select(AuditLog).where(AuditLog.league_id == league.id)
+    ).scalar_one()
     assert audit.action == "discord_deactivated"
     check_session.close()
 
@@ -216,16 +235,7 @@ def test_announce_results_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(DiscordRateLimitError):
         discord_jobs_module.announce_results.fn(str(league.id), str(event.id))
 
-    refreshed = session.execute(select(DiscordIntegration).where(DiscordIntegration.id == integration.id)).scalar_one()
+    refreshed = session.execute(
+        select(DiscordIntegration).where(DiscordIntegration.id == integration.id)
+    ).scalar_one()
     assert refreshed.is_active is True
-
-
-
-
-
-
-
-
-
-
-

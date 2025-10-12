@@ -31,7 +31,11 @@ TestingSessionLocal = sessionmaker(
 for table in Base.metadata.sorted_tables:
     for column in table.c:
         default = getattr(column, "server_default", None)
-        if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+        if (
+            default is not None
+            and hasattr(default, "arg")
+            and "gen_random_uuid" in str(default.arg)
+        ):
             column.server_default = None
 
 Base.metadata.create_all(bind=engine)
@@ -81,7 +85,7 @@ def health_env(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[Settings, obj
         should_fail = False
 
         @classmethod
-        def from_url(cls, *_args, **_kwargs) -> "StubRedis":
+        def from_url(cls, *_args, **_kwargs) -> StubRedis:
             return cls()
 
         def ping(self) -> None:

@@ -9,7 +9,10 @@ interface PointsSchemeResponse {
   }>
 }
 
-export async function fetchPointsScheme(token: string, slug: string): Promise<PointsSchemeEntry[]> {
+export async function fetchPointsScheme(
+  token: string,
+  slug: string,
+): Promise<PointsSchemeEntry[]> {
   const response = await apiFetch(`/leagues/${slug}/points-scheme`, {
     token,
   })

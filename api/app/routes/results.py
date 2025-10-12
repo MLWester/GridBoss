@@ -2,26 +2,23 @@
 
 import json
 import logging
-from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, status
-from app.core.errors import api_error
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.errors import api_error
 from app.core.settings import Settings, get_settings
 from app.db.models import (
     Driver,
     Event,
     EventStatus,
     LeagueRole,
-    PointsRule,
     PointsScheme,
     Result,
     ResultStatus,
-    Season,
     User,
 )
 from app.db.session import get_session
@@ -34,7 +31,8 @@ from app.services.rbac import require_membership, require_role_at_least
 from app.services.standings import StandingsCacheConfig, get_standings_cache
 
 try:
-    from worker.jobs import standings, discord as discord_jobs
+    from worker.jobs import discord as discord_jobs
+    from worker.jobs import standings
 except Exception:  # pragma: no cover - worker optional during testing
     standings = None  # type: ignore
     discord_jobs = None  # type: ignore
@@ -183,7 +181,9 @@ async def submit_results(
     session: SessionDep,
     current_user: CurrentUserDep,
     settings: SettingsDep,
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key", convert_underscores=False),
+    idempotency_key: str | None = Header(
+        default=None, alias="Idempotency-Key", convert_underscores=False
+    ),
 ) -> EventResultsRead:
     try:
         event = _load_event(session, event_id)
@@ -235,23 +235,27 @@ async def submit_results(
         raise
     points_map = _load_points_scheme(session, event)
 
-    existing_results = session.execute(
-        select(Result).where(Result.event_id == event.id).order_by(Result.finish_position)
-    ).scalars().all()
-
-    payload_hash = _serialize_payload([
-        {
-            "driver_id": str(item.driver_id),
-            "finish_position": item.finish_position,
-            "bonus_points": item.bonus_points,
-            "penalty_points": item.penalty_points,
-        }
-        for item in sorted(entries, key=lambda entry: entry.driver_id)
-    ])
-
-    idem_service = get_idempotency_service(
-        IdempotencyConfig(redis_url=settings.redis_url)
+    existing_results = (
+        session.execute(
+            select(Result).where(Result.event_id == event.id).order_by(Result.finish_position)
+        )
+        .scalars()
+        .all()
     )
+
+    payload_hash = _serialize_payload(
+        [
+            {
+                "driver_id": str(item.driver_id),
+                "finish_position": item.finish_position,
+                "bonus_points": item.bonus_points,
+                "penalty_points": item.penalty_points,
+            }
+            for item in sorted(entries, key=lambda entry: entry.driver_id)
+        ]
+    )
+
+    idem_service = get_idempotency_service(IdempotencyConfig(redis_url=settings.redis_url))
 
     idem_status: str | None = None
     if idempotency_key:
@@ -275,7 +279,9 @@ async def submit_results(
         for entry in sorted(entries, key=lambda item: item.finish_position):
             driver = drivers[entry.driver_id]
             base_points = points_map.get(entry.finish_position, 0)
-            total_points = _compute_total_points(base_points, entry.bonus_points, entry.penalty_points)
+            total_points = _compute_total_points(
+                base_points, entry.bonus_points, entry.penalty_points
+            )
             result = Result(
                 event_id=event.id,
                 driver_id=driver.id,
@@ -292,7 +298,10 @@ async def submit_results(
         event.status = EventStatus.COMPLETED.value
 
         after_state = {"results": _results_state(results), "status": event.status}
-        before_state = {"results": _results_state(existing_results), "status": previous_event_status}
+        before_state = {
+            "results": _results_state(existing_results),
+            "status": previous_event_status,
+        }
         if before_state != after_state:
             record_audit_log(
                 session,
@@ -330,9 +339,7 @@ async def submit_results(
 
 def _trigger_standings_jobs(event: Event) -> None:
     if standings is None:
-        logger.info(
-            "Results processed for event %s but worker jobs module unavailable.", event.id
-        )
+        logger.info("Results processed for event %s but worker jobs module unavailable.", event.id)
         return
 
     try:
@@ -378,7 +385,3 @@ async def read_results(
         .all()
     )
     return _build_response(event, results)
-
-
-
-

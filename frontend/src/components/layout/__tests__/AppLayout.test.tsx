@@ -5,7 +5,9 @@ import type { AuthContextValue } from '../../../providers/AuthContext'
 import { AuthContext } from '../../../providers/AuthContext'
 import { AppLayout } from '../AppLayout'
 
-const baseAuthValue = (overrides: Partial<AuthContextValue> = {}): AuthContextValue => ({
+const baseAuthValue = (
+  overrides: Partial<AuthContextValue> = {},
+): AuthContextValue => ({
   profile: null,
   isLoading: false,
   error: null,

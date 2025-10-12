@@ -1,22 +1,23 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
 from inspect import iscoroutinefunction
-from typing import Any, Callable
+from typing import Any
 from uuid import UUID
 
 from fastapi import status
 from sqlalchemy.orm import Session
 
 from app.core.errors import api_error
+from app.core.observability import bind_league_id
 from app.db.models import League
+from app.services.audit import record_audit_log
 from app.services.plan import (
     effective_plan,
     get_billing_account_for_owner,
     is_plan_sufficient,
 )
-from app.services.audit import record_audit_log
-from app.core.observability import bind_league_id
 
 
 def _resolve_league(session: Session, kwargs: dict[str, Any]) -> League:
@@ -80,7 +81,9 @@ def _ensure_plan_access(
         )
 
 
-def requires_plan(required_plan: str, *, message: str | None = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def requires_plan(
+    required_plan: str, *, message: str | None = None
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     normalized_required = required_plan.upper()
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:

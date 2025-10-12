@@ -52,8 +52,12 @@ const createState = (): AdminConsoleState => {
     isLoading: false,
     error: null,
     refresh: vi.fn<AdminConsoleState['refresh']>(() => Promise.resolve(data)),
-    toggleDiscord: vi.fn<AdminConsoleState['toggleDiscord']>(() => Promise.resolve()),
-    overridePlan: vi.fn<AdminConsoleState['overridePlan']>(() => Promise.resolve()),
+    toggleDiscord: vi.fn<AdminConsoleState['toggleDiscord']>(() =>
+      Promise.resolve(),
+    ),
+    overridePlan: vi.fn<AdminConsoleState['overridePlan']>(() =>
+      Promise.resolve(),
+    ),
     togglingLeagueId: null,
     planUpdatingLeagueId: null,
     isMutating: false,
@@ -116,5 +120,3 @@ describe('AdminConsolePage', () => {
     expect(screen.getByText(/Admin console disabled/)).toBeInTheDocument()
   })
 })
-
-

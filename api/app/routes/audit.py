@@ -3,11 +3,10 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.errors import api_error
 from app.db.models import AuditLog, LeagueRole, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user

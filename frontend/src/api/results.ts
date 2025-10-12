@@ -1,18 +1,27 @@
 import { apiFetch } from './client'
 import { ApiError } from './auth'
-import type { ResultEntryRead, ResultEntrySummary, SubmitResultEntry } from '../types/results'
+import type {
+  ResultEntryRead,
+  ResultEntrySummary,
+  SubmitResultEntry,
+} from '../types/results'
 
 function mapEntry(entry: ResultEntryRead): ResultEntrySummary {
   return {
     driverId: entry.driver_id,
     finishPosition: entry.finish_position,
     status: entry.status,
-    bonusPoints: typeof entry.bonus_points === 'number' ? entry.bonus_points : 0,
-    penaltyPoints: typeof entry.penalty_points === 'number' ? entry.penalty_points : 0,
+    bonusPoints:
+      typeof entry.bonus_points === 'number' ? entry.bonus_points : 0,
+    penaltyPoints:
+      typeof entry.penalty_points === 'number' ? entry.penalty_points : 0,
   }
 }
 
-export async function fetchEventResults(token: string, eventId: string): Promise<ResultEntrySummary[]> {
+export async function fetchEventResults(
+  token: string,
+  eventId: string,
+): Promise<ResultEntrySummary[]> {
   const response = await apiFetch(`/events/${eventId}/results`, {
     token,
   })
@@ -54,7 +63,9 @@ export async function submitEventResults(
   }
 
   if (response.status === 402) {
-    const detail = (await response.json().catch(() => null)) as { message?: unknown } | null
+    const detail = (await response.json().catch(() => null)) as {
+      message?: unknown
+    } | null
     const message =
       detail?.message != null && typeof detail.message === 'string'
         ? detail.message
@@ -63,7 +74,9 @@ export async function submitEventResults(
   }
 
   if (!response.ok) {
-    const detail = (await response.json().catch(() => null)) as { message?: unknown } | null
+    const detail = (await response.json().catch(() => null)) as {
+      message?: unknown
+    } | null
     if (detail?.message != null && typeof detail.message === 'string') {
       throw new ApiError(detail.message, response.status)
     }

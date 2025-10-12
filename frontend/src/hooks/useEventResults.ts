@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchEventResults, submitEventResults } from '../api/results'
 import { useAuth } from './useAuth'
-import type { ResultEntrySummary, ResultStatus, SubmitResultEntry } from '../types/results'
+import type {
+  ResultEntrySummary,
+  ResultStatus,
+  SubmitResultEntry,
+} from '../types/results'
 import type { DriverSummary } from '../types/drivers'
 
 interface UseEventResultsResult {
@@ -47,7 +51,8 @@ export function useEventResults(
   const queryClient = useQueryClient()
 
   const defaultEntries = useMemo(() => asResultEntries(drivers), [drivers])
-  const [localEntries, setLocalEntries] = useState<ResultEntrySummary[]>(defaultEntries)
+  const [localEntries, setLocalEntries] =
+    useState<ResultEntrySummary[]>(defaultEntries)
 
   useEffect(() => {
     if (!eventId) {
@@ -62,12 +67,17 @@ export function useEventResults(
     staleTime: 0,
   })
 
-  const entries = shouldFetch ? resultsQuery.data ?? defaultEntries : localEntries
+  const entries = shouldFetch
+    ? (resultsQuery.data ?? defaultEntries)
+    : localEntries
 
   const setEntries = useCallback(
     (next: ResultEntrySummary[]) => {
       if (shouldFetch) {
-        queryClient.setQueryData<ResultEntrySummary[]>(['event-results', eventId], next)
+        queryClient.setQueryData<ResultEntrySummary[]>(
+          ['event-results', eventId],
+          next,
+        )
       } else {
         setLocalEntries(next)
       }
@@ -81,7 +91,10 @@ export function useEventResults(
       setLocalEntries(asResultEntries(drivers))
       return
     }
-    await queryClient.invalidateQueries({ queryKey: ['event-results', eventId], exact: true })
+    await queryClient.invalidateQueries({
+      queryKey: ['event-results', eventId],
+      exact: true,
+    })
   }, [drivers, eventId, queryClient, shouldFetch])
 
   const submit = useCallback(
@@ -93,7 +106,9 @@ export function useEventResults(
       const normalized = payload.map<ResultEntrySummary>((entry, index) => ({
         driverId: entry.driverId,
         finishPosition: index + 1,
-        status: defaultStatuses.includes(entry.status) ? entry.status : 'FINISHED',
+        status: defaultStatuses.includes(entry.status)
+          ? entry.status
+          : 'FINISHED',
         bonusPoints: entry.bonusPoints,
         penaltyPoints: entry.penaltyPoints,
       }))
@@ -110,7 +125,12 @@ export function useEventResults(
           throw new Error('Not authenticated')
         }
         const idempotencyKey = generateIdempotencyKey()
-        await submitEventResults(accessToken, eventId, { entries: submitEntries }, idempotencyKey)
+        await submitEventResults(
+          accessToken,
+          eventId,
+          { entries: submitEntries },
+          idempotencyKey,
+        )
         await refresh()
         return
       }
@@ -123,7 +143,7 @@ export function useEventResults(
   return {
     entries,
     isLoading: shouldFetch ? resultsQuery.isLoading : false,
-    error: shouldFetch ? resultsQuery.error ?? null : null,
+    error: shouldFetch ? (resultsQuery.error ?? null) : null,
     refresh,
     setEntries,
     submit,

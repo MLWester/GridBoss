@@ -21,7 +21,8 @@ export async function apiFetch(
       credentials: credentials ?? 'include',
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Network request failed'
+    const message =
+      error instanceof Error ? error.message : 'Network request failed'
     throw new Error(message)
   }
 }

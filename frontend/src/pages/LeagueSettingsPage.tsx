@@ -5,10 +5,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { updateLeagueGeneral } from '../api/leagues'
-import { usePointsScheme, DEFAULT_POINTS_SCHEME } from '../hooks/usePointsScheme'
+import {
+  usePointsScheme,
+  DEFAULT_POINTS_SCHEME,
+} from '../hooks/usePointsScheme'
 import type { LeagueOutletContext } from '../components/layout/LeagueLayout'
 import type { LeagueRole } from '../types/auth'
-import type { PointsSchemeEntry, UpdateLeagueGeneralRequest } from '../types/leagues'
+import type {
+  PointsSchemeEntry,
+  UpdateLeagueGeneralRequest,
+} from '../types/leagues'
 import { useDiscordIntegration } from '../hooks/useDiscordIntegration'
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -63,7 +69,10 @@ function toRows(entries: PointsSchemeEntry[]): PointsRow[] {
   }))
 }
 
-function arePointsEqual(rows: PointsRow[], entries: PointsSchemeEntry[]): boolean {
+function arePointsEqual(
+  rows: PointsRow[],
+  entries: PointsSchemeEntry[],
+): boolean {
   if (rows.length !== entries.length) {
     return false
   }
@@ -75,7 +84,8 @@ function arePointsEqual(rows: PointsRow[], entries: PointsSchemeEntry[]): boolea
 
 export function LeagueSettingsPage(): ReactElement {
   const { slug = '' } = useParams<{ slug: string }>()
-  const { overview, refetch, isBypass } = useOutletContext<LeagueOutletContext>()
+  const { overview, refetch, isBypass } =
+    useOutletContext<LeagueOutletContext>()
   const { accessToken, isLoading: isAuthLoading, billingPlan } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
@@ -90,7 +100,10 @@ export function LeagueSettingsPage(): ReactElement {
   const canEditPointsScheme = canEditPoints(membership)
   const canManageDiscord = canEditGeneral(membership)
 
-  const plan = useMemo(() => (overview?.league.plan ?? billingPlan?.plan ?? 'FREE').toUpperCase(), [overview?.league.plan, billingPlan?.plan])
+  const plan = useMemo(
+    () => (overview?.league.plan ?? billingPlan?.plan ?? 'FREE').toUpperCase(),
+    [overview?.league.plan, billingPlan?.plan],
+  )
   const isProPlan = plan === 'PRO' || plan === 'ELITE'
 
   const [generalForm, setGeneralForm] = useState({
@@ -115,8 +128,14 @@ export function LeagueSettingsPage(): ReactElement {
     },
   })
 
-  const { entries: pointsEntries, isLoading: isPointsLoading, error: pointsError, save, resetToDefault, isBypass: isPointsBypass } =
-    usePointsScheme(slug)
+  const {
+    entries: pointsEntries,
+    isLoading: isPointsLoading,
+    error: pointsError,
+    save,
+    resetToDefault,
+    isBypass: isPointsBypass,
+  } = usePointsScheme(slug)
 
   const {
     status: discordStatus,
@@ -129,7 +148,9 @@ export function LeagueSettingsPage(): ReactElement {
     isBypass: isDiscordBypass,
   } = useDiscordIntegration(slug)
 
-  const [pointsRows, setPointsRows] = useState<PointsRow[]>(toRows(pointsEntries))
+  const [pointsRows, setPointsRows] = useState<PointsRow[]>(
+    toRows(pointsEntries),
+  )
   const [pointsErrors, setPointsErrors] = useState<Record<number, string>>({})
   const [isPointsSaving, setIsPointsSaving] = useState(false)
   const [isLinkingDiscord, setIsLinkingDiscord] = useState(false)
@@ -141,13 +162,16 @@ export function LeagueSettingsPage(): ReactElement {
   }, [pointsEntries])
 
   const isGeneralDirty =
-    generalForm.name !== (overview?.league.name ?? '') || generalForm.slug !== (overview?.league.slug ?? slug)
+    generalForm.name !== (overview?.league.name ?? '') ||
+    generalForm.slug !== (overview?.league.slug ?? slug)
 
   const isGeneralLoading = generalMutation.isPending || isAuthLoading
 
   const isPointsDirty = !arePointsEqual(pointsRows, pointsEntries)
 
-  const handleGeneralSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleGeneralSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
     event.preventDefault()
     if (!overview?.league) {
       return
@@ -205,26 +229,32 @@ export function LeagueSettingsPage(): ReactElement {
     try {
       const updated = await generalMutation.mutateAsync(payload)
 
-      queryClient.setQueryData(['league-overview', slug], (current: unknown) => {
-        if (!current || typeof current !== 'object') {
-          return current
-        }
-        const cast = current as LeagueOutletContext['overview']
-        if (!cast) {
-          return current
-        }
-        return {
-          ...cast,
-          league: {
-            ...cast.league,
-            name: updated.name,
-            slug: updated.slug,
-          },
-        }
-      })
+      queryClient.setQueryData(
+        ['league-overview', slug],
+        (current: unknown) => {
+          if (!current || typeof current !== 'object') {
+            return current
+          }
+          const cast = current as LeagueOutletContext['overview']
+          if (!cast) {
+            return current
+          }
+          return {
+            ...cast,
+            league: {
+              ...cast.league,
+              name: updated.name,
+              slug: updated.slug,
+            },
+          }
+        },
+      )
 
       if (updated.slug !== slug) {
-        queryClient.setQueryData(['league-overview', updated.slug], (current: unknown) => current)
+        queryClient.setQueryData(
+          ['league-overview', updated.slug],
+          (current: unknown) => current,
+        )
       }
 
       await Promise.allSettled([
@@ -272,7 +302,9 @@ export function LeagueSettingsPage(): ReactElement {
 
   const handlePointsInputChange = (position: number, value: string) => {
     setPointsRows((current) =>
-      current.map((row) => (row.position === position ? { ...row, points: value } : row)),
+      current.map((row) =>
+        row.position === position ? { ...row, points: value } : row,
+      ),
     )
   }
 
@@ -335,7 +367,8 @@ export function LeagueSettingsPage(): ReactElement {
         variant: 'success',
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to save points scheme.'
+      const message =
+        error instanceof Error ? error.message : 'Unable to save points scheme.'
       showToast({
         title: 'Save failed',
         description: message,
@@ -346,9 +379,15 @@ export function LeagueSettingsPage(): ReactElement {
     }
   }
 
-  const planLabel = overview?.league.plan ? overview.league.plan.toUpperCase() : 'FREE'
-  const bypassBanner = isBypass ? 'Bypass mode active: changes are stored locally.' : undefined
-  const discordBypassBanner = isDiscordBypass ? 'Discord demo mode: actions are simulated locally.' : undefined
+  const planLabel = overview?.league.plan
+    ? overview.league.plan.toUpperCase()
+    : 'FREE'
+  const bypassBanner = isBypass
+    ? 'Bypass mode active: changes are stored locally.'
+    : undefined
+  const discordBypassBanner = isDiscordBypass
+    ? 'Discord demo mode: actions are simulated locally.'
+    : undefined
 
   const discordStatusLabel = discordStatus.linked
     ? discordStatus.requiresReconnect
@@ -362,7 +401,8 @@ export function LeagueSettingsPage(): ReactElement {
       : 'border-emerald-500/60 bg-emerald-500/10 text-emerald-100'
     : 'border-slate-700/70 bg-slate-900/60 text-slate-300'
 
-  const disableLinkButton = !canManageDiscord || isLinkingDiscord || isDiscordLoading
+  const disableLinkButton =
+    !canManageDiscord || isLinkingDiscord || isDiscordLoading
   const disableUnlinkButton =
     !canManageDiscord ||
     !discordStatus.linked ||
@@ -380,7 +420,8 @@ export function LeagueSettingsPage(): ReactElement {
     if (!canManageDiscord) {
       showToast({
         title: 'Insufficient permissions',
-        description: 'Only owners or admins can manage the Discord integration.',
+        description:
+          'Only owners or admins can manage the Discord integration.',
         variant: 'error',
       })
       return
@@ -396,11 +437,15 @@ export function LeagueSettingsPage(): ReactElement {
       await refetch()
       showToast({
         title: 'Link started',
-        description: 'Complete the Discord authorization flow and return here when finished.',
+        description:
+          'Complete the Discord authorization flow and return here when finished.',
         variant: 'info',
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to start the Discord linking flow.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to start the Discord linking flow.'
       showToast({
         title: 'Link failed',
         description: message,
@@ -415,7 +460,8 @@ export function LeagueSettingsPage(): ReactElement {
     if (!canManageDiscord) {
       showToast({
         title: 'Insufficient permissions',
-        description: 'Only owners or admins can manage the Discord integration.',
+        description:
+          'Only owners or admins can manage the Discord integration.',
         variant: 'error',
       })
       return
@@ -432,7 +478,10 @@ export function LeagueSettingsPage(): ReactElement {
         variant: 'success',
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to unlink the Discord integration.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to unlink the Discord integration.'
       showToast({
         title: 'Unlink failed',
         description: message,
@@ -447,7 +496,8 @@ export function LeagueSettingsPage(): ReactElement {
     if (!canManageDiscord) {
       showToast({
         title: 'Insufficient permissions',
-        description: 'Only owners or admins can manage the Discord integration.',
+        description:
+          'Only owners or admins can manage the Discord integration.',
         variant: 'error',
       })
       return
@@ -475,11 +525,15 @@ export function LeagueSettingsPage(): ReactElement {
       await refreshDiscord()
       showToast({
         title: 'Test sent',
-        description: message || 'Check your Discord server for the announcement.',
+        description:
+          message || 'Check your Discord server for the announcement.',
         variant: 'success',
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to send test announcement.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to send test announcement.'
       showToast({
         title: 'Test failed',
         description: message,
@@ -522,7 +576,9 @@ export function LeagueSettingsPage(): ReactElement {
         >
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm text-slate-300">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">League name</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                League name
+              </span>
               <input
                 value={generalForm.name}
                 onChange={(event) => {
@@ -534,11 +590,17 @@ export function LeagueSettingsPage(): ReactElement {
                 disabled={!canEditGeneralSettings || isGeneralLoading}
                 className="w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40 disabled:opacity-60"
               />
-              {generalErrors.name ? <span className="text-xs text-rose-300">{generalErrors.name}</span> : null}
+              {generalErrors.name ? (
+                <span className="text-xs text-rose-300">
+                  {generalErrors.name}
+                </span>
+              ) : null}
             </label>
 
             <label className="space-y-2 text-sm text-slate-300">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">League slug</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                League slug
+              </span>
               <input
                 value={generalForm.slug}
                 onChange={(event) => {
@@ -551,13 +613,18 @@ export function LeagueSettingsPage(): ReactElement {
                 disabled={!canEditGeneralSettings || isGeneralLoading}
                 className="w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40 disabled:opacity-60"
               />
-              {generalErrors.slug ? <span className="text-xs text-rose-300">{generalErrors.slug}</span> : null}
+              {generalErrors.slug ? (
+                <span className="text-xs text-rose-300">
+                  {generalErrors.slug}
+                </span>
+              ) : null}
             </label>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-slate-500">
-              Slug changes update your league URL. Share the new link with your drivers after saving.
+              Slug changes update your league URL. Share the new link with your
+              drivers after saving.
             </p>
             <button
               type="submit"
@@ -583,7 +650,8 @@ export function LeagueSettingsPage(): ReactElement {
         <header className="space-y-2">
           <h2 className="text-xl font-semibold text-slate-100">Points</h2>
           <p className="text-sm text-slate-400">
-            Configure base points per finishing position. These apply to future results submissions.
+            Configure base points per finishing position. These apply to future
+            results submissions.
           </p>
         </header>
 
@@ -615,17 +683,27 @@ export function LeagueSettingsPage(): ReactElement {
                           min={0}
                           value={row.points}
                           onChange={(event) => {
-                            handlePointsInputChange(row.position, event.target.value)
+                            handlePointsInputChange(
+                              row.position,
+                              event.target.value,
+                            )
                           }}
-                          disabled={!canEditPointsScheme || isPointsLoading || isPointsSaving}
+                          disabled={
+                            !canEditPointsScheme ||
+                            isPointsLoading ||
+                            isPointsSaving
+                          }
                           className="w-24 rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40 disabled:opacity-60"
                         />
                         {pointsErrors[row.position] ? (
-                          <p className="mt-1 text-xs text-rose-300">{pointsErrors[row.position]}</p>
+                          <p className="mt-1 text-xs text-rose-300">
+                            {pointsErrors[row.position]}
+                          </p>
                         ) : null}
                       </td>
                       <td className="px-4 py-3 text-right text-xs text-slate-500">
-                        {DEFAULT_POINTS_SCHEME[row.position - 1]?.points === Number.parseInt(row.points, 10)
+                        {DEFAULT_POINTS_SCHEME[row.position - 1]?.points ===
+                        Number.parseInt(row.points, 10)
                           ? 'Default'
                           : ''}
                       </td>
@@ -637,13 +715,16 @@ export function LeagueSettingsPage(): ReactElement {
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-slate-500">
-                Bonus and penalty points are added during results entry. Reset to default to restore the F1 template.
+                Bonus and penalty points are added during results entry. Reset
+                to default to restore the F1 template.
               </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={handleResetPoints}
-                  disabled={!canEditPointsScheme || isPointsLoading || isPointsSaving}
+                  disabled={
+                    !canEditPointsScheme || isPointsLoading || isPointsSaving
+                  }
                   className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:border-slate-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Reset to default
@@ -653,7 +734,9 @@ export function LeagueSettingsPage(): ReactElement {
                   onClick={() => {
                     void handleSavePoints()
                   }}
-                  disabled={!canEditPointsScheme || isPointsLoading || isPointsSaving}
+                  disabled={
+                    !canEditPointsScheme || isPointsLoading || isPointsSaving
+                  }
                   className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
                 >
                   {isPointsSaving ? (
@@ -672,7 +755,8 @@ export function LeagueSettingsPage(): ReactElement {
 
             {isPointsBypass ? (
               <p className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-3 text-xs text-slate-400">
-                Demo mode: point changes are stored locally until the API is available.
+                Demo mode: point changes are stored locally until the API is
+                available.
               </p>
             ) : null}
           </div>
@@ -681,9 +765,12 @@ export function LeagueSettingsPage(): ReactElement {
 
       <section className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow shadow-slate-950/30">
         <header className="space-y-2">
-          <h2 className="text-xl font-semibold text-slate-100">Discord integration</h2>
+          <h2 className="text-xl font-semibold text-slate-100">
+            Discord integration
+          </h2>
           <p className="text-sm text-slate-400">
-            Link your Discord server to announce race results and key updates automatically.
+            Link your Discord server to announce race results and key updates
+            automatically.
           </p>
         </header>
 
@@ -704,7 +791,9 @@ export function LeagueSettingsPage(): ReactElement {
           </div>
         ) : discordError ? (
           <div className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
-            <p className="font-semibold">We could not load the Discord integration.</p>
+            <p className="font-semibold">
+              We could not load the Discord integration.
+            </p>
             <p className="mt-1 text-rose-100/80">{discordError.message}</p>
           </div>
         ) : (
@@ -712,17 +801,24 @@ export function LeagueSettingsPage(): ReactElement {
             <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-1">
-                  <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${discordStatusTone}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${discordStatusTone}`}
+                  >
                     {discordStatusLabel}
                   </span>
                   <div className="mt-3 space-y-1 text-sm text-slate-300">
                     <p>
-                      <span className="text-slate-500">Guild:</span> {discordStatus.guildName || 'Not connected'}
+                      <span className="text-slate-500">Guild:</span>{' '}
+                      {discordStatus.guildName || 'Not connected'}
                     </p>
                     <p>
-                      <span className="text-slate-500">Channel:</span> {discordStatus.channelName || 'Not connected'}
+                      <span className="text-slate-500">Channel:</span>{' '}
+                      {discordStatus.channelName || 'Not connected'}
                     </p>
-                    <p className="text-xs text-slate-500">Last test: {formatTestTimestamp(discordStatus.lastTestedAt)}</p>
+                    <p className="text-xs text-slate-500">
+                      Last test:{' '}
+                      {formatTestTimestamp(discordStatus.lastTestedAt)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -737,7 +833,9 @@ export function LeagueSettingsPage(): ReactElement {
                     {isLinkingDiscord ? (
                       <span className="inline-flex h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
                     ) : null}
-                    {discordStatus.linked ? 'Reconnect Discord' : 'Link Discord'}
+                    {discordStatus.linked
+                      ? 'Reconnect Discord'
+                      : 'Link Discord'}
                   </button>
                   {discordStatus.linked ? (
                     <button
@@ -758,7 +856,8 @@ export function LeagueSettingsPage(): ReactElement {
               </div>
               {discordStatus.requiresReconnect ? (
                 <p className="mt-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-                  Permissions changed or the bot was removed. Reconnect to restore announcements.
+                  Permissions changed or the bot was removed. Reconnect to
+                  restore announcements.
                 </p>
               ) : null}
             </div>
@@ -775,7 +874,11 @@ export function LeagueSettingsPage(): ReactElement {
                   void handleTestDiscord()
                 }}
                 disabled={disableTestButton}
-                title={isProPlan ? undefined : 'Upgrade to the Pro plan to send test announcements.'}
+                title={
+                  isProPlan
+                    ? undefined
+                    : 'Upgrade to the Pro plan to send test announcements.'
+                }
                 className="inline-flex items-center gap-2 rounded-full bg-slate-100/10 px-5 py-2 text-sm font-semibold text-slate-100 transition hover:bg-slate-100/20 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
               >
                 {isTestingDiscord ? (
@@ -796,16 +899,3 @@ export function LeagueSettingsPage(): ReactElement {
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

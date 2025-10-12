@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 from uuid import uuid4
 
 from fastapi import Request
@@ -18,7 +18,9 @@ from app.core.observability import (
 class RequestContextMiddleware(BaseHTTPMiddleware):
     """Attach request-scoped context for observability."""
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Response]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Response]
+    ) -> Response:
         incoming_request_id = request.headers.get("X-Request-ID") or str(uuid4())
         bind_request_id(incoming_request_id)
         bind_user_id(None)

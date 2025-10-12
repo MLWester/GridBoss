@@ -1,6 +1,11 @@
 import { apiFetch } from './client'
 import { ApiError } from './auth'
-import type { DriverRead, DriverSummary, BulkDriverInput, UpdateDriverRequest } from '../types/drivers'
+import type {
+  DriverRead,
+  DriverSummary,
+  BulkDriverInput,
+  UpdateDriverRequest,
+} from '../types/drivers'
 
 function mapDriver(driver: DriverRead): DriverSummary {
   return {
@@ -14,7 +19,10 @@ function mapDriver(driver: DriverRead): DriverSummary {
   }
 }
 
-export async function fetchLeagueDrivers(token: string, slug: string): Promise<DriverSummary[]> {
+export async function fetchLeagueDrivers(
+  token: string,
+  slug: string,
+): Promise<DriverSummary[]> {
   const response = await apiFetch(`/leagues/${slug}/drivers`, {
     token,
   })
@@ -42,7 +50,10 @@ export async function bulkCreateDrivers(
   })
 
   if (response.status === 409) {
-    throw new ApiError('One or more driver names already exist', response.status)
+    throw new ApiError(
+      'One or more driver names already exist',
+      response.status,
+    )
   }
 
   if (!response.ok) {

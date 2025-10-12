@@ -32,16 +32,16 @@ export function AppLayout(): ReactElement {
             <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-sky-400">
               GridBoss
             </span>
-            <span className="text-sm text-slate-400">League Control Center</span>
+            <span className="text-sm text-slate-400">
+              League Control Center
+            </span>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium">
                 {user?.discord_username ?? 'Driver'}
               </p>
-              <p className="text-xs text-slate-400">
-                {membershipLabel}
-              </p>
+              <p className="text-xs text-slate-400">{membershipLabel}</p>
             </div>
             <button
               type="button"
@@ -57,7 +57,9 @@ export function AppLayout(): ReactElement {
       </header>
       <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10">
         <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 shadow-lg shadow-slate-950/40">
-          <h1 className="text-3xl font-semibold tracking-tight">Welcome back</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Welcome back
+          </h1>
           <p className="mt-2 text-sm text-slate-400">
             {billingPlan?.plan
               ? `You are on the ${billingPlan.plan} plan. Manage your leagues, events, and drivers from this hub as upcoming PBIs bring the full experience to life.`
@@ -73,7 +75,9 @@ export function AppLayout(): ReactElement {
               className={({ isActive }) =>
                 [
                   'inline-flex items-center rounded-full border border-slate-800/70 bg-slate-900/50 px-4 py-2 transition hover:border-sky-500/60 hover:text-sky-100',
-                  isActive ? 'border-sky-500/60 bg-sky-500/10 text-sky-100' : '',
+                  isActive
+                    ? 'border-sky-500/60 bg-sky-500/10 text-sky-100'
+                    : '',
                 ]
                   .filter(Boolean)
                   .join(' ')

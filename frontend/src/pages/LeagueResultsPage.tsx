@@ -30,7 +30,9 @@ function formatDriverName(driver: DriverSummary): string {
   return driver.displayName
 }
 
-function buildDriverLookup(drivers: DriverSummary[]): Partial<Record<string, DriverSummary>> {
+function buildDriverLookup(
+  drivers: DriverSummary[],
+): Partial<Record<string, DriverSummary>> {
   const map: Partial<Record<string, DriverSummary>> = {}
   for (const driver of drivers) {
     map[driver.id] = driver
@@ -62,12 +64,16 @@ export function LeagueResultsPage(): ReactElement {
     [memberships, slug],
   )
 
-  const role: LeagueRole | null = membership?.role ?? overview?.league.role ?? null
+  const role: LeagueRole | null =
+    membership?.role ?? overview?.league.role ?? null
   const canEdit = canManageResults(role)
 
   const orderedEvents = useMemo(() => {
     const sorted = [...events]
-    sorted.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+    sorted.sort(
+      (a, b) =>
+        new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
+    )
     return sorted
   }, [events])
 
@@ -78,13 +84,17 @@ export function LeagueResultsPage(): ReactElement {
       setSelectedEventId(null)
       return
     }
-    if (selectedEventId !== null && orderedEvents.some((event) => event.id === selectedEventId)) {
+    if (
+      selectedEventId !== null &&
+      orderedEvents.some((event) => event.id === selectedEventId)
+    ) {
       return
     }
     setSelectedEventId(orderedEvents[0]?.id ?? null)
   }, [orderedEvents, selectedEventId])
 
-  const selectedEvent = orderedEvents.find((event) => event.id === selectedEventId) || null
+  const selectedEvent =
+    orderedEvents.find((event) => event.id === selectedEventId) || null
 
   const driverLookup = useMemo(() => buildDriverLookup(drivers), [drivers])
 
@@ -97,7 +107,8 @@ export function LeagueResultsPage(): ReactElement {
     isBypass: isResultsBypass,
   } = useEventResults(selectedEventId, drivers)
 
-  const [draftEntries, setDraftEntries] = useState<ResultEntrySummary[]>(entries)
+  const [draftEntries, setDraftEntries] =
+    useState<ResultEntrySummary[]>(entries)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [planError, setPlanError] = useState<string | null>(null)
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -107,14 +118,21 @@ export function LeagueResultsPage(): ReactElement {
   }, [entries])
 
   const handleReorder = (sourceIndex: number, destinationIndex: number) => {
-    if (sourceIndex === destinationIndex || sourceIndex < 0 || destinationIndex < 0) {
+    if (
+      sourceIndex === destinationIndex ||
+      sourceIndex < 0 ||
+      destinationIndex < 0
+    ) {
       return
     }
     setDraftEntries((current) => {
       const clone = [...current]
       const [item] = clone.splice(sourceIndex, 1)
       clone.splice(destinationIndex, 0, item)
-      return clone.map((entry, index) => ({ ...entry, finishPosition: index + 1 }))
+      return clone.map((entry, index) => ({
+        ...entry,
+        finishPosition: index + 1,
+      }))
     })
   }
 
@@ -128,11 +146,14 @@ export function LeagueResultsPage(): ReactElement {
       return
     }
 
-    const missingDriver = draftEntries.find((entry) => !driverLookup[entry.driverId])
+    const missingDriver = draftEntries.find(
+      (entry) => !driverLookup[entry.driverId],
+    )
     if (missingDriver) {
       showToast({
         title: 'Unknown driver',
-        description: 'One or more drivers are missing from the roster. Refresh the page and try again.',
+        description:
+          'One or more drivers are missing from the roster. Refresh the page and try again.',
         variant: 'error',
       })
       return
@@ -142,14 +163,20 @@ export function LeagueResultsPage(): ReactElement {
     setPlanError(null)
     try {
       await submit(draftEntries)
-      setEntries(draftEntries.map((entry, index) => ({ ...entry, finishPosition: index + 1 })))
+      setEntries(
+        draftEntries.map((entry, index) => ({
+          ...entry,
+          finishPosition: index + 1,
+        })),
+      )
       showToast({
         title: 'Results submitted',
         description: 'Standings will update once the background job completes.',
         variant: 'success',
       })
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to submit results'
+      const message =
+        err instanceof Error ? err.message : 'Unable to submit results'
       if (message.toLowerCase().includes('plan')) {
         setPlanError(message)
       }
@@ -165,14 +192,22 @@ export function LeagueResultsPage(): ReactElement {
 
   const handleStatusChange = (index: number, status: ResultStatus) => {
     setDraftEntries((current) =>
-      current.map((entry, idx) => (idx === index ? { ...entry, status } : entry)),
+      current.map((entry, idx) =>
+        idx === index ? { ...entry, status } : entry,
+      ),
     )
   }
 
-  const handleInputChange = (index: number, field: 'bonusPoints' | 'penaltyPoints', value: string) => {
+  const handleInputChange = (
+    index: number,
+    field: 'bonusPoints' | 'penaltyPoints',
+    value: string,
+  ) => {
     const numeric = value === '' ? 0 : Number.parseInt(value, 10) || 0
     setDraftEntries((current) =>
-      current.map((entry, idx) => (idx === index ? { ...entry, [field]: numeric } : entry)),
+      current.map((entry, idx) =>
+        idx === index ? { ...entry, [field]: numeric } : entry,
+      ),
     )
   }
 
@@ -194,7 +229,12 @@ export function LeagueResultsPage(): ReactElement {
     setDragState(null)
   }
 
-  if (isAuthLoading || isEventsLoading || isDriversLoading || isResultsLoading) {
+  if (
+    isAuthLoading ||
+    isEventsLoading ||
+    isDriversLoading ||
+    isResultsLoading
+  ) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 6 }).map((_, index) => (
@@ -214,10 +254,15 @@ export function LeagueResultsPage(): ReactElement {
 
   if (eventsError || driversError || resultsError) {
     const message =
-      eventsError?.message ?? driversError?.message ?? resultsError?.message ?? 'Unknown error loading results'
+      eventsError?.message ??
+      driversError?.message ??
+      resultsError?.message ??
+      'Unknown error loading results'
     return (
       <div className="rounded-3xl border border-rose-500/40 bg-rose-500/10 p-6 text-sm text-rose-100">
-        <p className="font-semibold">We could not load everything needed for results entry.</p>
+        <p className="font-semibold">
+          We could not load everything needed for results entry.
+        </p>
         <p className="mt-1 text-rose-100/80">{message}</p>
       </div>
     )
@@ -226,7 +271,10 @@ export function LeagueResultsPage(): ReactElement {
   if (!selectedEvent) {
     return (
       <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-300">
-        <p>No events available yet. Schedule an event first before entering results.</p>
+        <p>
+          No events available yet. Schedule an event first before entering
+          results.
+        </p>
       </div>
     )
   }
@@ -241,11 +289,16 @@ export function LeagueResultsPage(): ReactElement {
       <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-100">Event results</h2>
+            <h2 className="text-2xl font-semibold text-slate-100">
+              Event results
+            </h2>
             <p className="text-sm text-slate-400">{infoBanner}</p>
           </div>
           <div className="flex items-center gap-3">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400" htmlFor="event-select">
+            <label
+              className="text-xs font-semibold uppercase tracking-wide text-slate-400"
+              htmlFor="event-select"
+            >
               Event
             </label>
             <select
@@ -298,11 +351,15 @@ export function LeagueResultsPage(): ReactElement {
               }}
               className={classNames(
                 'grid grid-cols-[auto_1.2fr_1.2fr_1.2fr_1fr_1fr] items-center gap-3 rounded-3xl border border-slate-800/70 bg-slate-900/60 p-4 shadow shadow-slate-950/30',
-                dragState?.destinationIndex === index ? 'border-sky-500/60' : '',
+                dragState?.destinationIndex === index
+                  ? 'border-sky-500/60'
+                  : '',
               )}
             >
               <div className="flex flex-col items-center justify-center">
-                <span className="text-sm font-semibold text-slate-200">{index + 1}</span>
+                <span className="text-sm font-semibold text-slate-200">
+                  {index + 1}
+                </span>
                 {canEdit ? (
                   <div className="mt-2 flex flex-col gap-1">
                     <button
@@ -317,7 +374,10 @@ export function LeagueResultsPage(): ReactElement {
                     <button
                       type="button"
                       onClick={() => {
-                        handleReorder(index, Math.min(draftEntries.length - 1, index + 1))
+                        handleReorder(
+                          index,
+                          Math.min(draftEntries.length - 1, index + 1),
+                        )
                       }}
                       className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-700 text-[10px] font-semibold uppercase text-slate-300 transition hover:border-sky-500 hover:text-sky-100"
                     >
@@ -330,7 +390,9 @@ export function LeagueResultsPage(): ReactElement {
                 <p className="text-sm font-semibold text-slate-100">
                   {driver ? formatDriverName(driver) : 'Unknown driver'}
                 </p>
-                <p className="text-xs text-slate-200">{driver?.teamName ?? 'Unassigned'}</p>
+                <p className="text-xs text-slate-200">
+                  {driver?.teamName ?? 'Unassigned'}
+                </p>
               </div>
               <div>
                 <label
@@ -344,7 +406,10 @@ export function LeagueResultsPage(): ReactElement {
                   value={entry.status}
                   disabled={!canEdit}
                   onChange={(event) => {
-                    handleStatusChange(index, event.target.value as ResultStatus)
+                    handleStatusChange(
+                      index,
+                      event.target.value as ResultStatus,
+                    )
                   }}
                   className="mt-1 w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40 disabled:opacity-60"
                 >
@@ -388,7 +453,11 @@ export function LeagueResultsPage(): ReactElement {
                   value={entry.penaltyPoints}
                   disabled={!canEdit}
                   onChange={(event) => {
-                    handleInputChange(index, 'penaltyPoints', event.target.value)
+                    handleInputChange(
+                      index,
+                      'penaltyPoints',
+                      event.target.value,
+                    )
                   }}
                   className="mt-1 w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40 disabled:opacity-60"
                 />
@@ -403,7 +472,8 @@ export function LeagueResultsPage(): ReactElement {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-slate-200">
-          Need to tweak? Reorder drivers, adjust modifiers, and submit again. Standings recompute automatically.
+          Need to tweak? Reorder drivers, adjust modifiers, and submit again.
+          Standings recompute automatically.
         </p>
         {canEdit ? (
           <button
@@ -427,13 +497,11 @@ export function LeagueResultsPage(): ReactElement {
       <Fragment>
         <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-4 text-xs text-slate-400">
           <p>
-            Worker queue running slow? Refresh after a few seconds. If standings still look stale, the background job is
-            catching up.
+            Worker queue running slow? Refresh after a few seconds. If standings
+            still look stale, the background job is catching up.
           </p>
         </div>
       </Fragment>
     </div>
   )
 }
-
-

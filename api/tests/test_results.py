@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import sys
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from http import HTTPStatus
-from uuid import UUID, uuid4
-
 from pathlib import Path
-import sys
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -15,9 +14,10 @@ if str(ROOT) not in sys.path:
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from worker.jobs import standings
 
 from app.core.settings import Settings, get_settings
 from app.db import Base
@@ -39,7 +39,6 @@ from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.main import app
 from app.routes.auth import provide_discord_client
-from worker.jobs import standings
 
 SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///:memory:"
 engine = create_engine(
@@ -162,7 +161,9 @@ def create_league_with_owner(session: Session, owner: User) -> tuple[League, Sea
     return league, season
 
 
-def create_driver(session: Session, league: League, user: User | None = None, *, display_name: str) -> Driver:
+def create_driver(
+    session: Session, league: League, user: User | None = None, *, display_name: str
+) -> Driver:
     driver = Driver(
         league_id=league.id,
         user_id=user.id if user else None,

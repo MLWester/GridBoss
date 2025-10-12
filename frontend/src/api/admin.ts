@@ -1,7 +1,11 @@
 import { apiFetch } from './client'
 import { ApiError } from './auth'
 import type { BillingPlanTier } from '../types/billing'
-import type { AdminLeagueSummary, AdminSearchResponse, AdminUserSummary } from '../types/admin'
+import type {
+  AdminLeagueSummary,
+  AdminSearchResponse,
+  AdminUserSummary,
+} from '../types/admin'
 
 interface AdminUserSummaryRead {
   id: string
@@ -70,7 +74,10 @@ function mapLeagueSummary(payload: AdminLeagueSummaryRead): AdminLeagueSummary {
   }
 }
 
-export async function fetchAdminSearch(token: string, query: string): Promise<AdminSearchResponse> {
+export async function fetchAdminSearch(
+  token: string,
+  query: string,
+): Promise<AdminSearchResponse> {
   const params = query ? `?query=${encodeURIComponent(query)}` : ''
   const response = await apiFetch(`/admin/search${params}`, {
     token,
@@ -81,7 +88,10 @@ export async function fetchAdminSearch(token: string, query: string): Promise<Ad
   }
 
   if (response.status === 403) {
-    throw new ApiError('Founder access required to view the admin console.', response.status)
+    throw new ApiError(
+      'Founder access required to view the admin console.',
+      response.status,
+    )
   }
 
   if (!response.ok) {

@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchAdminSearch, overrideLeaguePlan, toggleLeagueDiscord } from '../api/admin'
+import {
+  fetchAdminSearch,
+  overrideLeaguePlan,
+  toggleLeagueDiscord,
+} from '../api/admin'
 import { useAuth } from './useAuth'
 import type { AdminLeagueSummary, AdminSearchResponse } from '../types/admin'
 import type { BillingPlanTier } from '../types/billing'
@@ -72,9 +76,11 @@ export function useAdminConsole() {
   const isProduction = import.meta.env.MODE === 'production'
 
   const [query, setQuery] = useState('')
-  const [mockData, setMockData] = useState<AdminSearchResponse>(MOCK_ADMIN_RESPONSE)
+  const [mockData, setMockData] =
+    useState<AdminSearchResponse>(MOCK_ADMIN_RESPONSE)
 
-  const shouldFetch = adminModeEnabled && isFounder && Boolean(accessToken) && !isBypassAuth
+  const shouldFetch =
+    adminModeEnabled && isFounder && Boolean(accessToken) && !isBypassAuth
 
   const searchQuery = useQuery({
     queryKey: ['admin-search', query],
@@ -117,7 +123,9 @@ export function useAdminConsole() {
       if (!shouldFetch) {
         let updatedResult: AdminLeagueSummary | undefined
         setMockData((current) => {
-          const existing = current.leagues.find((league) => league.id === leagueId)
+          const existing = current.leagues.find(
+            (league) => league.id === leagueId,
+          )
           if (!existing) {
             const fallbackPlan: BillingPlanTier = 'FREE'
             const fallback: AdminLeagueSummary = {
@@ -139,7 +147,10 @@ export function useAdminConsole() {
               leagues: [...current.leagues, fallback],
             }
           }
-          const nextLeague: AdminLeagueSummary = { ...existing, discordActive: isActive }
+          const nextLeague: AdminLeagueSummary = {
+            ...existing,
+            discordActive: isActive,
+          }
           updatedResult = nextLeague
           return {
             ...current,
@@ -177,17 +188,20 @@ export function useAdminConsole() {
     },
     onSuccess: (updated) => {
       if (shouldFetch) {
-        queryClient.setQueryData<AdminSearchResponse>(['admin-search', query], (current) => {
-          if (!current) {
-            return current
-          }
-          return {
-            ...current,
-            leagues: current.leagues.map((league) =>
-              league.id === updated.id ? updated : league,
-            ),
-          }
-        })
+        queryClient.setQueryData<AdminSearchResponse>(
+          ['admin-search', query],
+          (current) => {
+            if (!current) {
+              return current
+            }
+            return {
+              ...current,
+              leagues: current.leagues.map((league) =>
+                league.id === updated.id ? updated : league,
+              ),
+            }
+          },
+        )
       }
     },
     onSettled: () => {
@@ -195,13 +209,17 @@ export function useAdminConsole() {
     },
   })
 
-  const [planUpdatingLeagueId, setPlanUpdatingLeagueId] = useState<string | null>(null)
+  const [planUpdatingLeagueId, setPlanUpdatingLeagueId] = useState<
+    string | null
+  >(null)
   const planMutation = useMutation({
     mutationFn: async ({ leagueId, plan }: PlanOverrideArgs) => {
       if (!shouldFetch) {
         let updatedResult: AdminLeagueSummary | undefined
         setMockData((current) => {
-          const existing = current.leagues.find((league) => league.id === leagueId)
+          const existing = current.leagues.find(
+            (league) => league.id === leagueId,
+          )
           if (!existing) {
             const fallback: AdminLeagueSummary = {
               id: leagueId,
@@ -264,17 +282,20 @@ export function useAdminConsole() {
     },
     onSuccess: (updated) => {
       if (shouldFetch) {
-        queryClient.setQueryData<AdminSearchResponse>(['admin-search', query], (current) => {
-          if (!current) {
-            return current
-          }
-          return {
-            ...current,
-            leagues: current.leagues.map((league) =>
-              league.id === updated.id ? updated : league,
-            ),
-          }
-        })
+        queryClient.setQueryData<AdminSearchResponse>(
+          ['admin-search', query],
+          (current) => {
+            if (!current) {
+              return current
+            }
+            return {
+              ...current,
+              leagues: current.leagues.map((league) =>
+                league.id === updated.id ? updated : league,
+              ),
+            }
+          },
+        )
       }
     },
     onSettled: () => {
@@ -308,6 +329,3 @@ export function useAdminConsole() {
     shouldFetch,
   }
 }
-
-
-

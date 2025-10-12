@@ -11,7 +11,10 @@ function mapTeam(team: TeamRead): TeamSummary {
   }
 }
 
-export async function fetchLeagueTeams(token: string, slug: string): Promise<TeamSummary[]> {
+export async function fetchLeagueTeams(
+  token: string,
+  slug: string,
+): Promise<TeamSummary[]> {
   const response = await apiFetch(`/leagues/${slug}/teams`, {
     token,
   })

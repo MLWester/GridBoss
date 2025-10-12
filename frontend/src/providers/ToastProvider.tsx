@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
-import { ToastContext, type ToastInput, type ToastVariant } from './ToastContext'
+import {
+  ToastContext,
+  type ToastInput,
+  type ToastVariant,
+} from './ToastContext'
 
 interface ToastRecord extends ToastInput {
   id: number
@@ -18,7 +22,11 @@ function getVariantStyles(variant: ToastVariant = 'info'): string {
   return 'border-sky-400/40 bg-slate-900/90 text-slate-100'
 }
 
-export function ToastProvider({ children }: { children: React.ReactNode }): ReactElement {
+export function ToastProvider({
+  children,
+}: {
+  children: React.ReactNode
+}): ReactElement {
   const [toasts, setToasts] = useState<ToastRecord[]>([])
   const timers = useRef<Map<number, number>>(new Map())
 
@@ -80,7 +88,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
               <div className="flex-1">
                 <p className="text-sm font-semibold">{toast.title}</p>
                 {toast.description ? (
-                  <p className="mt-1 text-xs text-slate-200/80">{toast.description}</p>
+                  <p className="mt-1 text-xs text-slate-200/80">
+                    {toast.description}
+                  </p>
                 ) : null}
               </div>
               <button

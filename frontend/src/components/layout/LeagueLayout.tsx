@@ -39,11 +39,15 @@ export function LeagueLayout(): ReactElement {
   const { leagues } = useLeagues()
   const { billingPlan } = useAuth()
 
-  const { overview, isLoading, error, refetch, isBypass } = useLeagueOverview(slug ?? '')
+  const { overview, isLoading, error, refetch, isBypass } = useLeagueOverview(
+    slug ?? '',
+  )
 
   const leagueSummary = useMemo(() => {
     if (!slug) return overview?.league ?? null
-    return leagues.find((league) => league.slug === slug) ?? overview?.league ?? null
+    return (
+      leagues.find((league) => league.slug === slug) ?? overview?.league ?? null
+    )
   }, [leagues, overview?.league, slug])
 
   const contextValue: LeagueOutletContext = {
@@ -59,20 +63,33 @@ export function LeagueLayout(): ReactElement {
       <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow-xl shadow-slate-950/40">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-300">League</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-300">
+              League
+            </p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-100">
-              {leagueSummary?.name ?? (slug ? slug.replace(/-/g, ' ') : 'League')}
+              {leagueSummary?.name ??
+                (slug ? slug.replace(/-/g, ' ') : 'League')}
             </h1>
-            <p className="text-sm text-slate-400">Slug: {leagueSummary?.slug ?? slug ?? 'n/a'}</p>
+            <p className="text-sm text-slate-400">
+              Slug: {leagueSummary?.slug ?? slug ?? 'n/a'}
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl border border-slate-800/70 bg-slate-900/70 p-4 text-right">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Plan</p>
-              <p className="mt-2 text-lg font-semibold text-slate-100">{formatPlan(leagueSummary?.plan ?? billingPlan?.plan ?? 'FREE')}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Plan
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-100">
+                {formatPlan(leagueSummary?.plan ?? billingPlan?.plan ?? 'FREE')}
+              </p>
             </div>
             <div className="rounded-2xl border border-slate-800/70 bg-slate-900/70 p-4 text-right">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Driver limit</p>
-              <p className="mt-2 text-lg font-semibold text-slate-100">{formatDriverLimit(leagueSummary?.driverLimit ?? null)}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Driver limit
+              </p>
+              <p className="mt-2 text-lg font-semibold text-slate-100">
+                {formatDriverLimit(leagueSummary?.driverLimit ?? null)}
+              </p>
             </div>
           </div>
         </div>
@@ -86,7 +103,9 @@ export function LeagueLayout(): ReactElement {
               className={({ isActive }) =>
                 [
                   'inline-flex items-center rounded-full border border-slate-800/70 bg-slate-900/60 px-4 py-2 transition hover:border-sky-500/60 hover:text-sky-100',
-                  isActive ? 'border-sky-500/60 bg-sky-500/10 text-sky-100' : '',
+                  isActive
+                    ? 'border-sky-500/60 bg-sky-500/10 text-sky-100'
+                    : '',
                 ]
                   .filter(Boolean)
                   .join(' ')

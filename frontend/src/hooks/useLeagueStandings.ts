@@ -23,7 +23,10 @@ function createMockSeasons(slug: string): SeasonSummary[] {
   ]
 }
 
-function createMockStandings(slug: string, seasonId: string): StandingEntrySummary[] {
+function createMockStandings(
+  slug: string,
+  seasonId: string,
+): StandingEntrySummary[] {
   const base = slug || 'demo'
   const entries: StandingEntrySummary[] = [
     {
@@ -72,9 +75,15 @@ export function useLeagueStandings(slug: string): UseLeagueStandingsResult {
   const shouldFetch = Boolean(accessToken)
   const queryClient = useQueryClient()
 
-  const fallbackSeasons = useMemo(() => createMockSeasons(slug || 'demo'), [slug])
-  const [localSeasons, setLocalSeasons] = useState<SeasonSummary[]>(fallbackSeasons)
-  const [localStandings, setLocalStandings] = useState<Record<string, StandingEntrySummary[]>>(() => {
+  const fallbackSeasons = useMemo(
+    () => createMockSeasons(slug || 'demo'),
+    [slug],
+  )
+  const [localSeasons, setLocalSeasons] =
+    useState<SeasonSummary[]>(fallbackSeasons)
+  const [localStandings, setLocalStandings] = useState<
+    Record<string, StandingEntrySummary[]>
+  >(() => {
     const initial: Record<string, StandingEntrySummary[]> = {}
     for (const season of fallbackSeasons) {
       initial[season.id] = createMockStandings(slug, season.id)
@@ -101,10 +110,14 @@ export function useLeagueStandings(slug: string): UseLeagueStandingsResult {
     staleTime: 60_000,
   })
 
-  const [selectedSeasonId, setSelectedSeasonIdState] = useState<string | null>(null)
+  const [selectedSeasonId, setSelectedSeasonIdState] = useState<string | null>(
+    null,
+  )
 
   useEffect(() => {
-    const availableSeasons = shouldFetch ? seasonsQuery.data ?? [] : localSeasons
+    const availableSeasons = shouldFetch
+      ? (seasonsQuery.data ?? [])
+      : localSeasons
     if (availableSeasons.length === 0) {
       setSelectedSeasonIdState(null)
       return
@@ -121,24 +134,22 @@ export function useLeagueStandings(slug: string): UseLeagueStandingsResult {
 
   const standingsQuery = useQuery<StandingEntrySummary[]>({
     queryKey: ['league-standings', slug, selectedSeasonId],
-    queryFn: () => fetchLeagueStandings(accessToken ?? '', slug, selectedSeasonId ?? ''),
+    queryFn: () =>
+      fetchLeagueStandings(accessToken ?? '', slug, selectedSeasonId ?? ''),
     enabled: shouldFetch && Boolean(slug) && Boolean(selectedSeasonId),
     staleTime: 30_000,
   })
 
-  const seasons = shouldFetch ? seasonsQuery.data ?? [] : localSeasons
+  const seasons = shouldFetch ? (seasonsQuery.data ?? []) : localSeasons
   const standings = shouldFetch
-    ? standingsQuery.data ?? []
+    ? (standingsQuery.data ?? [])
     : selectedSeasonId
-      ? localStandings[selectedSeasonId] ?? []
+      ? (localStandings[selectedSeasonId] ?? [])
       : []
 
-  const setSelectedSeasonId = useCallback(
-    (seasonId: string) => {
-      setSelectedSeasonIdState(seasonId)
-    },
-    [],
-  )
+  const setSelectedSeasonId = useCallback((seasonId: string) => {
+    setSelectedSeasonIdState(seasonId)
+  }, [])
 
   const refresh = useCallback(async () => {
     if (!selectedSeasonId) {
@@ -151,7 +162,10 @@ export function useLeagueStandings(slug: string): UseLeagueStandingsResult {
       }))
       return
     }
-    await queryClient.invalidateQueries({ queryKey: ['league-standings', slug, selectedSeasonId], exact: true })
+    await queryClient.invalidateQueries({
+      queryKey: ['league-standings', slug, selectedSeasonId],
+      exact: true,
+    })
   }, [selectedSeasonId, shouldFetch, queryClient, slug])
 
   return {
@@ -159,9 +173,13 @@ export function useLeagueStandings(slug: string): UseLeagueStandingsResult {
     selectedSeasonId,
     setSelectedSeasonId,
     standings,
-    isLoading: shouldFetch ? seasonsQuery.isLoading || standingsQuery.isLoading : false,
+    isLoading: shouldFetch
+      ? seasonsQuery.isLoading || standingsQuery.isLoading
+      : false,
     isFetching: shouldFetch ? standingsQuery.isFetching : false,
-    error: shouldFetch ? seasonsQuery.error ?? standingsQuery.error ?? null : null,
+    error: shouldFetch
+      ? (seasonsQuery.error ?? standingsQuery.error ?? null)
+      : null,
     refresh,
     isBypass: isBypassAuth || !shouldFetch,
   }

@@ -8,11 +8,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.observability import bind_user_id
 from app.core.security import ACCESS_TOKEN_TYPE, decode_token
 from app.core.settings import Settings, get_settings
 from app.db.models import User
 from app.db.session import get_session
-from app.core.observability import bind_user_id
 
 bearer_scheme = HTTPBearer(auto_error=False)
 

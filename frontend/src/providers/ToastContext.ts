@@ -13,4 +13,6 @@ export interface ToastContextValue {
   showToast: (toast: ToastInput) => void
 }
 
-export const ToastContext = createContext<ToastContextValue | undefined>(undefined)
+export const ToastContext = createContext<ToastContextValue | undefined>(
+  undefined,
+)

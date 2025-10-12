@@ -1,13 +1,12 @@
 ﻿from __future__ import annotations
 
+import sys
 from collections.abc import Generator
 from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
-from uuid import uuid4
-from datetime import datetime, timedelta, timezone
-
 from pathlib import Path
-import sys
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -18,15 +17,23 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from worker.jobs import discord as discord_jobs
 
 from app.core.settings import Settings, get_settings
 from app.db import Base
-from app.db.models import AuditLog, BillingAccount, DiscordIntegration, League, LeagueRole, Membership, User
+from app.db.models import (
+    AuditLog,
+    BillingAccount,
+    DiscordIntegration,
+    League,
+    LeagueRole,
+    Membership,
+    User,
+)
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.main import app
 from app.routes.auth import provide_discord_client
-from worker.jobs import discord as discord_jobs
 
 SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///:memory:"
 engine = create_engine(
@@ -53,7 +60,11 @@ def setup_database() -> None:
     for table in Base.metadata.sorted_tables:
         for column in table.c:
             default = getattr(column, "server_default", None)
-            if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+            if (
+                default is not None
+                and hasattr(default, "arg")
+                and "gen_random_uuid" in str(default.arg)
+            ):
                 column.server_default = None
     Base.metadata.create_all(bind=engine)
 
@@ -253,7 +264,7 @@ class TestDiscordIntegrationRoutes:
         league = create_league(database_session, owner=owner, plan="FREE")
         add_member(database_session, league=league, user=admin, role=LeagueRole.ADMIN)
 
-        grace_expiration = datetime.now(timezone.utc) + timedelta(days=3)
+        grace_expiration = datetime.now(UTC) + timedelta(days=3)
         billing = BillingAccount(
             owner_user_id=owner.id,
             plan="FREE",
@@ -283,7 +294,7 @@ class TestDiscordIntegrationRoutes:
             owner_user_id=owner.id,
             plan="FREE",
             plan_grace_plan="PRO",
-            plan_grace_expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+            plan_grace_expires_at=datetime.now(UTC) - timedelta(days=1),
         )
         database_session.add(billing)
         database_session.commit()
@@ -338,9 +349,11 @@ class TestDiscordIntegrationRoutes:
 
         assert job_spy == [((str(league.id), "guild", "channel"), {})]
 
-        audit_actions = database_session.execute(
-            select(AuditLog.action).where(AuditLog.league_id == league.id)
-        ).scalars().all()
+        audit_actions = (
+            database_session.execute(select(AuditLog.action).where(AuditLog.league_id == league.id))
+            .scalars()
+            .all()
+        )
         assert "test" in audit_actions
 
     def test_test_endpoint_requires_active_integration(
@@ -386,4 +399,3 @@ class TestDiscordIntegrationRoutes:
         assert response.status_code == HTTPStatus.NOT_FOUND
         payload = response.json()
         assert payload["error"]["code"] == "DISCORD_NOT_LINKED"
-

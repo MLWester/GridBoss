@@ -45,7 +45,10 @@ function useShareLink(): (link: string) => Promise<boolean> {
         await navigator.share({ url: link, title: 'GridBoss Standings' })
         return true
       }
-      if ('clipboard' in navigator && typeof navigator.clipboard.writeText === 'function') {
+      if (
+        'clipboard' in navigator &&
+        typeof navigator.clipboard.writeText === 'function'
+      ) {
         await navigator.clipboard.writeText(link)
         return true
       }
@@ -69,7 +72,8 @@ export function LeagueStandingsPage(): ReactElement {
     [memberships, slug],
   )
 
-  const role: LeagueRole | null = membership?.role ?? overview?.league.role ?? null
+  const role: LeagueRole | null =
+    membership?.role ?? overview?.league.role ?? null
   const canRefresh = canManageStandings(role)
 
   const {
@@ -84,7 +88,9 @@ export function LeagueStandingsPage(): ReactElement {
     isBypass,
   } = useLeagueStandings(slug)
 
-  const [shareState, setShareState] = useState<'idle' | 'success' | 'error'>('idle')
+  const [shareState, setShareState] = useState<'idle' | 'success' | 'error'>(
+    'idle',
+  )
 
   const tieLookup = useMemo(() => {
     const lookup = new Set<number>()
@@ -110,12 +116,15 @@ export function LeagueStandingsPage(): ReactElement {
         description: 'Standings link copied. Share it with your drivers!',
         variant: 'success',
       })
-      setTimeout(() => { setShareState('idle') }, 3000)
+      setTimeout(() => {
+        setShareState('idle')
+      }, 3000)
     } else {
       setShareState('error')
       showToast({
         title: 'Unable to share',
-        description: 'Copy the browser URL manually and share it while we patch this up.',
+        description:
+          'Copy the browser URL manually and share it while we patch this up.',
         variant: 'error',
       })
     }
@@ -161,7 +170,9 @@ export function LeagueStandingsPage(): ReactElement {
   if (!selectedSeasonId || seasons.length === 0) {
     return (
       <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-300">
-        <p>No seasons found yet. Activate a season to start tracking standings.</p>
+        <p>
+          No seasons found yet. Activate a season to start tracking standings.
+        </p>
       </div>
     )
   }
@@ -179,7 +190,10 @@ export function LeagueStandingsPage(): ReactElement {
         <div>
           <h2 className="text-2xl font-semibold text-slate-100">Standings</h2>
           <p className="text-sm text-slate-400">
-            Points tally updates when results land. {isBypass ? 'Showing sample data while bypass mode is active.' : null}
+            Points tally updates when results land.{' '}
+            {isBypass
+              ? 'Showing sample data while bypass mode is active.'
+              : null}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -214,7 +228,9 @@ export function LeagueStandingsPage(): ReactElement {
             }}
             className={classNames(
               'inline-flex items-center gap-2 rounded-full border border-sky-500/60 px-4 py-2 text-xs font-semibold uppercase tracking-wide transition hover:border-sky-400 hover:text-sky-100',
-              shareState === 'success' ? 'bg-sky-500/10 text-sky-100' : 'text-sky-200',
+              shareState === 'success'
+                ? 'bg-sky-500/10 text-sky-100'
+                : 'text-sky-200',
             )}
           >
             {shareLabel}
@@ -224,7 +240,10 @@ export function LeagueStandingsPage(): ReactElement {
 
       {standings.length === 0 ? (
         <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-300">
-          <p>No results yet for this season. Once events finish, standings will appear here.</p>
+          <p>
+            No results yet for this season. Once events finish, standings will
+            appear here.
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-3xl border border-slate-800/70 bg-slate-900/60">
@@ -251,19 +270,31 @@ export function LeagueStandingsPage(): ReactElement {
                       podiumClass ?? '',
                     )}
                   >
-                    <td className="px-4 py-3 text-sm font-semibold text-slate-200">{index + 1}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-slate-200">
+                      {index + 1}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="font-semibold">{entry.driverName}</div>
                       <div className="text-xs text-slate-400">
-                        {entry.podiums != null ? `${entry.podiums.toString()} podium${entry.podiums === 1 ? '' : 's'}` : null}
+                        {entry.podiums != null
+                          ? `${entry.podiums.toString()} podium${entry.podiums === 1 ? '' : 's'}`
+                          : null}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-300">{entry.teamName ?? '—'}</td>
-                    <td className="px-4 py-3 text-right text-slate-50">
-                      {isTie ? `=${entry.points.toString()}` : entry.points.toString()}
+                    <td className="px-4 py-3 text-slate-300">
+                      {entry.teamName ?? '—'}
                     </td>
-                    <td className="px-4 py-3 text-right text-slate-300">{entry.wins.toString()}</td>
-                    <td className="px-4 py-3 text-right text-slate-300">{formatBestFinish(entry.bestFinish)}</td>
+                    <td className="px-4 py-3 text-right text-slate-50">
+                      {isTie
+                        ? `=${entry.points.toString()}`
+                        : entry.points.toString()}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-300">
+                      {entry.wins.toString()}
+                    </td>
+                    <td className="px-4 py-3 text-right text-slate-300">
+                      {formatBestFinish(entry.bestFinish)}
+                    </td>
                   </tr>
                 )
               })}
@@ -274,15 +305,11 @@ export function LeagueStandingsPage(): ReactElement {
 
       <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-4 text-xs text-slate-400">
         <p>
-          Tie-breakers use wins first and the best finishing position second. Standings auto-refresh whenever results
-          are posted; use Refresh if you think the worker queue is catching up slowly.
+          Tie-breakers use wins first and the best finishing position second.
+          Standings auto-refresh whenever results are posted; use Refresh if you
+          think the worker queue is catching up slowly.
         </p>
       </div>
     </div>
   )
 }
-
-
-
-
-

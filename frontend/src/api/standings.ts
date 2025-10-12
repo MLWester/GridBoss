@@ -1,6 +1,11 @@
 import { apiFetch } from './client'
 import { ApiError } from './auth'
-import type { SeasonRead, SeasonSummary, StandingEntryRead, StandingEntrySummary } from '../types/standings'
+import type {
+  SeasonRead,
+  SeasonSummary,
+  StandingEntryRead,
+  StandingEntrySummary,
+} from '../types/standings'
 
 function mapSeason(season: SeasonRead): SeasonSummary {
   return {
@@ -22,7 +27,10 @@ function mapStanding(entry: StandingEntryRead): StandingEntrySummary {
   }
 }
 
-export async function fetchLeagueSeasons(token: string, slug: string): Promise<SeasonSummary[]> {
+export async function fetchLeagueSeasons(
+  token: string,
+  slug: string,
+): Promise<SeasonSummary[]> {
   const response = await apiFetch(`/leagues/${slug}/seasons`, {
     token,
   })
@@ -40,9 +48,12 @@ export async function fetchLeagueStandings(
   slug: string,
   seasonId: string,
 ): Promise<StandingEntrySummary[]> {
-  const response = await apiFetch(`/leagues/${slug}/standings?seasonId=${encodeURIComponent(seasonId)}`, {
-    token,
-  })
+  const response = await apiFetch(
+    `/leagues/${slug}/standings?seasonId=${encodeURIComponent(seasonId)}`,
+    {
+      token,
+    },
+  )
 
   if (response.status === 404) {
     return []
