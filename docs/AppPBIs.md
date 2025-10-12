@@ -301,7 +301,7 @@ Acceptance Criteria:
 Dependencies: PBI-024, PBI-008
 Branch: pbi/030-settings-general-points
 
-## PBI-031 - Discord Integration UI
+## PBI-031 - Discord Integration UI 
 Summary: Deliver UI for linking Discord guilds and testing announcements.
 Scope: Frontend
 Acceptance Criteria:

@@ -239,11 +239,11 @@ export function BillingPage(): ReactElement {
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold text-slate-100">Billing overview</h2>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-200">
               Current plan:{' '}
               <span className="font-semibold text-slate-200">{formatPlan(accountPlan)}</span>
             </p>
-            <p className="text-xs text-slate-500">Next renewal: {formatDate(overview?.currentPeriodEnd ?? null)}</p>
+            <p className="text-xs text-slate-200">Next renewal: {formatDate(overview?.currentPeriodEnd ?? null)}</p>
           </div>
           <button
             type="button"
@@ -256,7 +256,7 @@ export function BillingPage(): ReactElement {
                 ? undefined
                 : 'Complete a checkout first to configure the customer portal.'
             }
-            className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-slate-200 transition hover:border-slate-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-slate-200 transition hover:border-slate-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-300"
           >
             {isPortalLoading ? (
               <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
@@ -270,7 +270,7 @@ export function BillingPage(): ReactElement {
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="text-xl font-semibold text-slate-100">Driver usage</h3>
-            <p className="text-sm text-slate-400">Track roster sizes for each owned league.</p>
+            <p className="text-sm text-slate-200">Track roster sizes for each owned league.</p>
           </div>
           <button
             type="button"
@@ -285,7 +285,7 @@ export function BillingPage(): ReactElement {
 
         <div className="mt-5 space-y-4">
           {leagues.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-5 text-sm text-slate-300">
+            <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-5 text-sm text-slate-200">
               You have not created any leagues yet. Create a league to start tracking driver slots.
             </div>
           ) : (
@@ -301,9 +301,9 @@ export function BillingPage(): ReactElement {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-lg font-semibold text-slate-100">{league.name}</p>
-                      <p className="text-xs text-slate-500">slug: {league.slug}</p>
+                    <p className="text-xs text-slate-200">slug: {league.slug}</p>
                     </div>
-                    <div className="space-y-1 text-right text-xs text-slate-400">
+                    <div className="space-y-1 text-right text-xs text-slate-200">
                       <p>
                         Limit: <span className="font-semibold text-slate-200">{league.driverLimit}</span>
                       </p>
@@ -332,7 +332,7 @@ export function BillingPage(): ReactElement {
                       style={{ width: `${String(usage)}%` }}
                     />
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">Usage: {usage}%</p>
+                  <p className="mt-2 text-xs text-slate-200">Usage: {usage}%</p>
                 </div>
               )
             })
@@ -365,7 +365,7 @@ export function BillingPage(): ReactElement {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
+                    <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-200">
                       {option.label}
                     </p>
                     <p className="mt-2 text-3xl font-semibold text-slate-100">{option.price}</p>
@@ -376,8 +376,8 @@ export function BillingPage(): ReactElement {
                     </span>
                   ) : null}
                 </div>
-                <p className="mt-3 text-sm text-slate-400">{option.description}</p>
-                <ul className="mt-4 space-y-2 text-sm text-slate-300">
+                <p className="mt-3 text-sm text-slate-200">{option.description}</p>
+                <ul className="mt-4 space-y-2 text-sm text-slate-200">
                   {option.features.map((feature) => {
                     const gatedTooltip =
                       feature.gated && optionRank > currentRank
@@ -392,7 +392,7 @@ export function BillingPage(): ReactElement {
                         <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/10 text-sky-300">
                           ✓
                         </span>
-                        <span className={feature.gated && optionRank > currentRank ? 'text-slate-500' : ''}>
+                        <span className={feature.gated && optionRank > currentRank ? 'text-slate-200' : ''}>
                           {feature.text}
                         </span>
                       </li>
@@ -409,7 +409,7 @@ export function BillingPage(): ReactElement {
                     }}
                     disabled={buttonDisabled || (!isUpgrade && !isCurrent)}
                     title={buttonTitle}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-300"
                   >
                     {isPending ? (
                       <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
@@ -425,3 +425,5 @@ export function BillingPage(): ReactElement {
     </div>
   )
 }
+
+

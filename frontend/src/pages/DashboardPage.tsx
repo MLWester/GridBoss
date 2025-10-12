@@ -60,7 +60,7 @@ function RoleBadge({ role }: { role: LeagueRole | null }): ReactElement {
         ? 'text-sky-300 border-sky-400/40'
         : role === 'STEWARD'
           ? 'text-emerald-300 border-emerald-400/40'
-          : 'text-slate-300 border-slate-500/40'
+          : 'text-slate-200 border-slate-500/40'
 
   return (
     <span className={`rounded-full border px-3 py-0.5 text-xs font-semibold uppercase tracking-wide ${tone}`}>
@@ -162,7 +162,7 @@ function CreateLeagueDialog({
           <button
             type="button"
             onClick={close}
-            className="rounded-full border border-slate-700/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+            className="rounded-full border border-slate-700/70 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-200 transition hover:border-slate-500 hover:text-slate-100"
           >
             Cancel
           </button>
@@ -170,7 +170,7 @@ function CreateLeagueDialog({
 
         <form onSubmit={(event) => { void handleSubmit(event) }} className="mt-6 space-y-5">
           <label className="block text-sm">
-            <span className="text-slate-300">League name</span>
+            <span className="text-slate-200">League name</span>
             <input
               value={name}
               onChange={(event) => { handleNameChange(event.target.value) }}
@@ -182,7 +182,7 @@ function CreateLeagueDialog({
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-300">Slug</span>
+            <span className="text-slate-200">Slug</span>
             <input
               value={slug}
               onChange={(event) => {
@@ -287,7 +287,7 @@ export function DashboardPage(): ReactElement {
 
     if (leagues.length === 0) {
       return (
-        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-300">
+        <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-200">
           <p className="text-slate-100">No leagues yet</p>
           <p className="mt-2 text-slate-400">
             Create your first league to unlock the management dashboard, drivers roster, and standings workspace.
@@ -365,3 +365,5 @@ export function DashboardPage(): ReactElement {
     </section>
   )
 }
+
+
