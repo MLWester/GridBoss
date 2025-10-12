@@ -13,6 +13,7 @@ from app.core.settings import get_settings
 from app.middleware.request_context import RequestContextMiddleware
 from app.db import Base
 from app.routes import (
+    admin,
     audit,
     auth,
     billing,
@@ -79,6 +80,7 @@ app.add_middleware(RequestContextMiddleware)
 app.include_router(health.router)
 app.include_router(audit.router)
 app.include_router(auth.router)
+app.include_router(admin.router)
 app.include_router(billing.router)
 app.include_router(leagues.router)
 app.include_router(memberships.router)

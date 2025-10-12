@@ -13,6 +13,7 @@ const MOCK_PROFILE: MeResponse = {
     discord_username: 'Demo Driver',
     avatar_url: null,
     email: 'demo@gridboss.app',
+    is_founder: true,
   },
   memberships: [
     {

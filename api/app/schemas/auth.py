@@ -14,6 +14,7 @@ class UserOut(BaseModel):
     discord_username: str | None
     avatar_url: str | None
     email: str | None
+    is_founder: bool
 
     class Config:
         from_attributes = True

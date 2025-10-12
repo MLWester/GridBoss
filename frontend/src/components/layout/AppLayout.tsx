@@ -1,19 +1,28 @@
+import { useMemo } from 'react'
 import type { ReactElement } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
-const rootTabs = [
-  { label: 'Dashboard', path: '.' },
-  { label: 'Billing', path: 'billing' },
-]
-
 export function AppLayout(): ReactElement {
-  const { user, memberships, billingPlan, logout } = useAuth()
+  const { user, memberships, billingPlan, logout, isFounder } = useAuth()
   const membershipCount = memberships.length
   const membershipLabel =
     membershipCount > 0
       ? `${membershipCount.toString()} league${membershipCount > 1 ? 's' : ''}`
       : 'No leagues yet'
+
+  const adminModeEnabled = import.meta.env.VITE_ADMIN_MODE === 'true'
+
+  const tabs = useMemo(() => {
+    const base = [
+      { label: 'Dashboard', path: '.' },
+      { label: 'Billing', path: 'billing' },
+    ]
+    if (adminModeEnabled && isFounder) {
+      base.push({ label: 'Admin', path: 'admin' })
+    }
+    return base
+  }, [adminModeEnabled, isFounder])
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -56,7 +65,7 @@ export function AppLayout(): ReactElement {
           </p>
         </section>
         <nav className="flex flex-wrap gap-2 text-sm">
-          {rootTabs.map((tab) => (
+          {tabs.map((tab) => (
             <NavLink
               key={tab.label}
               to={tab.path}

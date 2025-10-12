@@ -14,5 +14,6 @@ export function useAuth() {
     user: profile?.user ?? null,
     memberships: profile?.memberships ?? [],
     billingPlan: profile?.billingPlan ?? null,
+    isFounder: profile ? profile.user.is_founder : false,
   }
 }

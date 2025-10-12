@@ -48,6 +48,9 @@ class User(Base):
     discord_username: Mapped[str | None] = mapped_column(String)
     avatar_url: Mapped[str | None] = mapped_column(String)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    is_founder: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
 
     leagues_owned: Mapped[list[League]] = relationship(back_populates="owner")
     memberships: Mapped[list[Membership]] = relationship(back_populates="user")
