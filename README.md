@@ -35,12 +35,13 @@ gridboss/
 Each package will carry its own README or docs as functionality is implemented. Refer to the master spec for file-level expectations.
 
 ## Getting Started
-1. Install prerequisites: Node 18+, npm 10+, Python 3.11+, Docker Desktop.
+1. Install prerequisites: Node 18+, npm 10+, Python 3.11+, Docker Desktop (enable WSL2 integration on Windows).
 2. Clone the repository and review `docs/MasterSpec.md` for domain context.
 3. Copy environment defaults and customise as needed:
    ```powershell
    Copy-Item .env.example .env
    ```
+   - This file is consumed by the API, worker, bot, and Docker Compose services.
 4. Bootstrap the frontend:
    ```powershell
    cd frontend
@@ -48,13 +49,16 @@ Each package will carry its own README or docs as functionality is implemented. 
    npm run lint
    npm run format
    ```
-5. Bootstrap the API service:
+5. Bootstrap the API service and worker dependencies:
    ```powershell
    cd ..\api
    python -m venv .venv
    .venv\Scripts\pip install -r requirements-dev.txt
    .venv\Scripts\ruff check
    .venv\Scripts\black --check .
+   cd ..\worker
+   python -m venv .venv
+   .venv\Scripts\pip install -r requirements.txt
    ```
 6. Follow PBIs in `docs/AppPBIs.md`, starting with `pbi/002-env-and-docker` for environment parity.
 
@@ -83,6 +87,27 @@ Services provided:
 
 Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml down`.
 
+## Running Tests
+- **Backend (FastAPI)**:
+  ```powershell
+  $env:PYTHONPATH = 'api'
+  .\api\.venv\Scripts\ruff check api
+  .\api\.venv\Scripts\black --check api
+  .\api\.venv\Scripts\pytest
+  ```
+  Pytest emits coverage via `pytest-cov` (see `coverage.xml`) and mirrors the CI job.
+- **Frontend (React/Vite)**:
+  ```powershell
+  cd frontend
+  npm run lint
+  npm run format
+  npm run test
+  npm run test:coverage
+  npm run build
+  ```
+  Use `npm run test:watch` for interactive development and `npm run test:e2e` once Playwright fixtures are populated.
+- **End-to-end**: Playwright config lives at `frontend/playwright.config.ts`; tests expect the Docker stack to be running locally.
+
 ## Tooling Commands
 - Frontend lint: `npm run lint`
 - Frontend format check: `npm run format`
@@ -90,6 +115,13 @@ Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml 
 - API lint: `.venv\Scripts\ruff check`
 - API format: `.venv\Scripts\black .`
 - API unit tests (placeholder): `.venv\Scripts\pytest`
+
+## Deployment Notes
+- **Container Builds**: Production images are defined in `infra/`. Inject secrets (Stripe, Discord, database) via your deployment platform instead of committing them to `.env`.
+- **Database Migrations**: Use Alembic (`api/alembic.ini`). From `api/`, run `alembic revision --autogenerate -m "<summary>"` then `alembic upgrade head` before promoting a release.
+- **Static Assets**: `npm run build` outputs to `frontend/dist/`; serve this folder via CDN or static hosting in production.
+- **Observability**: Set `SENTRY_DSN`, `OTEL_ENABLED=true`, and `OTEL_EXPORTER_ENDPOINT` in production manifests to emit telemetry.
+- **Rollbacks**: Maintain database backups alongside release tags; if rollout fails, redeploy the previous image and run `alembic downgrade` to the prior revision.
 
 ## Development Workflow
 - Work progresses PBI by PBI. Create a feature branch matching the branch name listed in the backlog (for example `pbi/002-env-and-docker`).
