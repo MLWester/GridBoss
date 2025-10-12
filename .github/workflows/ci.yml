@@ -45,6 +45,14 @@ jobs:
       - name: Run pytest with coverage
         run: pytest
 
+      - name: Generate API docs
+        run: python scripts/generate_api_docs.py
+        working-directory: ${{ github.workspace }}
+
+      - name: Verify API docs are current
+        run: git diff --exit-code docs/API.md
+        working-directory: ${{ github.workspace }}
+
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4

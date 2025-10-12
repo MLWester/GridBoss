@@ -30,11 +30,13 @@ class Settings(BaseSettings):
 
     admin_mode: bool = Field(default=False, alias="ADMIN_MODE")
 
-    discord_client_id: str = Field(alias="DISCORD_CLIENT_ID")
-    discord_client_secret: str = Field(alias="DISCORD_CLIENT_SECRET")
-    discord_redirect_uri: AnyHttpUrl = Field(alias="DISCORD_REDIRECT_URI")
+    discord_client_id: str = Field(default="000000000000000000", alias="DISCORD_CLIENT_ID")
+    discord_client_secret: str = Field(default="dev-secret", alias="DISCORD_CLIENT_SECRET")
+    discord_redirect_uri: AnyHttpUrl = Field(
+        default="http://localhost:8000/auth/discord/callback", alias="DISCORD_REDIRECT_URI"
+    )
 
-    jwt_secret: str = Field(alias="JWT_SECRET")
+    jwt_secret: str = Field(default="dev-jwt-secret", alias="JWT_SECRET")
     jwt_access_ttl_min: int = Field(default=15, alias="JWT_ACCESS_TTL_MIN")
     jwt_refresh_ttl_days: int = Field(default=14, alias="JWT_REFRESH_TTL_DAYS")
 

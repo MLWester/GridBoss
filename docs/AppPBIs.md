@@ -343,7 +343,7 @@ Branch: pbi/034-frontend-tests
 
 ## OPS & CI -----------------------------------------------------------------------------------
 
-## PBI-035 - CI Pipeline and Quality Gates
+## PBI-035 - CI Pipeline and Quality Gates (complete)
 Summary: Configure continuous integration workflows for linting, testing, and builds.
 Scope: Ops
 Acceptance Criteria:
@@ -353,7 +353,7 @@ Acceptance Criteria:
 Dependencies: PBI-020, PBI-034
 Branch: pbi/035-ci-pipeline
 
-## PBI-036 - Performance and Load Testing
+## PBI-036 - Performance and Load Testing (still needs to be completed)
 Summary: Validate performance targets for standings and job queue throughput.
 Scope: Backend, Ops
 Acceptance Criteria:
