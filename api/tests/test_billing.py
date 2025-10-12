@@ -6,8 +6,12 @@ import types
 if "stripe" not in sys.modules:
     stripe_module = types.ModuleType("stripe")
     stripe_module.Customer = types.SimpleNamespace(create=lambda **kwargs: {"id": "stub_customer"})
-    stripe_module.checkout = types.SimpleNamespace(Session=types.SimpleNamespace(create=lambda **kwargs: {"url": "stub_checkout"}))
-    stripe_module.billing_portal = types.SimpleNamespace(Session=types.SimpleNamespace(create=lambda **kwargs: {"url": "stub_portal"}))
+    stripe_module.checkout = types.SimpleNamespace(
+        Session=types.SimpleNamespace(create=lambda **kwargs: {"url": "stub_checkout"})
+    )
+    stripe_module.billing_portal = types.SimpleNamespace(
+        Session=types.SimpleNamespace(create=lambda **kwargs: {"url": "stub_portal"})
+    )
     stripe_module.error = types.SimpleNamespace(StripeError=Exception)
     sys.modules["stripe"] = stripe_module
 
@@ -47,7 +51,11 @@ TestingSessionLocal = sessionmaker(
 for table in Base.metadata.sorted_tables:
     for column in table.c:
         default = getattr(column, "server_default", None)
-        if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+        if (
+            default is not None
+            and hasattr(default, "arg")
+            and "gen_random_uuid" in str(default.arg)
+        ):
             column.server_default = None
 
 Base.metadata.create_all(bind=engine)
@@ -57,7 +65,6 @@ def reset_database() -> None:
     with engine.begin() as connection:
         for table in reversed(Base.metadata.sorted_tables):
             connection.execute(table.delete())
-
 
 
 class StripeStub:
@@ -99,13 +106,6 @@ class StripeStub:
 @pytest.fixture(scope="session", autouse=True)
 def setup_database() -> None:
     Base.metadata.create_all(bind=engine)
-
-
-def reset_database() -> None:
-    with engine.begin() as connection:
-        for table in reversed(Base.metadata.sorted_tables):
-            connection.execute(table.delete())
-
 
 
 @pytest.fixture(autouse=True)
@@ -212,9 +212,7 @@ class TestBillingRoutes:
         ).scalar_one()
         assert stored.plan == "PRO"
         assert stored.stripe_customer_id == stripe_stub.customer_id
-        league = session.execute(
-            select(League).where(League.owner_id == owner.id)
-        ).scalar_one()
+        league = session.execute(select(League).where(League.owner_id == owner.id)).scalar_one()
         assert league.plan == "PRO"
         assert league.driver_limit == 100
         session.close()
@@ -269,8 +267,3 @@ class TestBillingRoutes:
             {"customer_id": "cus_existing", "return_url": "http://localhost:5173/billing"}
         ]
         session.close()
-
-
-
-
-

@@ -39,9 +39,7 @@ SUPPORTED_PLANS = {"PRO", "ELITE"}
 
 
 def _owner_leagues(session: Session, user_id: str) -> list[League]:
-    return (
-        session.execute(select(League).where(League.owner_id == user_id)).scalars().all()
-    )
+    return session.execute(select(League).where(League.owner_id == user_id)).scalars().all()
 
 
 def _ensure_owner_role(session: Session, user_id: str) -> None:
@@ -113,9 +111,7 @@ async def read_billing_overview(
         current_period_end=billing_account.current_period_end if billing_account else None,
         grace_plan=billing_account.plan_grace_plan if billing_account else None,
         grace_expires_at=billing_account.plan_grace_expires_at if billing_account else None,
-        can_manage_subscription=bool(
-            billing_account and billing_account.stripe_customer_id
-        ),
+        can_manage_subscription=bool(billing_account and billing_account.stripe_customer_id),
         leagues=leagues,
     )
 
@@ -147,8 +143,7 @@ async def create_checkout_session(
         )
 
     league_states_before = {
-        league.id: {"plan": league.plan, "driver_limit": league.driver_limit}
-        for league in leagues
+        league.id: {"plan": league.plan, "driver_limit": league.driver_limit} for league in leagues
     }
 
     billing_account = (

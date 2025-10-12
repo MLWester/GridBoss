@@ -10,8 +10,8 @@ from fastapi.responses import JSONResponse
 
 from app.core.observability import configure_logging
 from app.core.settings import get_settings
-from app.middleware.request_context import RequestContextMiddleware
 from app.db import Base
+from app.middleware.request_context import RequestContextMiddleware
 from app.routes import (
     admin,
     audit,
@@ -40,7 +40,11 @@ def _prepare_sqlite_defaults(app_env: str) -> None:
     for table in Base.metadata.sorted_tables:
         for column in table.c:
             default = getattr(column, "server_default", None)
-            if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+            if (
+                default is not None
+                and hasattr(default, "arg")
+                and "gen_random_uuid" in str(default.arg)
+            ):
                 column.server_default = None
 
 

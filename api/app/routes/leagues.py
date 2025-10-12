@@ -9,13 +9,13 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.settings import Settings, get_settings
 from app.core.observability import bind_league_id
+from app.core.settings import Settings, get_settings
 from app.db.models import League, LeagueRole, Membership, Season, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
-from app.services.audit import record_audit_log
 from app.schemas.leagues import LeagueCreate, LeagueRead, LeagueUpdate
+from app.services.audit import record_audit_log
 
 router = APIRouter(prefix="/leagues", tags=["leagues"])
 

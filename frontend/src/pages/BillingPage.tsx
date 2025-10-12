@@ -114,10 +114,20 @@ function percentUsage(driverCount: number, driverLimit: number): number {
 }
 
 export function BillingPage(): ReactElement {
-  const { overview, isLoading, error, refresh, beginCheckout, launchPortal, isBypass } = useBilling()
+  const {
+    overview,
+    isLoading,
+    error,
+    refresh,
+    beginCheckout,
+    launchPortal,
+    isBypass,
+  } = useBilling()
   const { showToast } = useToast()
 
-  const [pendingPlan, setPendingPlan] = useState<BillingUpgradePlan | null>(null)
+  const [pendingPlan, setPendingPlan] = useState<BillingUpgradePlan | null>(
+    null,
+  )
   const [isPortalLoading, setIsPortalLoading] = useState(false)
 
   const accountPlan: BillingPlanTier = overview?.plan ?? 'FREE'
@@ -139,7 +149,9 @@ export function BillingPage(): ReactElement {
       await refresh()
     } catch (checkoutError) {
       const description =
-        checkoutError instanceof Error ? checkoutError.message : 'Unable to start the checkout session.'
+        checkoutError instanceof Error
+          ? checkoutError.message
+          : 'Unable to start the checkout session.'
       showToast({
         title: 'Checkout failed',
         description,
@@ -159,7 +171,8 @@ export function BillingPage(): ReactElement {
       }
       showToast({
         title: 'Portal opened',
-        description: 'Manage your subscription inside the Stripe customer portal.',
+        description:
+          'Manage your subscription inside the Stripe customer portal.',
         variant: 'success',
       })
     } catch (portalError) {
@@ -190,7 +203,10 @@ export function BillingPage(): ReactElement {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 2 }).map((_, index) => (
-            <div key={index} className="rounded-3xl border border-slate-800/70 bg-slate-900/50 p-5">
+            <div
+              key={index}
+              className="rounded-3xl border border-slate-800/70 bg-slate-900/50 p-5"
+            >
               <div className="h-4 w-24 rounded bg-slate-800" />
               <div className="mt-2 h-8 w-32 rounded bg-slate-800" />
               <div className="mt-4 space-y-2">
@@ -209,13 +225,16 @@ export function BillingPage(): ReactElement {
     <div className="space-y-6">
       {isBypass ? (
         <div className="rounded-3xl border border-blue-500/40 bg-blue-500/10 p-4 text-sm text-blue-100">
-          Billing demo mode active: upgrade and portal actions open mock URLs locally.
+          Billing demo mode active: upgrade and portal actions open mock URLs
+          locally.
         </div>
       ) : null}
 
       {error ? (
         <div className="rounded-3xl border border-rose-500/40 bg-rose-500/10 p-5 text-sm text-rose-100">
-          <p className="font-semibold">We could not load billing information.</p>
+          <p className="font-semibold">
+            We could not load billing information.
+          </p>
           <p className="mt-2 text-rose-100/80">{error.message}</p>
           <button
             type="button"
@@ -238,12 +257,18 @@ export function BillingPage(): ReactElement {
       <section className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow shadow-slate-950/30">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-100">Billing overview</h2>
+            <h2 className="text-2xl font-semibold text-slate-100">
+              Billing overview
+            </h2>
             <p className="text-sm text-slate-200">
               Current plan:{' '}
-              <span className="font-semibold text-slate-200">{formatPlan(accountPlan)}</span>
+              <span className="font-semibold text-slate-200">
+                {formatPlan(accountPlan)}
+              </span>
             </p>
-            <p className="text-xs text-slate-200">Next renewal: {formatDate(overview?.currentPeriodEnd ?? null)}</p>
+            <p className="text-xs text-slate-200">
+              Next renewal: {formatDate(overview?.currentPeriodEnd ?? null)}
+            </p>
           </div>
           <button
             type="button"
@@ -269,8 +294,12 @@ export function BillingPage(): ReactElement {
       <section className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow shadow-slate-950/30">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="text-xl font-semibold text-slate-100">Driver usage</h3>
-            <p className="text-sm text-slate-200">Track roster sizes for each owned league.</p>
+            <h3 className="text-xl font-semibold text-slate-100">
+              Driver usage
+            </h3>
+            <p className="text-sm text-slate-200">
+              Track roster sizes for each owned league.
+            </p>
           </div>
           <button
             type="button"
@@ -286,7 +315,8 @@ export function BillingPage(): ReactElement {
         <div className="mt-5 space-y-4">
           {leagues.length === 0 ? (
             <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-5 text-sm text-slate-200">
-              You have not created any leagues yet. Create a league to start tracking driver slots.
+              You have not created any leagues yet. Create a league to start
+              tracking driver slots.
             </div>
           ) : (
             leagues.map((league) => {
@@ -300,15 +330,25 @@ export function BillingPage(): ReactElement {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-lg font-semibold text-slate-100">{league.name}</p>
-                    <p className="text-xs text-slate-200">slug: {league.slug}</p>
+                      <p className="text-lg font-semibold text-slate-100">
+                        {league.name}
+                      </p>
+                      <p className="text-xs text-slate-200">
+                        slug: {league.slug}
+                      </p>
                     </div>
                     <div className="space-y-1 text-right text-xs text-slate-200">
                       <p>
-                        Limit: <span className="font-semibold text-slate-200">{league.driverLimit}</span>
+                        Limit:{' '}
+                        <span className="font-semibold text-slate-200">
+                          {league.driverLimit}
+                        </span>
                       </p>
                       <p>
-                        Used: <span className="font-semibold text-slate-200">{league.driverCount}</span>
+                        Used:{' '}
+                        <span className="font-semibold text-slate-200">
+                          {league.driverCount}
+                        </span>
                       </p>
                       {atLimit ? (
                         <span
@@ -341,7 +381,9 @@ export function BillingPage(): ReactElement {
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-xl font-semibold text-slate-100">Choose the right plan</h3>
+        <h3 className="text-xl font-semibold text-slate-100">
+          Choose the right plan
+        </h3>
         <div className="grid gap-4 md:grid-cols-3">
           {PLAN_OPTIONS.map((option) => {
             const currentPlan = accountPlan
@@ -351,7 +393,8 @@ export function BillingPage(): ReactElement {
             const isDowngrade = optionRank < currentRank
             const isUpgrade = optionRank > currentRank
             const isPending = pendingPlan === option.tier
-            const buttonDisabled = isCurrent || isDowngrade || (isPending && !isCurrent)
+            const buttonDisabled =
+              isCurrent || isDowngrade || (isPending && !isCurrent)
             const buttonTitle = isDowngrade
               ? 'Use the customer portal to manage downgrades.'
               : isCurrent
@@ -368,7 +411,9 @@ export function BillingPage(): ReactElement {
                     <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-200">
                       {option.label}
                     </p>
-                    <p className="mt-2 text-3xl font-semibold text-slate-100">{option.price}</p>
+                    <p className="mt-2 text-3xl font-semibold text-slate-100">
+                      {option.price}
+                    </p>
                   </div>
                   {isCurrent ? (
                     <span className="rounded-full border border-sky-500/60 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sky-200">
@@ -376,7 +421,9 @@ export function BillingPage(): ReactElement {
                     </span>
                   ) : null}
                 </div>
-                <p className="mt-3 text-sm text-slate-200">{option.description}</p>
+                <p className="mt-3 text-sm text-slate-200">
+                  {option.description}
+                </p>
                 <ul className="mt-4 space-y-2 text-sm text-slate-200">
                   {option.features.map((feature) => {
                     const gatedTooltip =
@@ -392,7 +439,13 @@ export function BillingPage(): ReactElement {
                         <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/10 text-sky-300">
                           ✓
                         </span>
-                        <span className={feature.gated && optionRank > currentRank ? 'text-slate-200' : ''}>
+                        <span
+                          className={
+                            feature.gated && optionRank > currentRank
+                              ? 'text-slate-200'
+                              : ''
+                          }
+                        >
                           {feature.text}
                         </span>
                       </li>
@@ -414,7 +467,11 @@ export function BillingPage(): ReactElement {
                     {isPending ? (
                       <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
                     ) : null}
-                    {isCurrent ? 'Current plan' : isDowngrade ? 'Downgrade via portal' : `Upgrade to ${option.label}`}
+                    {isCurrent
+                      ? 'Current plan'
+                      : isDowngrade
+                        ? 'Downgrade via portal'
+                        : `Upgrade to ${option.label}`}
                   </button>
                 </div>
               </div>
@@ -425,5 +482,3 @@ export function BillingPage(): ReactElement {
     </div>
   )
 }
-
-

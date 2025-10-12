@@ -20,14 +20,30 @@ function slugify(source: string): string {
 }
 
 const PlusIcon = (): ReactElement => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+  <svg
+    className="h-4 w-4"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+  >
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />
   </svg>
 )
 
 const RefreshIcon = (): ReactElement => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0 0 9 3 9 9 0 0 0 6.36-15.36L20 4M4 20l1.64-1.64" />
+  <svg
+    className="h-4 w-4"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0 0 9 3 9 9 0 0 0 6.36-15.36L20 4M4 20l1.64-1.64"
+    />
   </svg>
 )
 
@@ -63,7 +79,9 @@ function RoleBadge({ role }: { role: LeagueRole | null }): ReactElement {
           : 'text-slate-200 border-slate-500/40'
 
   return (
-    <span className={`rounded-full border px-3 py-0.5 text-xs font-semibold uppercase tracking-wide ${tone}`}>
+    <span
+      className={`rounded-full border px-3 py-0.5 text-xs font-semibold uppercase tracking-wide ${tone}`}
+    >
       {role.toLowerCase()}
     </span>
   )
@@ -145,14 +163,21 @@ function CreateLeagueDialog({
     }
   }
 
-  const actionLabel = status === 'pending' ? 'Creating…' : isBypass ? 'Simulate League' : 'Create League'
+  const actionLabel =
+    status === 'pending'
+      ? 'Creatingï¿½'
+      : isBypass
+        ? 'Simulate League'
+        : 'Create League'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4">
       <div className="w-full max-w-lg rounded-3xl border border-slate-800/70 bg-slate-900/80 p-6 shadow-2xl shadow-slate-950/60">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-slate-100">Create a new league</h2>
+            <h2 className="text-xl font-semibold text-slate-100">
+              Create a new league
+            </h2>
             <p className="mt-1 text-sm text-slate-400">
               {isBypass
                 ? 'Bypass mode is active, so this will simulate a league for preview purposes.'
@@ -168,12 +193,19 @@ function CreateLeagueDialog({
           </button>
         </div>
 
-        <form onSubmit={(event) => { void handleSubmit(event) }} className="mt-6 space-y-5">
+        <form
+          onSubmit={(event) => {
+            void handleSubmit(event)
+          }}
+          className="mt-6 space-y-5"
+        >
           <label className="block text-sm">
             <span className="text-slate-200">League name</span>
             <input
               value={name}
-              onChange={(event) => { handleNameChange(event.target.value) }}
+              onChange={(event) => {
+                handleNameChange(event.target.value)
+              }}
               type="text"
               className="mt-2 w-full rounded-2xl border border-slate-700/70 bg-slate-950 px-4 py-2 text-slate-100 outline-none focus:border-sky-500/70"
               placeholder="Sim Racing League"
@@ -196,7 +228,9 @@ function CreateLeagueDialog({
             />
           </label>
 
-          {(formError || errorMessage) && <p className="text-sm text-rose-300">{formError ?? errorMessage}</p>}
+          {(formError || errorMessage) && (
+            <p className="text-sm text-rose-300">{formError ?? errorMessage}</p>
+          )}
 
           <div className="flex justify-end gap-2">
             <button
@@ -218,7 +252,10 @@ export function DashboardPage(): ReactElement {
   const { refreshProfile, isBypassAuth, accessToken, billingPlan } = useAuth()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const planLabel = useMemo(() => billingPlan?.plan ?? 'FREE', [billingPlan?.plan])
+  const planLabel = useMemo(
+    () => billingPlan?.plan ?? 'FREE',
+    [billingPlan?.plan],
+  )
 
   const computeDriverLimit = useCallback(() => {
     if (billingPlan?.plan === 'ELITE') return 9999
@@ -276,7 +313,9 @@ export function DashboardPage(): ReactElement {
           <p className="mt-2 text-rose-100/80">{error.message}</p>
           <button
             type="button"
-            onClick={() => { void refetch() }}
+            onClick={() => {
+              void refetch()
+            }}
             className="mt-4 inline-flex items-center gap-2 rounded-full border border-rose-400/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-rose-100 transition hover:border-rose-200"
           >
             <RefreshIcon /> Retry
@@ -290,11 +329,14 @@ export function DashboardPage(): ReactElement {
         <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-200">
           <p className="text-slate-100">No leagues yet</p>
           <p className="mt-2 text-slate-400">
-            Create your first league to unlock the management dashboard, drivers roster, and standings workspace.
+            Create your first league to unlock the management dashboard, drivers
+            roster, and standings workspace.
           </p>
           <button
             type="button"
-            onClick={() => { setIsDialogOpen(true) }}
+            onClick={() => {
+              setIsDialogOpen(true)
+            }}
             className="mt-4 inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
           >
             <PlusIcon /> Create league
@@ -313,7 +355,9 @@ export function DashboardPage(): ReactElement {
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-lg font-semibold text-slate-100">{league.name}</p>
+                <p className="text-lg font-semibold text-slate-100">
+                  {league.name}
+                </p>
                 <p className="text-xs text-slate-400">slug: {league.slug}</p>
               </div>
               <RoleBadge role={league.role ?? null} />
@@ -325,7 +369,9 @@ export function DashboardPage(): ReactElement {
               </div>
               <div className="flex items-center justify-between">
                 <dt>Driver limit</dt>
-                <dd className="text-slate-200">{league.driverLimit ?? 'n/a'}</dd>
+                <dd className="text-slate-200">
+                  {league.driverLimit ?? 'n/a'}
+                </dd>
               </div>
             </dl>
           </Link>
@@ -338,14 +384,19 @@ export function DashboardPage(): ReactElement {
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-100">Your leagues</h2>
+          <h2 className="text-2xl font-semibold text-slate-100">
+            Your leagues
+          </h2>
           <p className="text-sm text-slate-400">
-            Manage your organisations from this hub. Create new leagues or jump into rosters once upcoming modules land.
+            Manage your organisations from this hub. Create new leagues or jump
+            into rosters once upcoming modules land.
           </p>
         </div>
         <button
           type="button"
-          onClick={() => { setIsDialogOpen(true) }}
+          onClick={() => {
+            setIsDialogOpen(true)
+          }}
           className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
         >
           <PlusIcon /> Create league
@@ -359,11 +410,15 @@ export function DashboardPage(): ReactElement {
         onOpenChange={setIsDialogOpen}
         onSubmit={handleCreate}
         status={mutation.status}
-        errorMessage={mutation.isError ? (mutation.error instanceof Error ? mutation.error.message : 'Failed to create league') : null}
+        errorMessage={
+          mutation.isError
+            ? mutation.error instanceof Error
+              ? mutation.error.message
+              : 'Failed to create league'
+            : null
+        }
         isBypass={isBypassAuth}
       />
     </section>
   )
 }
-
-

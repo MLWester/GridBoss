@@ -35,7 +35,10 @@ function LoadingSkeleton(): ReactElement {
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {Array.from({ length: 4 }).map((__, chip) => (
-              <div key={chip.toString()} className="h-7 w-20 rounded-full bg-slate-800" />
+              <div
+                key={chip.toString()}
+                className="h-7 w-20 rounded-full bg-slate-800"
+              />
             ))}
           </div>
         </div>
@@ -87,8 +90,8 @@ function TeamModal({
           <div>
             <h2 className="text-2xl font-semibold text-slate-100">{title}</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Give your team a name and pick the drivers that should belong to it. Drivers can only belong to one team
-              at a time.
+              Give your team a name and pick the drivers that should belong to
+              it. Drivers can only belong to one team at a time.
             </p>
           </div>
           <button
@@ -104,7 +107,10 @@ function TeamModal({
 
         <div className="mt-6 space-y-5">
           <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-400" htmlFor="team-name">
+            <label
+              className="block text-xs font-semibold uppercase tracking-wide text-slate-400"
+              htmlFor="team-name"
+            >
               Team name
             </label>
             <input
@@ -119,11 +125,14 @@ function TeamModal({
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Drivers</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Drivers
+            </p>
             <div className="mt-3 grid gap-2">
               {drivers.length === 0 ? (
                 <p className="text-sm text-slate-500">
-                  No drivers available yet. Add drivers first to build out teams.
+                  No drivers available yet. Add drivers first to build out
+                  teams.
                 </p>
               ) : (
                 drivers.map((driver) => {
@@ -149,7 +158,9 @@ function TeamModal({
                         <span>{driver.displayName}</span>
                       </div>
                       <span className="text-xs text-slate-500">
-                        {driver.teamId && driver.teamName ? `Currently: ${driver.teamName}` : 'Unassigned'}
+                        {driver.teamId && driver.teamName
+                          ? `Currently: ${driver.teamName}`
+                          : 'Unassigned'}
                       </span>
                     </label>
                   )
@@ -196,7 +207,13 @@ interface DeleteModalProps {
   isDeleting: boolean
 }
 
-function DeleteModal({ open, team, onConfirm, onClose, isDeleting }: DeleteModalProps): ReactElement | null {
+function DeleteModal({
+  open,
+  team,
+  onConfirm,
+  onClose,
+  isDeleting,
+}: DeleteModalProps): ReactElement | null {
   if (!open || !team) {
     return null
   }
@@ -206,8 +223,9 @@ function DeleteModal({ open, team, onConfirm, onClose, isDeleting }: DeleteModal
       <div className="w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-950/95 p-8 text-slate-100 shadow-xl shadow-slate-950/60">
         <h3 className="text-xl font-semibold">Delete team</h3>
         <p className="mt-3 text-sm text-slate-300">
-          Removing <span className="font-semibold">{team.name}</span> will unassign its drivers. You can reassign them
-          later from the teams or drivers tab.
+          Removing <span className="font-semibold">{team.name}</span> will
+          unassign its drivers. You can reassign them later from the teams or
+          drivers tab.
         </p>
         <div className="mt-6 flex items-center justify-end gap-3 text-sm">
           <button
@@ -261,12 +279,16 @@ export function LeagueTeamsPage(): ReactElement {
     [memberships, slug],
   )
 
-  const role: LeagueRole | null = membership?.role ?? overview?.league.role ?? null
+  const role: LeagueRole | null =
+    membership?.role ?? overview?.league.role ?? null
   const canEdit = canManageTeams(role)
 
   const [isCreating, setIsCreating] = useState(false)
   const [editTarget, setEditTarget] = useState<TeamSummary | null>(null)
-  const [formState, setFormState] = useState<TeamFormState>({ name: '', driverIds: [] })
+  const [formState, setFormState] = useState<TeamFormState>({
+    name: '',
+    driverIds: [],
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<TeamSummary | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -288,7 +310,10 @@ export function LeagueTeamsPage(): ReactElement {
   }
 
   const availableDrivers = useMemo(
-    () => drivers.slice().sort((a, b) => a.displayName.localeCompare(b.displayName)),
+    () =>
+      drivers
+        .slice()
+        .sort((a, b) => a.displayName.localeCompare(b.displayName)),
     [drivers],
   )
 
@@ -296,7 +321,10 @@ export function LeagueTeamsPage(): ReactElement {
     setIsSubmitting(true)
     try {
       const trimmedName = formState.name.trim()
-      const team = await createTeam({ name: trimmedName, driverIds: formState.driverIds })
+      const team = await createTeam({
+        name: trimmedName,
+        driverIds: formState.driverIds,
+      })
       showToast({
         title: 'Team created',
         description: `${team.name} is ready. Drivers assigned have been moved from their previous teams.`,
@@ -304,7 +332,8 @@ export function LeagueTeamsPage(): ReactElement {
       })
       closeModals()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create team'
+      const message =
+        err instanceof Error ? err.message : 'Failed to create team'
       showToast({
         title: 'Create failed',
         description: message,
@@ -322,7 +351,10 @@ export function LeagueTeamsPage(): ReactElement {
     setIsSubmitting(true)
     try {
       const trimmedName = formState.name.trim()
-      const team = await updateTeam(editTarget.id, { name: trimmedName, driverIds: formState.driverIds })
+      const team = await updateTeam(editTarget.id, {
+        name: trimmedName,
+        driverIds: formState.driverIds,
+      })
       showToast({
         title: 'Team updated',
         description: `${team.name} has been refreshed.`,
@@ -330,7 +362,8 @@ export function LeagueTeamsPage(): ReactElement {
       })
       closeModals()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update team'
+      const message =
+        err instanceof Error ? err.message : 'Failed to update team'
       showToast({
         title: 'Update failed',
         description: message,
@@ -355,7 +388,8 @@ export function LeagueTeamsPage(): ReactElement {
       })
       setDeleteTarget(null)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete team'
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete team'
       showToast({
         title: 'Delete failed',
         description: message,
@@ -417,7 +451,10 @@ export function LeagueTeamsPage(): ReactElement {
         <div>
           <h2 className="text-2xl font-semibold text-slate-100">Teams</h2>
           <p className="text-sm text-slate-400">
-            Organise your roster into teams. {isBypass ? 'This view is populated with mock data while bypass mode is active.' : null}
+            Organise your roster into teams.{' '}
+            {isBypass
+              ? 'This view is populated with mock data while bypass mode is active.'
+              : null}
           </p>
         </div>
         {canEdit ? (
@@ -437,8 +474,8 @@ export function LeagueTeamsPage(): ReactElement {
         <div className="mt-6 rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-300">
           <p className="text-slate-100">No teams yet</p>
           <p className="mt-2 text-slate-400">
-            Create a team to start grouping drivers. You can reassign drivers at any time, and upcoming PBIs will add
-            more team analytics.
+            Create a team to start grouping drivers. You can reassign drivers at
+            any time, and upcoming PBIs will add more team analytics.
           </p>
           {canEdit ? (
             <button
@@ -451,7 +488,9 @@ export function LeagueTeamsPage(): ReactElement {
               Create your first team
             </button>
           ) : (
-            <p className="mt-4 text-xs text-slate-500">You need elevated permissions to manage teams.</p>
+            <p className="mt-4 text-xs text-slate-500">
+              You need elevated permissions to manage teams.
+            </p>
           )}
         </div>
       ) : (
@@ -463,9 +502,12 @@ export function LeagueTeamsPage(): ReactElement {
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-lg font-semibold text-slate-100">{team.name}</p>
+                  <p className="text-lg font-semibold text-slate-100">
+                    {team.name}
+                  </p>
                   <p className="text-xs text-slate-500">
-                    {team.driverCount.toString()} {team.driverCount === 1 ? 'driver' : 'drivers'}
+                    {team.driverCount.toString()}{' '}
+                    {team.driverCount === 1 ? 'driver' : 'drivers'}
                   </p>
                 </div>
                 {canEdit ? (

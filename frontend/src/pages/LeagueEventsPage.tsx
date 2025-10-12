@@ -100,7 +100,8 @@ function EventModal({
           <div>
             <h2 className="text-2xl font-semibold">{title}</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Configure the event details. Start time uses your local timezone and will be stored in UTC.
+              Configure the event details. Start time uses your local timezone
+              and will be stored in UTC.
             </p>
           </div>
           <button
@@ -184,7 +185,10 @@ function EventModal({
                 <select
                   value={form.status}
                   onChange={(event) => {
-                    onChange({ ...form, status: event.target.value as EventStatus })
+                    onChange({
+                      ...form,
+                      status: event.target.value as EventStatus,
+                    })
                   }}
                   className="mt-2 w-full rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40"
                 >
@@ -290,21 +294,32 @@ function ConfirmModal({
   )
 }
 
-function partitionEvents(events: EventSummary[]): { upcoming: EventSummary[]; completed: EventSummary[] } {
+function partitionEvents(events: EventSummary[]): {
+  upcoming: EventSummary[]
+  completed: EventSummary[]
+} {
   const now = Date.now()
   const upcoming: EventSummary[] = []
   const completed: EventSummary[] = []
   for (const event of events) {
     const start = new Date(event.startTime).getTime()
-    if (event.status === 'COMPLETED' || event.status === 'CANCELLED' || start < now) {
+    if (
+      event.status === 'COMPLETED' ||
+      event.status === 'CANCELLED' ||
+      start < now
+    ) {
       completed.push(event)
     } else {
       upcoming.push(event)
     }
   }
 
-  upcoming.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-  completed.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+  upcoming.sort(
+    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+  )
+  completed.sort(
+    (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime(),
+  )
   return { upcoming, completed }
 }
 
@@ -313,15 +328,25 @@ export function LeagueEventsPage(): ReactElement {
   const { overview } = useOutletContext<LeagueOutletContext>()
   const { memberships, isLoading: isAuthLoading } = useAuth()
   const { showToast } = useToast()
-  const { events, isLoading, isFetching, error, refetch, createEvent, updateEvent, deleteEvent, isBypass } =
-    useLeagueEvents(slug)
+  const {
+    events,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    isBypass,
+  } = useLeagueEvents(slug)
 
   const membership = useMemo(
     () => memberships.find((item) => item.league_slug === slug) ?? null,
     [memberships, slug],
   )
 
-  const role: LeagueRole | null = membership?.role ?? overview?.league.role ?? null
+  const role: LeagueRole | null =
+    membership?.role ?? overview?.league.role ?? null
   const canEdit = canManageEvents(role)
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -341,7 +366,10 @@ export function LeagueEventsPage(): ReactElement {
   }>({ type: null, event: null })
   const [isConfirming, setIsConfirming] = useState(false)
 
-  const { upcoming, completed } = useMemo(() => partitionEvents(events), [events])
+  const { upcoming, completed } = useMemo(
+    () => partitionEvents(events),
+    [events],
+  )
 
   const startCreate = () => {
     const defaultStart = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
@@ -388,8 +416,12 @@ export function LeagueEventsPage(): ReactElement {
         name: formState.name.trim(),
         track: formState.track.trim() || null,
         startTime: fromLocalInput(formState.startLocal),
-        laps: formState.laps ? Number.parseInt(formState.laps, 10) || null : null,
-        distanceKm: formState.distanceKm ? Number.parseFloat(formState.distanceKm) || null : null,
+        laps: formState.laps
+          ? Number.parseInt(formState.laps, 10) || null
+          : null,
+        distanceKm: formState.distanceKm
+          ? Number.parseFloat(formState.distanceKm) || null
+          : null,
         status: 'SCHEDULED' as EventStatus,
       }
       const event = await createEvent(payload)
@@ -400,7 +432,8 @@ export function LeagueEventsPage(): ReactElement {
       })
       closeModals()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create event'
+      const message =
+        err instanceof Error ? err.message : 'Failed to create event'
       showToast({
         title: 'Create failed',
         description: message,
@@ -420,10 +453,16 @@ export function LeagueEventsPage(): ReactElement {
       const payload = {
         name: formState.name.trim(),
         track: formState.track.trim() || null,
-        startTime: formState.startLocal ? fromLocalInput(formState.startLocal) : undefined,
+        startTime: formState.startLocal
+          ? fromLocalInput(formState.startLocal)
+          : undefined,
         status: formState.status,
-        laps: formState.laps ? Number.parseInt(formState.laps, 10) || null : null,
-        distanceKm: formState.distanceKm ? Number.parseFloat(formState.distanceKm) || null : null,
+        laps: formState.laps
+          ? Number.parseInt(formState.laps, 10) || null
+          : null,
+        distanceKm: formState.distanceKm
+          ? Number.parseFloat(formState.distanceKm) || null
+          : null,
       }
       const updated = await updateEvent(editTarget.id, payload)
       showToast({
@@ -433,7 +472,8 @@ export function LeagueEventsPage(): ReactElement {
       })
       closeModals()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update event'
+      const message =
+        err instanceof Error ? err.message : 'Failed to update event'
       showToast({
         title: 'Update failed',
         description: message,
@@ -455,7 +495,8 @@ export function LeagueEventsPage(): ReactElement {
       })
       setConfirmState({ type: null, event: null })
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to cancel event'
+      const message =
+        err instanceof Error ? err.message : 'Failed to cancel event'
       showToast({
         title: 'Cancel failed',
         description: message,
@@ -477,7 +518,8 @@ export function LeagueEventsPage(): ReactElement {
       })
       setConfirmState({ type: null, event: null })
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete event'
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete event'
       showToast({
         title: 'Delete failed',
         description: message,
@@ -527,43 +569,42 @@ export function LeagueEventsPage(): ReactElement {
   }
 
   const renderEventCard = (event: EventSummary) => {
-    const manageButtons =
-      canEdit && (
-        <div className="flex flex-wrap items-center gap-2">
+    const manageButtons = canEdit && (
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={isFetching}
+          onClick={() => {
+            startEdit(event)
+          }}
+          className="rounded-full border border-slate-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:border-slate-500 hover:text-slate-100 disabled:opacity-60"
+        >
+          Edit
+        </button>
+        {event.status !== 'CANCELLED' && (
           <button
             type="button"
             disabled={isFetching}
             onClick={() => {
-              startEdit(event)
+              setConfirmState({ type: 'cancel', event })
             }}
-            className="rounded-full border border-slate-700 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:border-slate-500 hover:text-slate-100 disabled:opacity-60"
+            className="rounded-full border border-amber-500/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-amber-200 transition hover:border-amber-400 hover:text-amber-100 disabled:opacity-60"
           >
-            Edit
+            Cancel
           </button>
-          {event.status !== 'CANCELLED' && (
-            <button
-              type="button"
-              disabled={isFetching}
-              onClick={() => {
-                setConfirmState({ type: 'cancel', event })
-              }}
-              className="rounded-full border border-amber-500/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-amber-200 transition hover:border-amber-400 hover:text-amber-100 disabled:opacity-60"
-            >
-              Cancel
-            </button>
-          )}
-          <button
-            type="button"
-            disabled={isFetching}
-            onClick={() => {
-              setConfirmState({ type: 'delete', event })
-            }}
-            className="rounded-full border border-rose-500/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-rose-200 transition hover:border-rose-400 hover:text-rose-100 disabled:opacity-60"
-          >
-            Delete
-          </button>
-        </div>
-      )
+        )}
+        <button
+          type="button"
+          disabled={isFetching}
+          onClick={() => {
+            setConfirmState({ type: 'delete', event })
+          }}
+          className="rounded-full border border-rose-500/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-rose-200 transition hover:border-rose-400 hover:text-rose-100 disabled:opacity-60"
+        >
+          Delete
+        </button>
+      </div>
+    )
 
     return (
       <div
@@ -572,17 +613,27 @@ export function LeagueEventsPage(): ReactElement {
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-slate-100">{event.name}</h3>
-            <p className="text-sm text-slate-400">{event.track ?? 'Track TBD'}</p>
+            <h3 className="text-lg font-semibold text-slate-100">
+              {event.name}
+            </h3>
+            <p className="text-sm text-slate-400">
+              {event.track ?? 'Track TBD'}
+            </p>
           </div>
-          <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusTone(event.status)}`}>
+          <span
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${statusTone(event.status)}`}
+          >
             {event.status.toLowerCase()}
           </span>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-300">
           <span>{formatDate(event.startTime)}</span>
-          {event.laps != null ? <span>{event.laps.toString()} laps</span> : null}
-          {event.distanceKm != null ? <span>{event.distanceKm.toString()} km</span> : null}
+          {event.laps != null ? (
+            <span>{event.laps.toString()} laps</span>
+          ) : null}
+          {event.distanceKm != null ? (
+            <span>{event.distanceKm.toString()} km</span>
+          ) : null}
         </div>
         {manageButtons ? <div className="mt-4">{manageButtons}</div> : null}
       </div>
@@ -596,7 +647,9 @@ export function LeagueEventsPage(): ReactElement {
           <h2 className="text-2xl font-semibold text-slate-100">Events</h2>
           <p className="text-sm text-slate-400">
             Manage race weekends and keep your roster informed.{' '}
-            {isBypass ? 'These entries use mock events while bypass mode is active.' : null}
+            {isBypass
+              ? 'These entries use mock events while bypass mode is active.'
+              : null}
           </p>
         </div>
         {canEdit ? (
@@ -613,7 +666,9 @@ export function LeagueEventsPage(): ReactElement {
       </div>
 
       <section>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Upcoming</h3>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Upcoming
+        </h3>
         <div className="mt-3 space-y-3">
           {upcoming.length === 0 ? (
             <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-5 text-sm text-slate-300">
@@ -637,11 +692,15 @@ export function LeagueEventsPage(): ReactElement {
       </section>
 
       <section>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Completed & cancelled</h3>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Completed & cancelled
+        </h3>
         <div className="mt-3 space-y-3">
           {completed.length === 0 ? (
             <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-5 text-sm text-slate-300">
-              <p>Completed events will appear here once results start rolling in.</p>
+              <p>
+                Completed events will appear here once results start rolling in.
+              </p>
             </div>
           ) : (
             completed.map(renderEventCard)

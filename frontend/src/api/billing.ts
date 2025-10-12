@@ -24,7 +24,9 @@ function mapOverview(payload: BillingOverviewRead): BillingOverview {
   return {
     plan: (payload.plan ?? 'FREE').toUpperCase() as BillingPlanTier,
     currentPeriodEnd: payload.current_period_end,
-    gracePlan: payload.grace_plan ? (payload.grace_plan.toUpperCase() as BillingPlanTier) : null,
+    gracePlan: payload.grace_plan
+      ? (payload.grace_plan.toUpperCase() as BillingPlanTier)
+      : null,
     graceExpiresAt: payload.grace_expires_at,
     canManageSubscription: payload.can_manage_subscription,
     leagues: payload.leagues.map((league) => ({
@@ -38,7 +40,9 @@ function mapOverview(payload: BillingOverviewRead): BillingOverview {
   }
 }
 
-export async function fetchBillingOverview(token: string): Promise<BillingOverview> {
+export async function fetchBillingOverview(
+  token: string,
+): Promise<BillingOverview> {
   const response = await apiFetch('/billing/overview', {
     token,
   })
@@ -51,7 +55,10 @@ export async function fetchBillingOverview(token: string): Promise<BillingOvervi
   return mapOverview(payload)
 }
 
-export async function startBillingCheckout(token: string, plan: Exclude<BillingPlanTier, 'FREE'>): Promise<string> {
+export async function startBillingCheckout(
+  token: string,
+  plan: Exclude<BillingPlanTier, 'FREE'>,
+): Promise<string> {
   const response = await apiFetch('/billing/checkout', {
     method: 'POST',
     token,
@@ -62,7 +69,10 @@ export async function startBillingCheckout(token: string, plan: Exclude<BillingP
   })
 
   if (response.status === 402) {
-    throw new ApiError('Billing plan requires manual approval.', response.status)
+    throw new ApiError(
+      'Billing plan requires manual approval.',
+      response.status,
+    )
   }
 
   if (!response.ok) {
@@ -80,7 +90,10 @@ export async function openBillingPortal(token: string): Promise<string> {
   })
 
   if (response.status === 400) {
-    throw new ApiError('Complete checkout before accessing the billing portal.', response.status)
+    throw new ApiError(
+      'Complete checkout before accessing the billing portal.',
+      response.status,
+    )
   }
 
   if (!response.ok) {

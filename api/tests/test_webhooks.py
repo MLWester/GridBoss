@@ -1,7 +1,7 @@
 ﻿from __future__ import annotations
 
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -21,9 +21,9 @@ from app.db.models import (
     Subscription,
     User,
 )
-from app.services.plan import GRACE_PERIOD_DAYS
 from app.db.session import get_session
 from app.main import app
+from app.services.plan import GRACE_PERIOD_DAYS
 
 SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///:memory:"
 engine = create_engine(
@@ -42,7 +42,11 @@ TestingSessionLocal = sessionmaker(
 for table in Base.metadata.sorted_tables:
     for column in table.c:
         default = getattr(column, "server_default", None)
-        if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+        if (
+            default is not None
+            and hasattr(default, "arg")
+            and "gen_random_uuid" in str(default.arg)
+        ):
             column.server_default = None
 
 Base.metadata.create_all(bind=engine)
@@ -102,12 +106,16 @@ def sync_spy(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     import worker.jobs.stripe as stripe_jobs
 
     calls: list[str] = []
-    monkeypatch.setattr(stripe_jobs.sync_plan_from_stripe, "send", lambda customer_id: calls.append(customer_id))
+    monkeypatch.setattr(
+        stripe_jobs.sync_plan_from_stripe, "send", lambda customer_id: calls.append(customer_id)
+    )
     return calls
 
 
 def create_user(session: Session) -> User:
-    user = User(discord_id=str(uuid4()), discord_username="user", email=f"{uuid4().hex}@example.com")
+    user = User(
+        discord_id=str(uuid4()), discord_username="user", email=f"{uuid4().hex}@example.com"
+    )
     session.add(user)
     session.commit()
     session.refresh(user)
@@ -177,18 +185,26 @@ def test_checkout_completed_creates_subscription(client: TestClient) -> None:
     assert response.status_code == 200
     session.close()
     verify = TestingSessionLocal()
-    stripe_event = verify.execute(select(StripeEvent).where(StripeEvent.event_id == "evt_checkout")).scalar_one()
+    stripe_event = verify.execute(
+        select(StripeEvent).where(StripeEvent.event_id == "evt_checkout")
+    ).scalar_one()
     assert stripe_event is not None
-    subscription = verify.execute(select(Subscription).where(Subscription.stripe_subscription_id == "sub_123")).scalar_one()
+    subscription = verify.execute(
+        select(Subscription).where(Subscription.stripe_subscription_id == "sub_123")
+    ).scalar_one()
     assert subscription.plan == "PRO"
-    billing = verify.execute(select(BillingAccount).where(BillingAccount.owner_user_id == owner.id)).scalar_one()
+    billing = verify.execute(
+        select(BillingAccount).where(BillingAccount.owner_user_id == owner.id)
+    ).scalar_one()
     assert billing.plan == "PRO"
     league = verify.execute(select(League).where(League.owner_id == owner.id)).scalar_one()
     assert league.plan == "PRO"
     verify.close()
 
 
-def test_subscription_updated_updates_plan_and_enqueues_sync(client: TestClient, sync_spy: list[str]) -> None:
+def test_subscription_updated_updates_plan_and_enqueues_sync(
+    client: TestClient, sync_spy: list[str]
+) -> None:
     session = TestingSessionLocal()
     owner, _ = create_owner(session)
     billing = BillingAccount(owner_user_id=owner.id, plan="PRO", stripe_customer_id="cus_456")
@@ -204,7 +220,7 @@ def test_subscription_updated_updates_plan_and_enqueues_sync(client: TestClient,
     session.add(subscription)
     session.commit()
 
-    current_period_end = int(datetime.now(tz=timezone.utc).timestamp())
+    current_period_end = int(datetime.now(tz=UTC).timestamp())
     event = {
         "id": "evt_update",
         "type": "customer.subscription.updated",
@@ -234,10 +250,14 @@ def test_subscription_updated_updates_plan_and_enqueues_sync(client: TestClient,
     assert response.status_code == 200
     session.close()
     verify = TestingSessionLocal()
-    subscription = verify.execute(select(Subscription).where(Subscription.stripe_subscription_id == "sub_456")).scalar_one()
+    subscription = verify.execute(
+        select(Subscription).where(Subscription.stripe_subscription_id == "sub_456")
+    ).scalar_one()
     assert subscription.plan == "ELITE"
     assert subscription.status == "active"
-    billing = verify.execute(select(BillingAccount).where(BillingAccount.owner_user_id == owner.id)).scalar_one()
+    billing = verify.execute(
+        select(BillingAccount).where(BillingAccount.owner_user_id == owner.id)
+    ).scalar_one()
     assert billing.plan == "ELITE"
     assert billing.plan_grace_plan is None
     assert billing.plan_grace_expires_at is None
@@ -246,7 +266,7 @@ def test_subscription_updated_updates_plan_and_enqueues_sync(client: TestClient,
     stored_end = billing.current_period_end
     assert stored_end is not None
     if stored_end.tzinfo is None:
-        stored_end = stored_end.replace(tzinfo=timezone.utc)
+        stored_end = stored_end.replace(tzinfo=UTC)
     assert int(stored_end.timestamp()) == current_period_end
     assert sync_spy == ["cus_456"]
     verify.close()
@@ -283,16 +303,20 @@ def test_subscription_deleted_sets_free(client: TestClient) -> None:
     assert response.status_code == 200
     session.close()
     verify = TestingSessionLocal()
-    subscription = verify.execute(select(Subscription).where(Subscription.stripe_subscription_id == "sub_789")).scalar_one()
+    subscription = verify.execute(
+        select(Subscription).where(Subscription.stripe_subscription_id == "sub_789")
+    ).scalar_one()
     assert subscription.status == "canceled"
-    billing = verify.execute(select(BillingAccount).where(BillingAccount.owner_user_id == owner.id)).scalar_one()
+    billing = verify.execute(
+        select(BillingAccount).where(BillingAccount.owner_user_id == owner.id)
+    ).scalar_one()
     assert billing.plan == "FREE"
     assert billing.plan_grace_plan == "PRO"
     assert billing.plan_grace_expires_at is not None
     grace_expires = billing.plan_grace_expires_at
     if grace_expires.tzinfo is None:
-        grace_expires = grace_expires.replace(tzinfo=timezone.utc)
-    remaining = grace_expires - datetime.now(timezone.utc)
+        grace_expires = grace_expires.replace(tzinfo=UTC)
+    remaining = grace_expires - datetime.now(UTC)
     assert remaining.total_seconds() > 0
     assert remaining <= timedelta(days=GRACE_PERIOD_DAYS, seconds=5)
     league = verify.execute(select(League).where(League.owner_id == owner.id)).scalar_one()
@@ -331,7 +355,9 @@ def test_invoice_payment_failed_marks_past_due(client: TestClient) -> None:
     assert response.status_code == 200
     session.close()
     verify = TestingSessionLocal()
-    subscription = verify.execute(select(Subscription).where(Subscription.stripe_subscription_id == "sub_inv")).scalar_one()
+    subscription = verify.execute(
+        select(Subscription).where(Subscription.stripe_subscription_id == "sub_inv")
+    ).scalar_one()
     assert subscription.status == "past_due"
     verify.close()
 
@@ -346,7 +372,13 @@ def test_idempotent_event_ignored(client: TestClient) -> None:
     event = {
         "id": "evt_dupe",
         "type": "checkout.session.completed",
-        "data": {"object": {"customer": "cus_dupe", "subscription": "sub_dupe", "metadata": {"plan": "PRO"}}},
+        "data": {
+            "object": {
+                "customer": "cus_dupe",
+                "subscription": "sub_dupe",
+                "metadata": {"plan": "PRO"},
+            }
+        },
     }
 
     payload = json.dumps(event)
@@ -359,6 +391,10 @@ def test_idempotent_event_ignored(client: TestClient) -> None:
     assert first.json()["status"] == "processed"
     assert second.status_code == 200
     assert second.json()["status"] == "ignored"
-    events = session.execute(select(StripeEvent).where(StripeEvent.event_id == "evt_dupe")).scalars().all()
+    events = (
+        session.execute(select(StripeEvent).where(StripeEvent.event_id == "evt_dupe"))
+        .scalars()
+        .all()
+    )
     assert len(events) == 1
     session.close()

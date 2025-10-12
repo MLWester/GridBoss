@@ -26,7 +26,8 @@ function toSummary(league: LeagueRead): LeagueSummary {
     name: league.name,
     slug: league.slug,
     plan: league.plan ?? null,
-    driverLimit: typeof league.driver_limit === 'number' ? league.driver_limit : null,
+    driverLimit:
+      typeof league.driver_limit === 'number' ? league.driver_limit : null,
     role: null,
   }
 }
@@ -52,7 +53,10 @@ function mapOverview(payload: LeagueOverviewResponse): LeagueOverviewData {
   }
 }
 
-export async function fetchLeagueOverview(token: string, slug: string): Promise<LeagueOverviewData> {
+export async function fetchLeagueOverview(
+  token: string,
+  slug: string,
+): Promise<LeagueOverviewData> {
   const response = await apiFetch(`/leagues/${slug}/overview`, {
     token,
   })

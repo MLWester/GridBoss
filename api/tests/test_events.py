@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
-from zoneinfo import ZoneInfo
 from http import HTTPStatus
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
@@ -187,8 +187,13 @@ class TestEventRoutes:
         stored = database_session.get(Event, UUID(data["id"]))
         assert stored is not None
         expected_utc = datetime.fromisoformat("2025-03-02T01:30:00+00:00")
-        stored_utc = stored.start_time.replace(tzinfo=UTC) if stored.start_time.tzinfo is None else stored.start_time
+        stored_utc = (
+            stored.start_time.replace(tzinfo=UTC)
+            if stored.start_time.tzinfo is None
+            else stored.start_time
+        )
         assert stored_utc == expected_utc
+
     def test_list_events_with_timezone_filter(
         self,
         client: TestClient,
@@ -196,7 +201,7 @@ class TestEventRoutes:
     ) -> None:
         owner = stub_user(database_session, "owner")
         league, season = create_league_with_owner(database_session, owner)
-        event = create_event(
+        create_event(
             database_session,
             league=league,
             season=season,
@@ -213,7 +218,9 @@ class TestEventRoutes:
         data = response.json()
         assert len(data) == 1
         converted = datetime.fromisoformat(data[0]["start_time"])
-        expected_local = datetime(2025, 4, 10, 18, 0, tzinfo=UTC).astimezone(ZoneInfo('America/New_York'))
+        expected_local = datetime(2025, 4, 10, 18, 0, tzinfo=UTC).astimezone(
+            ZoneInfo("America/New_York")
+        )
         assert converted == expected_local
 
     def test_status_filter_upcoming(
@@ -318,7 +325,3 @@ class TestEventRoutes:
             response = client.get(f"/leagues/{league.id}/events")
 
         assert response.status_code == HTTPStatus.FORBIDDEN
-
-
-
-

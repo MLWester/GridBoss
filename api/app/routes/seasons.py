@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
@@ -52,9 +52,7 @@ async def list_seasons(
     require_membership(session, league_id=league_id, user_id=current_user.id)
 
     seasons = (
-        session.execute(
-            select(Season).where(Season.league_id == league_id).order_by(Season.name)
-        )
+        session.execute(select(Season).where(Season.league_id == league_id).order_by(Season.name))
         .scalars()
         .all()
     )
@@ -146,7 +144,11 @@ async def update_season(
         if desired_active:
             session.execute(
                 update(Season)
-                .where(Season.league_id == season.league_id, Season.is_active.is_(True), Season.id != season.id)
+                .where(
+                    Season.league_id == season.league_id,
+                    Season.is_active.is_(True),
+                    Season.id != season.id,
+                )
                 .values(is_active=False)
             )
             season.is_active = True

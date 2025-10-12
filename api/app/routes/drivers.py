@@ -13,9 +13,8 @@ from app.db.models import Driver, League, LeagueRole, Team, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.schemas.drivers import DriverBulkCreate, DriverRead, DriverUpdate
-from app.services.rbac import require_membership, require_role_at_least
-
 from app.services.plan import effective_driver_limit, get_billing_account_for_owner
+from app.services.rbac import require_membership, require_role_at_least
 
 router = APIRouter(tags=["drivers"])
 
@@ -160,9 +159,7 @@ async def bulk_create_drivers(
     created_driver_ids = [driver.id for driver in drivers_to_create]
     created_drivers = (
         session.execute(
-            select(Driver)
-            .options(joinedload(Driver.team))
-            .where(Driver.id.in_(created_driver_ids))
+            select(Driver).options(joinedload(Driver.team)).where(Driver.id.in_(created_driver_ids))
         )
         .scalars()
         .all()
@@ -200,14 +197,17 @@ async def update_driver(
                 message="Driver display name is required",
                 field="display_name",
             )
-        existing = session.execute(
-            select(Driver)
-            .where(
-                Driver.league_id == driver.league_id,
-                func.lower(Driver.display_name) == new_name.lower(),
-                Driver.id != driver.id,
+        existing = (
+            session.execute(
+                select(Driver).where(
+                    Driver.league_id == driver.league_id,
+                    func.lower(Driver.display_name) == new_name.lower(),
+                    Driver.id != driver.id,
+                )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if existing:
             raise api_error(
                 status_code=status.HTTP_409_CONFLICT,
@@ -235,7 +235,9 @@ async def update_driver(
     return _driver_to_read(driver)
 
 
-@router.delete("/drivers/{driver_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+@router.delete(
+    "/drivers/{driver_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response
+)
 async def delete_driver(
     driver_id: UUID,
     session: SessionDep,
@@ -255,5 +257,3 @@ async def delete_driver(
     session.delete(driver)
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-

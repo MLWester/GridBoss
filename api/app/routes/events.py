@@ -89,6 +89,8 @@ def _event_to_read(event: Event, tz: ZoneInfo | None = None) -> EventRead:
         distance_km=float(event.distance_km) if event.distance_km is not None else None,
         status=EventStatus(event.status),
     )
+
+
 def _apply_status_filters(
     statement: Select[tuple[Event]],
     *,
@@ -309,7 +311,10 @@ async def update_event(
 
     if "status" in update_data and update_data["status"] is not None:
         new_status = update_data["status"].value
-        if event.status == EventStatus.COMPLETED.value and new_status != EventStatus.COMPLETED.value:
+        if (
+            event.status == EventStatus.COMPLETED.value
+            and new_status != EventStatus.COMPLETED.value
+        ):
             raise api_error(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 code="EVENT_COMPLETED",
@@ -349,7 +354,3 @@ async def cancel_event(
     event.status = EventStatus.CANCELED.value
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-
-

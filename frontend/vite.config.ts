@@ -6,7 +6,8 @@ const envHost = env.VITE_DEV_HOST
 const envPort = env.VITE_DEV_PORT
 
 const devHost = envHost !== undefined && envHost !== '' ? envHost : '127.0.0.1'
-const parsedPort = envPort !== undefined ? Number.parseInt(envPort, 10) : Number.NaN
+const parsedPort =
+  envPort !== undefined ? Number.parseInt(envPort, 10) : Number.NaN
 const devPort = Number.isFinite(parsedPort) ? parsedPort : 5174
 
 // https://vite.dev/config/
@@ -18,5 +19,3 @@ export default defineConfig({
     strictPort: true,
   },
 })
-
-

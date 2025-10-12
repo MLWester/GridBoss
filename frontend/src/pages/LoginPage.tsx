@@ -25,10 +25,15 @@ export function LoginPage(): ReactElement {
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-slate-100">
       <div className="w-full max-w-md space-y-6 rounded-3xl border border-slate-800 bg-slate-900/40 p-8 text-center shadow-lg shadow-slate-950/40">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-400">GridBoss</p>
-          <h1 className="text-3xl font-semibold tracking-tight">Sign in with Discord</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-400">
+            GridBoss
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Sign in with Discord
+          </h1>
           <p className="text-sm text-slate-400">
-            Authenticate via Discord to access your leagues, manage results, and prepare for the full GridBoss rollout.
+            Authenticate via Discord to access your leagues, manage results, and
+            prepare for the full GridBoss rollout.
           </p>
         </div>
         <button
@@ -50,12 +55,10 @@ export function LoginPage(): ReactElement {
           Continue with Discord
         </button>
         <p className="text-xs text-slate-200">
-          You will be redirected to Discord to authorise the GridBoss app. Once complete you&apos;ll return here with your session
-          ready to go.
+          You will be redirected to Discord to authorise the GridBoss app. Once
+          complete you&apos;ll return here with your session ready to go.
         </p>
       </div>
     </main>
   )
 }
-
-

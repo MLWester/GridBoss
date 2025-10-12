@@ -1,12 +1,9 @@
 ﻿from __future__ import annotations
 
-import json
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
-from uuid import UUID
 
 import stripe
-
 from fastapi import APIRouter, Depends, Header, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -16,7 +13,6 @@ from app.core.settings import Settings, get_settings
 from app.db.models import BillingAccount, League, StripeEvent, Subscription
 from app.db.session import get_session
 from app.services.audit import record_audit_log
-
 from app.services.plan import (
     GRACE_PERIOD_DAYS,
     PLAN_DRIVER_LIMITS,
@@ -35,7 +31,6 @@ SessionDep = Annotated[Session, Depends(get_session)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-
 def _map_price_to_plan(price_id: str, settings: Settings) -> str | None:
     mapping = {
         settings.stripe_price_pro: "PRO",
@@ -44,16 +39,30 @@ def _map_price_to_plan(price_id: str, settings: Settings) -> str | None:
     return mapping.get(price_id)
 
 
+def _resolve_stripe_jobs():
+    """Lazily import worker Stripe jobs to support test doubles."""
+    global stripe_jobs  # type: ignore[global-var-not-assigned]
+
+    if stripe_jobs is None:  # pragma: no branch - simple guard
+        try:
+            from worker.jobs import stripe as refreshed_jobs  # type: ignore
+        except Exception:  # pragma: no cover - worker optional
+            return None
+        stripe_jobs = refreshed_jobs
+    return stripe_jobs
+
+
 def _update_leagues_for_plan(session: Session, billing_account: BillingAccount, plan: str) -> None:
     previous_plan = normalize_plan(billing_account.plan)
     new_plan = normalize_plan(plan)
 
-    leagues = session.execute(
-        select(League).where(League.owner_id == billing_account.owner_user_id)
-    ).scalars().all()
+    leagues = (
+        session.execute(select(League).where(League.owner_id == billing_account.owner_user_id))
+        .scalars()
+        .all()
+    )
     before_league_states = {
-        league.id: {"plan": league.plan, "driver_limit": league.driver_limit}
-        for league in leagues
+        league.id: {"plan": league.plan, "driver_limit": league.driver_limit} for league in leagues
     }
     before_account_state = {
         "plan": billing_account.plan,
@@ -62,10 +71,14 @@ def _update_leagues_for_plan(session: Session, billing_account: BillingAccount, 
     }
 
     if previous_plan != new_plan:
-        downgraded = is_plan_sufficient(previous_plan, new_plan) and not is_plan_sufficient(new_plan, previous_plan)
+        downgraded = is_plan_sufficient(previous_plan, new_plan) and not is_plan_sufficient(
+            new_plan, previous_plan
+        )
         if downgraded:
             billing_account.plan_grace_plan = previous_plan
-            billing_account.plan_grace_expires_at = datetime.now(UTC) + timedelta(days=GRACE_PERIOD_DAYS)
+            billing_account.plan_grace_expires_at = datetime.now(UTC) + timedelta(
+                days=GRACE_PERIOD_DAYS
+            )
         else:
             billing_account.plan_grace_plan = None
             billing_account.plan_grace_expires_at = None
@@ -258,16 +271,21 @@ def _handle_subscription_update(
 
     if isinstance(status, str):
         subscription.status = status
-    billing_account.current_period_end = _parse_timestamp(current_period_end if isinstance(current_period_end, int) else None)
+    billing_account.current_period_end = _parse_timestamp(
+        current_period_end if isinstance(current_period_end, int) else None
+    )
 
-    if stripe_jobs is not None:
+    jobs_module = _resolve_stripe_jobs()
+    if jobs_module is not None:
         try:
-            stripe_jobs.sync_plan_from_stripe.send(customer_id)
+            jobs_module.sync_plan_from_stripe.send(customer_id)
         except Exception:  # pragma: no cover - best effort
             pass
 
 
-def _handle_subscription_deleted(session: Session, *, payload: dict[str, object], settings: Settings) -> None:
+def _handle_subscription_deleted(
+    session: Session, *, payload: dict[str, object], settings: Settings
+) -> None:
     data = payload.get("data", {}).get("object", {})  # type: ignore[assignment]
     if not isinstance(data, dict):
         return
@@ -300,7 +318,9 @@ def _handle_subscription_deleted(session: Session, *, payload: dict[str, object]
     _update_leagues_for_plan(session, billing_account, "FREE")
 
 
-def _handle_invoice_payment_failed(session: Session, *, payload: dict[str, object], settings: Settings) -> None:
+def _handle_invoice_payment_failed(
+    session: Session, *, payload: dict[str, object], settings: Settings
+) -> None:
     data = payload.get("data", {}).get("object", {})  # type: ignore[assignment]
     if not isinstance(data, dict):
         return
@@ -383,7 +403,7 @@ async def stripe_webhook(
         return {"status": "ignored"}
 
     try:
-        recorded = _record_processed_event(session, event_id)
+        _record_processed_event(session, event_id)
         handler = EVENT_HANDLERS.get(event_type)
         if handler is not None:
             handler(session, payload=event, settings=settings)

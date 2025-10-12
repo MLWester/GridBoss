@@ -7,7 +7,9 @@ import type {
   DiscordTestResponse,
 } from '../types/discord'
 
-function mapStatus(payload: DiscordIntegrationStatusRead): DiscordIntegrationStatus {
+function mapStatus(
+  payload: DiscordIntegrationStatusRead,
+): DiscordIntegrationStatus {
   return {
     linked: payload.linked ?? false,
     guildName: payload.guild_name ?? null,
@@ -17,7 +19,10 @@ function mapStatus(payload: DiscordIntegrationStatusRead): DiscordIntegrationSta
   }
 }
 
-export async function fetchDiscordIntegration(token: string, slug: string): Promise<DiscordIntegrationStatus> {
+export async function fetchDiscordIntegration(
+  token: string,
+  slug: string,
+): Promise<DiscordIntegrationStatus> {
   const response = await apiFetch(`/leagues/${slug}/discord`, {
     token,
   })
@@ -40,7 +45,10 @@ export async function fetchDiscordIntegration(token: string, slug: string): Prom
   return mapStatus(payload)
 }
 
-export async function startDiscordLink(token: string, slug: string): Promise<string> {
+export async function startDiscordLink(
+  token: string,
+  slug: string,
+): Promise<string> {
   const response = await apiFetch(`/leagues/${slug}/discord/link`, {
     method: 'POST',
     token,
@@ -54,7 +62,10 @@ export async function startDiscordLink(token: string, slug: string): Promise<str
   return payload.url
 }
 
-export async function unlinkDiscord(token: string, slug: string): Promise<void> {
+export async function unlinkDiscord(
+  token: string,
+  slug: string,
+): Promise<void> {
   const response = await apiFetch(`/leagues/${slug}/discord/unlink`, {
     method: 'POST',
     token,
@@ -65,14 +76,20 @@ export async function unlinkDiscord(token: string, slug: string): Promise<void> 
   }
 }
 
-export async function testDiscordIntegration(token: string, slug: string): Promise<string> {
+export async function testDiscordIntegration(
+  token: string,
+  slug: string,
+): Promise<string> {
   const response = await apiFetch(`/leagues/${slug}/discord/test`, {
     method: 'POST',
     token,
   })
 
   if (response.status === 402) {
-    throw new ApiError('Upgrade to Pro to send Discord announcements.', response.status)
+    throw new ApiError(
+      'Upgrade to Pro to send Discord announcements.',
+      response.status,
+    )
   }
 
   if (!response.ok) {

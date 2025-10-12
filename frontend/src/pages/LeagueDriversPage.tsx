@@ -70,7 +70,9 @@ function parseBulkInput(
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
 
-  const existingNames = new Set(drivers.map((driver) => driver.displayName.toLowerCase()))
+  const existingNames = new Set(
+    drivers.map((driver) => driver.displayName.toLowerCase()),
+  )
   const seenNames = new Set<string>()
 
   return lines.map((line) => {
@@ -124,7 +126,9 @@ function parseBulkInput(
       }
     }
 
-    const targetTeam = teams.find((team) => team.name.toLowerCase() === teamPart.toLowerCase())
+    const targetTeam = teams.find(
+      (team) => team.name.toLowerCase() === teamPart.toLowerCase(),
+    )
     if (!targetTeam) {
       return {
         line,
@@ -164,7 +168,10 @@ function BulkDriversModal({
 }: BulkDriversModalProps): ReactElement | null {
   const [input, setInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const rows = useMemo(() => parseBulkInput(input, drivers, teams), [input, drivers, teams])
+  const rows = useMemo(
+    () => parseBulkInput(input, drivers, teams),
+    [input, drivers, teams],
+  )
 
   const readyRows = rows.filter((row) => row.status === 'ready')
   const hasConflicts = rows.some((row) => row.status !== 'ready')
@@ -198,10 +205,12 @@ function BulkDriversModal({
       <div className="w-full max-w-3xl rounded-3xl border border-slate-800 bg-slate-950/95 p-8 shadow-xl shadow-slate-950/60">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-100">Bulk add drivers</h2>
+            <h2 className="text-2xl font-semibold text-slate-100">
+              Bulk add drivers
+            </h2>
             <p className="mt-1 text-sm text-slate-400">
-              Paste a list of names, optionally followed by a comma and team. Existing drivers and duplicates will be
-              flagged.
+              Paste a list of names, optionally followed by a comma and team.
+              Existing drivers and duplicates will be flagged.
             </p>
           </div>
           <button
@@ -229,16 +238,24 @@ function BulkDriversModal({
               className="h-48 w-full rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40"
             />
             <p className="text-xs text-slate-500">
-              Format: `Driver Name, Team Name`. Team is optional. Use tab or comma separators. Existing team names:{' '}
-              {teams.length > 0 ? teams.map((team) => team.name).join(', ') : 'none yet'}.
+              Format: `Driver Name, Team Name`. Team is optional. Use tab or
+              comma separators. Existing team names:{' '}
+              {teams.length > 0
+                ? teams.map((team) => team.name).join(', ')
+                : 'none yet'}
+              .
             </p>
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Preview</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Preview
+            </p>
             <div className="max-h-64 overflow-y-auto rounded-2xl border border-slate-800">
               {rows.length === 0 ? (
-                <div className="p-4 text-sm text-slate-500">Paste drivers to see the preview.</div>
+                <div className="p-4 text-sm text-slate-500">
+                  Paste drivers to see the preview.
+                </div>
               ) : (
                 <ul className="divide-y divide-slate-800 text-sm">
                   {rows.map((row, index) => (
@@ -253,7 +270,13 @@ function BulkDriversModal({
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2 text-slate-100">
-                        <span>{row.displayName || <span className="text-slate-500">Unnamed driver</span>}</span>
+                        <span>
+                          {row.displayName || (
+                            <span className="text-slate-500">
+                              Unnamed driver
+                            </span>
+                          )}
+                        </span>
                         <span className="text-xs uppercase tracking-wide text-slate-400">
                           {row.teamName ?? 'Unassigned'}
                         </span>
@@ -269,7 +292,11 @@ function BulkDriversModal({
             {rows.length > 0 ? (
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span>{readyRows.length} ready</span>
-                {hasConflicts ? <span className="text-rose-300">Resolve conflicts to continue</span> : null}
+                {hasConflicts ? (
+                  <span className="text-rose-300">
+                    Resolve conflicts to continue
+                  </span>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -330,11 +357,15 @@ export function LeagueDriversPage(): ReactElement {
     [memberships, slug],
   )
 
-  const role: LeagueRole | null = membership?.role ?? overview?.league.role ?? null
+  const role: LeagueRole | null =
+    membership?.role ?? overview?.league.role ?? null
   const canEdit = canManageDrivers(role)
 
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editDraft, setEditDraft] = useState<EditDraft>({ displayName: '', teamId: null })
+  const [editDraft, setEditDraft] = useState<EditDraft>({
+    displayName: '',
+    teamId: null,
+  })
   const [isSaving, setIsSaving] = useState(false)
   const [isBulkOpen, setIsBulkOpen] = useState(false)
 
@@ -361,7 +392,8 @@ export function LeagueDriversPage(): ReactElement {
       })
       return
     }
-    const hasChanges = trimmedName !== driver.displayName || editDraft.teamId !== driver.teamId
+    const hasChanges =
+      trimmedName !== driver.displayName || editDraft.teamId !== driver.teamId
     if (!hasChanges) {
       cancelEdit()
       return
@@ -380,7 +412,8 @@ export function LeagueDriversPage(): ReactElement {
       })
       cancelEdit()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to update driver'
+      const message =
+        err instanceof Error ? err.message : 'Unable to update driver'
       showToast({
         title: 'Update failed',
         description: message,
@@ -402,7 +435,8 @@ export function LeagueDriversPage(): ReactElement {
         variant: 'success',
       })
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add drivers'
+      const message =
+        err instanceof Error ? err.message : 'Failed to add drivers'
       showToast({
         title: 'Bulk import failed',
         description: message,
@@ -437,9 +471,12 @@ export function LeagueDriversPage(): ReactElement {
     <Fragment>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-100">Drivers roster</h2>
+          <h2 className="text-2xl font-semibold text-slate-100">
+            Drivers roster
+          </h2>
           <p className="text-sm text-slate-400">
-            Manage driver display names and team assignments. {isBypass ? 'This is mock data for bypass mode.' : null}
+            Manage driver display names and team assignments.{' '}
+            {isBypass ? 'This is mock data for bypass mode.' : null}
           </p>
         </div>
         {canEdit ? (
@@ -459,7 +496,8 @@ export function LeagueDriversPage(): ReactElement {
         <div className="mt-6 rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-300">
           <p className="text-slate-100">No drivers yet</p>
           <p className="mt-2 text-slate-400">
-            Bulk import your roster or use upcoming PBIs to invite drivers by email and Discord.
+            Bulk import your roster or use upcoming PBIs to invite drivers by
+            email and Discord.
           </p>
           {canEdit ? (
             <button
@@ -484,29 +522,40 @@ export function LeagueDriversPage(): ReactElement {
                 className="grid grid-cols-1 gap-4 rounded-3xl border border-slate-800/70 bg-slate-900/60 p-5 shadow shadow-slate-950/30 md:grid-cols-[2fr,2fr,1fr,auto]"
               >
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Display name</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Display name
+                  </p>
                   {isEditing ? (
                     <input
                       value={editDraft.displayName}
                       onChange={(event) => {
-                        setEditDraft((current) => ({ ...current, displayName: event.target.value }))
+                        setEditDraft((current) => ({
+                          ...current,
+                          displayName: event.target.value,
+                        }))
                       }}
                       className="w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40"
                     />
                   ) : (
-                    <p className="text-sm font-semibold text-slate-100">{driver.displayName}</p>
+                    <p className="text-sm font-semibold text-slate-100">
+                      {driver.displayName}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Team</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Team
+                  </p>
                   {isEditing ? (
                     <select
                       value={editDraft.teamId ?? ''}
                       onChange={(event) => {
                         setEditDraft((current) => ({
                           ...current,
-                          teamId: event.target.value ? event.target.value : null,
+                          teamId: event.target.value
+                            ? event.target.value
+                            : null,
                         }))
                       }}
                       className="w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40"
@@ -519,15 +568,21 @@ export function LeagueDriversPage(): ReactElement {
                       ))}
                     </select>
                   ) : (
-                    <p className="text-sm text-slate-300">{driver.teamName ?? 'Unassigned'}</p>
+                    <p className="text-sm text-slate-300">
+                      {driver.teamName ?? 'Unassigned'}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Link</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Link
+                  </p>
                   <LinkedBadge driver={driver} />
                   {driver.userName ? (
-                    <p className="text-xs text-slate-500">Discord: {driver.userName}</p>
+                    <p className="text-xs text-slate-500">
+                      Discord: {driver.userName}
+                    </p>
                   ) : null}
                 </div>
 

@@ -10,11 +10,15 @@ function mapEvent(event: EventRead): EventSummary {
     startTime: event.start_time,
     status: event.status,
     laps: typeof event.laps === 'number' ? event.laps : null,
-    distanceKm: typeof event.distance_km === 'number' ? event.distance_km : null,
+    distanceKm:
+      typeof event.distance_km === 'number' ? event.distance_km : null,
   }
 }
 
-export async function fetchLeagueEvents(token: string, slug: string): Promise<EventSummary[]> {
+export async function fetchLeagueEvents(
+  token: string,
+  slug: string,
+): Promise<EventSummary[]> {
   const response = await apiFetch(`/leagues/${slug}/events`, {
     token,
   })
@@ -93,7 +97,10 @@ export async function updateEvent(
   return mapEvent(payload)
 }
 
-export async function deleteEvent(token: string, eventId: string): Promise<void> {
+export async function deleteEvent(
+  token: string,
+  eventId: string,
+): Promise<void> {
   const response = await apiFetch(`/events/${eventId}`, {
     method: 'DELETE',
     token,

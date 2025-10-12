@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react'
 import type { ReactElement, FormEvent } from 'react'
 import { useAdminConsole } from '../hooks/useAdminConsole'
@@ -54,15 +53,23 @@ export function AdminConsolePage(): ReactElement {
 
   const hasNoAccess = adminEnabled && !isFounder
 
-  const summaryEmpty = useMemo(() => users.length === 0 && leagues.length === 0, [users, leagues])
+  const summaryEmpty = useMemo(
+    () => users.length === 0 && leagues.length === 0,
+    [users, leagues],
+  )
 
   if (!adminEnabled) {
     return (
       <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-200">
-        <h2 className="text-xl font-semibold text-slate-100">Admin console disabled</h2>
+        <h2 className="text-xl font-semibold text-slate-100">
+          Admin console disabled
+        </h2>
         <p className="mt-2 text-slate-400">
-          Enable the console by setting <code className="font-mono text-slate-200">ADMIN_MODE=true</code>{' '}
-          on the API and <code className="font-mono text-slate-200">VITE_ADMIN_MODE=true</code> for the frontend build.
+          Enable the console by setting{' '}
+          <code className="font-mono text-slate-200">ADMIN_MODE=true</code> on
+          the API and{' '}
+          <code className="font-mono text-slate-200">VITE_ADMIN_MODE=true</code>{' '}
+          for the frontend build.
         </p>
       </div>
     )
@@ -71,10 +78,13 @@ export function AdminConsolePage(): ReactElement {
   if (hasNoAccess) {
     return (
       <div className="rounded-3xl border border-amber-500/40 bg-amber-500/10 p-6 text-sm text-amber-100">
-        <h2 className="text-xl font-semibold text-amber-200">Founder access required</h2>
+        <h2 className="text-xl font-semibold text-amber-200">
+          Founder access required
+        </h2>
         <p className="mt-2">
-          Only founder accounts can view the admin console. Add <code className="font-mono text-amber-100">is_founder</code>{' '}
-          to your user record to continue.
+          Only founder accounts can view the admin console. Add{' '}
+          <code className="font-mono text-amber-100">is_founder</code> to your
+          user record to continue.
         </p>
       </div>
     )
@@ -93,13 +103,19 @@ export function AdminConsolePage(): ReactElement {
     } catch (err) {
       showToast({
         title: 'Discord update failed',
-        description: err instanceof Error ? err.message : 'Unable to update Discord integration.',
+        description:
+          err instanceof Error
+            ? err.message
+            : 'Unable to update Discord integration.',
         variant: 'error',
       })
     }
   }
 
-  const handlePlanOverride = async (leagueId: string, plan: BillingPlanTier) => {
+  const handlePlanOverride = async (
+    leagueId: string,
+    plan: BillingPlanTier,
+  ) => {
     if (disablePlanOverride) {
       showToast({
         title: 'Plan override disabled',
@@ -118,7 +134,10 @@ export function AdminConsolePage(): ReactElement {
     } catch (err) {
       showToast({
         title: 'Override failed',
-        description: err instanceof Error ? err.message : 'Unable to override league plan.',
+        description:
+          err instanceof Error
+            ? err.message
+            : 'Unable to override league plan.',
         variant: 'error',
       })
     }
@@ -128,18 +147,26 @@ export function AdminConsolePage(): ReactElement {
     <div className="space-y-6">
       {isProduction ? (
         <div className="rounded-3xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
-          Running in production mode. Dangerous actions are read-only unless explicitly enabled.
+          Running in production mode. Dangerous actions are read-only unless
+          explicitly enabled.
         </div>
       ) : (
         <div className="rounded-3xl border border-sky-500/40 bg-sky-500/10 p-4 text-sm text-sky-100">
-          Admin mode active. Use this console to inspect data and perform guarded overrides for debugging.
+          Admin mode active. Use this console to inspect data and perform
+          guarded overrides for debugging.
         </div>
       )}
 
       <section className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow shadow-slate-950/30">
-        <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-center gap-4">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex flex-wrap items-center gap-4"
+        >
           <div className="flex-1" style={{ minWidth: '200px' }}>
-            <label htmlFor="admin-search" className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <label
+              htmlFor="admin-search"
+              className="text-xs font-semibold uppercase tracking-wide text-slate-400"
+            >
               Search users & leagues
             </label>
             <input
@@ -160,24 +187,29 @@ export function AdminConsolePage(): ReactElement {
           </button>
         </form>
         {error ? (
-          <p className="mt-3 text-sm text-rose-300">
-            {error.message}
-          </p>
+          <p className="mt-3 text-sm text-rose-300">{error.message}</p>
         ) : null}
       </section>
 
       <section className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow shadow-slate-950/30">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-slate-100">User overview</h2>
-            <p className="text-sm text-slate-400">Inspect founders, owners, and subscription health.</p>
+            <h2 className="text-xl font-semibold text-slate-100">
+              User overview
+            </h2>
+            <p className="text-sm text-slate-400">
+              Inspect founders, owners, and subscription health.
+            </p>
           </div>
         </header>
 
         {isLoading ? (
           <div className="mt-5 space-y-3">
             {Array.from({ length: 2 }).map((_, index) => (
-              <div key={index} className="animate-pulse rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4">
+              <div
+                key={index}
+                className="animate-pulse rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4"
+              >
                 <div className="h-4 w-48 rounded bg-slate-800" />
                 <div className="mt-3 h-3 w-32 rounded bg-slate-800" />
                 <div className="mt-3 h-3 w-64 rounded bg-slate-800" />
@@ -191,20 +223,31 @@ export function AdminConsolePage(): ReactElement {
         ) : (
           <div className="mt-5 space-y-4">
             {users.map((user) => (
-              <div key={user.id} className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4">
+              <div
+                key={user.id}
+                className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-lg font-semibold text-slate-100">
                       {user.discordUsername || 'Unknown Discord user'}
                     </p>
-                    <p className="text-xs text-slate-200">{user.email || 'No email provided'}</p>
+                    <p className="text-xs text-slate-200">
+                      {user.email || 'No email provided'}
+                    </p>
                   </div>
                   <div className="text-xs text-slate-400">
                     <p>
-                      Created: <span className="text-slate-200">{formatDateTime(user.createdAt)}</span>
+                      Created:{' '}
+                      <span className="text-slate-200">
+                        {formatDateTime(user.createdAt)}
+                      </span>
                     </p>
                     <p>
-                      Leagues owned: <span className="text-slate-200">{user.leaguesOwned}</span>
+                      Leagues owned:{' '}
+                      <span className="text-slate-200">
+                        {user.leaguesOwned}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -214,12 +257,20 @@ export function AdminConsolePage(): ReactElement {
                     <p className="mt-1 text-slate-200">{user.billingPlan}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-900/40 p-3">
-                    <p className="font-semibold text-slate-200">Subscription status</p>
-                    <p className="mt-1 text-slate-200">{user.subscriptionStatus ?? 'n/a'}</p>
+                    <p className="font-semibold text-slate-200">
+                      Subscription status
+                    </p>
+                    <p className="mt-1 text-slate-200">
+                      {user.subscriptionStatus ?? 'n/a'}
+                    </p>
                   </div>
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-900/40 p-3">
-                    <p className="font-semibold text-slate-200">Stripe customer</p>
-                    <p className="mt-1 text-slate-200">{user.stripeCustomerId ?? 'n/a'}</p>
+                    <p className="font-semibold text-slate-200">
+                      Stripe customer
+                    </p>
+                    <p className="mt-1 text-slate-200">
+                      {user.stripeCustomerId ?? 'n/a'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -231,7 +282,9 @@ export function AdminConsolePage(): ReactElement {
       <section className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow shadow-slate-950/30">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-slate-100">League overview</h2>
+            <h2 className="text-xl font-semibold text-slate-100">
+              League overview
+            </h2>
             <p className="text-sm text-slate-400">
               Check driver utilisation, billing state, and Discord connectivity.
             </p>
@@ -250,7 +303,10 @@ export function AdminConsolePage(): ReactElement {
         {isLoading ? (
           <div className="mt-5 space-y-3">
             {Array.from({ length: 2 }).map((_, index) => (
-              <div key={index} className="animate-pulse rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4">
+              <div
+                key={index}
+                className="animate-pulse rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4"
+              >
                 <div className="h-4 w-40 rounded bg-slate-800" />
                 <div className="mt-2 h-3 w-60 rounded bg-slate-800" />
                 <div className="mt-4 h-3 w-32 rounded bg-slate-800" />
@@ -267,14 +323,27 @@ export function AdminConsolePage(): ReactElement {
               const isToggling = togglingLeagueId === league.id
               const isUpdatingPlan = planUpdatingLeagueId === league.id
               return (
-                <div key={league.id} className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-5 shadow shadow-slate-950/20">
+                <div
+                  key={league.id}
+                  className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-5 shadow shadow-slate-950/20"
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-lg font-semibold text-slate-100">{league.name}</p>
-                      <p className="text-xs text-slate-200">slug: {league.slug}</p>
+                      <p className="text-lg font-semibold text-slate-100">
+                        {league.name}
+                      </p>
+                      <p className="text-xs text-slate-200">
+                        slug: {league.slug}
+                      </p>
                       <p className="mt-2 text-xs text-slate-400">
-                        Owner: <span className="text-slate-200">{league.ownerDiscordUsername ?? 'Unknown'}</span> ·{' '}
-                        <span className="text-slate-200">{league.ownerEmail ?? 'n/a'}</span>
+                        Owner:{' '}
+                        <span className="text-slate-200">
+                          {league.ownerDiscordUsername ?? 'Unknown'}
+                        </span>{' '}
+                        ·{' '}
+                        <span className="text-slate-200">
+                          {league.ownerEmail ?? 'n/a'}
+                        </span>
                       </p>
                     </div>
                     <div className="text-xs text-slate-400">
@@ -284,10 +353,15 @@ export function AdminConsolePage(): ReactElement {
                       </p>
                       <p>
                         Billing plan:{' '}
-                        <span className="text-slate-200">{league.billingPlan}</span>
+                        <span className="text-slate-200">
+                          {league.billingPlan}
+                        </span>
                       </p>
                       <p>
-                        Drivers: <span className={`text-slate-200 ${league.driverCount >= league.driverLimit ? 'text-amber-300' : ''}`}>
+                        Drivers:{' '}
+                        <span
+                          className={`text-slate-200 ${league.driverCount >= league.driverLimit ? 'text-amber-300' : ''}`}
+                        >
                           {league.driverCount} / {league.driverLimit}
                         </span>
                       </p>
@@ -297,7 +371,10 @@ export function AdminConsolePage(): ReactElement {
                     <button
                       type="button"
                       onClick={() => {
-                        void handleToggleDiscord(league.id, !league.discordActive)
+                        void handleToggleDiscord(
+                          league.id,
+                          !league.discordActive,
+                        )
                       }}
                       disabled={isToggling}
                       className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide transition ${
@@ -309,10 +386,15 @@ export function AdminConsolePage(): ReactElement {
                       {isToggling ? (
                         <span className="inline-flex h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
                       ) : null}
-                      {league.discordActive ? 'Disable Discord' : 'Enable Discord'}
+                      {league.discordActive
+                        ? 'Disable Discord'
+                        : 'Enable Discord'}
                     </button>
                     <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <label htmlFor={`plan-${league.id}`} className="font-semibold text-slate-200">
+                      <label
+                        htmlFor={`plan-${league.id}`}
+                        className="font-semibold text-slate-200"
+                      >
                         Override plan
                       </label>
                       <select
@@ -352,4 +434,3 @@ export function AdminConsolePage(): ReactElement {
     </div>
   )
 }
-

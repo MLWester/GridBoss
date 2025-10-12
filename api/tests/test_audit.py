@@ -1,7 +1,6 @@
-
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -18,7 +17,6 @@ from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.main import app
 from app.services.audit import record_audit_log
-
 
 SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///:memory:"
 engine = create_engine(
@@ -37,7 +35,11 @@ TestingSessionLocal = sessionmaker(
 for table in Base.metadata.sorted_tables:
     for column in table.c:
         default = getattr(column, "server_default", None)
-        if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+        if (
+            default is not None
+            and hasattr(default, "arg")
+            and "gen_random_uuid" in str(default.arg)
+        ):
             column.server_default = None
 
 Base.metadata.create_all(bind=engine)
@@ -129,7 +131,7 @@ def add_member(session: Session, *, league: League, user: User, role: LeagueRole
 def test_record_audit_log_serializes_state(session: Session) -> None:
     user = create_user(session)
     league = create_league(session, owner=user)
-    timestamp = datetime.now(timezone.utc)
+    timestamp = datetime.now(UTC)
     identifier = uuid4()
 
     record_audit_log(

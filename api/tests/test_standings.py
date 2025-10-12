@@ -1,20 +1,20 @@
 ﻿from __future__ import annotations
 
+import sys
+import types
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from http import HTTPStatus
-from uuid import uuid4
-
 from pathlib import Path
-import sys
-import types
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
 if "dramatiq" not in sys.modules:
+
     class _ActorStub:
         def __init__(self, fn):
             self.fn = fn
@@ -38,6 +38,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from worker.jobs import standings as standings_jobs
 
 from app.core.settings import Settings, get_settings
 from app.db import Base
@@ -60,7 +61,6 @@ from app.dependencies.auth import get_current_user
 from app.main import app
 from app.routes.auth import provide_discord_client
 from app.services import standings as standings_service
-from worker.jobs import standings as standings_jobs
 
 SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///:memory:"
 engine = create_engine(
@@ -98,7 +98,11 @@ def setup_database() -> None:
     for table in Base.metadata.sorted_tables:
         for column in table.c:
             default = getattr(column, "server_default", None)
-            if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+            if (
+                default is not None
+                and hasattr(default, "arg")
+                and "gen_random_uuid" in str(default.arg)
+            ):
                 column.server_default = None
     Base.metadata.create_all(bind=engine)
 
@@ -472,6 +476,3 @@ class TestStandingsRoutes:
         assert refreshed_items[0]["points"] == 30
         assert refreshed_items[1]["driver_id"] == str(driver_a.id)
         assert refreshed_items[1]["points"] == 10
-
-
-

@@ -146,4 +146,3 @@ async def read_standings(
         payload=_serialize_response(response),
     )
     return response
-

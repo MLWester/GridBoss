@@ -49,13 +49,28 @@ def _integration_to_read(integration: DiscordIntegration) -> DiscordIntegrationR
     return DiscordIntegrationRead.model_validate(integration)
 
 
+def _resolve_discord_jobs():
+    """Attempt to import worker Discord jobs lazily so tests can provide stubs."""
+    global discord_jobs  # type: ignore[global-var-not-assigned]
+
+    if discord_jobs is None:  # pragma: no branch - simple guard for happy path
+        try:
+            from worker.jobs import discord as refreshed_jobs  # type: ignore
+        except Exception:  # pragma: no cover - worker optional
+            return None
+        discord_jobs = refreshed_jobs
+    return discord_jobs
+
+
 def _state_from_integration(integration: DiscordIntegration | None) -> dict[str, Any] | None:
     if integration is None:
         return None
     return {
         "guild_id": integration.guild_id,
         "channel_id": integration.channel_id,
-        "installed_by_user": str(integration.installed_by_user) if integration.installed_by_user else None,
+        "installed_by_user": (
+            str(integration.installed_by_user) if integration.installed_by_user else None
+        ),
         "is_active": integration.is_active,
     }
 
@@ -72,14 +87,12 @@ async def link_discord_integration(
     session: SessionDep,
     current_user: CurrentUserDep,
 ) -> DiscordIntegrationRead:
-    league = _get_league(league_id, session)
+    _get_league(league_id, session)
     membership = require_membership(session, league_id=league_id, user_id=current_user.id)
     require_role_at_least(membership, minimum=LeagueRole.ADMIN)
 
     existing = (
-        session.execute(
-            select(DiscordIntegration).where(DiscordIntegration.league_id == league_id)
-        )
+        session.execute(select(DiscordIntegration).where(DiscordIntegration.league_id == league_id))
         .scalars()
         .first()
     )
@@ -112,9 +125,6 @@ async def link_discord_integration(
     return _integration_to_read(integration)
 
 
-
-
-
 @router.post(
     "/leagues/{league_id}/discord/test",
     status_code=status.HTTP_202_ACCEPTED,
@@ -125,14 +135,12 @@ async def trigger_discord_test(
     session: SessionDep,
     current_user: CurrentUserDep,
 ) -> dict[str, str]:
-    league = _get_league(league_id, session)
+    _get_league(league_id, session)
     membership = require_membership(session, league_id=league_id, user_id=current_user.id)
     require_role_at_least(membership, minimum=LeagueRole.ADMIN)
 
     integration = (
-        session.execute(
-            select(DiscordIntegration).where(DiscordIntegration.league_id == league_id)
-        )
+        session.execute(select(DiscordIntegration).where(DiscordIntegration.league_id == league_id))
         .scalars()
         .first()
     )
@@ -167,14 +175,15 @@ async def trigger_discord_test(
     )
     session.commit()
 
-    if discord_jobs is None:
+    jobs_module = _resolve_discord_jobs()
+    if jobs_module is None:
         logger.info(
             "Discord test requested for league %s but worker jobs are unavailable", league_id
         )
         return {"status": "queued"}
 
     try:
-        discord_jobs.send_test_message.send(
+        jobs_module.send_test_message.send(
             str(league_id),
             integration.guild_id,
             integration.channel_id,
@@ -188,5 +197,3 @@ async def trigger_discord_test(
         ) from exc
 
     return {"status": "queued"}
-
-

@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactElement } from 'react'
 import { fetchCurrentUser, logoutRequest, UnauthorizedError } from '../api/auth'
-import { captureTokenFromUrl, clearAccessToken, readAccessToken, storeAccessToken } from '../lib/token-storage'
+import {
+  captureTokenFromUrl,
+  clearAccessToken,
+  readAccessToken,
+  storeAccessToken,
+} from '../lib/token-storage'
 import type { MeResponse } from '../types/auth'
 import type { AuthContextValue } from './AuthContext'
 import { AuthContext } from './AuthContext'
@@ -28,13 +33,19 @@ const MOCK_PROFILE: MeResponse = {
 
 const createMockProfile = (): MeResponse => ({
   user: { ...MOCK_PROFILE.user },
-  memberships: MOCK_PROFILE.memberships.map((membership) => ({ ...membership })),
+  memberships: MOCK_PROFILE.memberships.map((membership) => ({
+    ...membership,
+  })),
   billingPlan: MOCK_PROFILE.billingPlan
     ? { ...MOCK_PROFILE.billingPlan }
     : null,
 })
 
-export function AuthProvider({ children }: { children: React.ReactNode }): ReactElement {
+export function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode
+}): ReactElement {
   const [profile, setProfile] = useState<AuthContextValue['profile']>(null)
   const [accessToken, setAccessTokenState] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -136,17 +147,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }): React
     }
   }, [assignAccessToken, bypassAuth])
 
-  const value = useMemo<AuthContextValue>(() => ({
-    profile,
-    isLoading,
-    error,
-    isAuthenticated: Boolean(profile) || bypassAuth,
-    isBypassAuth: bypassAuth,
-    accessToken,
-    refreshProfile,
-    logout,
-    setAccessToken: assignAccessToken,
-  }), [profile, isLoading, error, accessToken, refreshProfile, logout, assignAccessToken, bypassAuth])
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      profile,
+      isLoading,
+      error,
+      isAuthenticated: Boolean(profile) || bypassAuth,
+      isBypassAuth: bypassAuth,
+      accessToken,
+      refreshProfile,
+      logout,
+      setAccessToken: assignAccessToken,
+    }),
+    [
+      profile,
+      isLoading,
+      error,
+      accessToken,
+      refreshProfile,
+      logout,
+      assignAccessToken,
+      bypassAuth,
+    ],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

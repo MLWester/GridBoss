@@ -1,4 +1,5 @@
 # GridBoss
+[![CI](https://github.com/GridBoss/GridBoss/actions/workflows/ci.yml/badge.svg)](https://github.com/GridBoss/GridBoss/actions/workflows/ci.yml)
 
 GridBoss is an app-centric SaaS platform for managing sim racing leagues. The product unifies league administration, event scheduling, result tracking, Discord announcements, and Stripe based subscriptions into a single experience tailored for competitive communities.
 
@@ -97,7 +98,7 @@ Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml 
 
 ## Testing and Quality Gates
 - Unit, integration, and end-to-end tests will be established across backend and frontend PBIs (see PBI-020 and PBI-034).
-- CI workflows (PBI-035) will run linting, tests, and builds on every pull request.
+- CI workflow (`.github/workflows/ci.yml`) runs frontend/backend lint, formatting checks, unit tests with coverage, and builds on pushes to `main` and all pull requests, uploading coverage artifacts for review.
 - Performance benchmarks (PBI-036) ensure standings and job queue SLOs are met.
 
 ## Documentation
@@ -109,6 +110,7 @@ Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml 
 - Follow coding standards defined in the master spec (formatters, linting, test coverage).
 - Use Conventional Commits when preparing commit messages.
 - Ensure audit logging, observability, and security considerations are addressed per acceptance criteria where applicable.
+- Run the CI-equivalent checks before opening a PR: `npm run lint`, `npm run format`, `npm run test:coverage`, `npm run build` from `frontend/`, and `ruff check`, `black --check`, `pytest` (coverage enabled) from `api/`.
 
 For questions or clarifications, update the relevant PBI or expand the documentation so decisions remain transparent to the team.
 ## Observability Configuration

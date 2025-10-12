@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import List
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -24,14 +23,14 @@ class PointsSchemeCreate(BaseModel):
     name: str = Field(min_length=1)
     season_id: UUID | None = None
     is_default: bool | None = False
-    rules: List[PointsRuleInput] | None = None
+    rules: list[PointsRuleInput] | None = None
 
 
 class PointsSchemeUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1)
     season_id: UUID | None = None
     is_default: bool | None = None
-    rules: List[PointsRuleInput] | None = None
+    rules: list[PointsRuleInput] | None = None
 
 
 class PointsSchemeRead(BaseModel):

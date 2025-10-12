@@ -51,16 +51,13 @@ async def list_teams(
     _get_league(session, league_id)
     require_membership(session, league_id=league_id, user_id=current_user.id)
 
-    rows = (
-        session.execute(
-            select(Team, func.count(Driver.id))
-            .outerjoin(Driver, Driver.team_id == Team.id)
-            .where(Team.league_id == league_id)
-            .group_by(Team.id)
-            .order_by(Team.name)
-        )
-        .all()
-    )
+    rows = session.execute(
+        select(Team, func.count(Driver.id))
+        .outerjoin(Driver, Driver.team_id == Team.id)
+        .where(Team.league_id == league_id)
+        .group_by(Team.id)
+        .order_by(Team.name)
+    ).all()
     return [_team_to_read(team, driver_count) for team, driver_count in rows]
 
 
@@ -88,12 +85,16 @@ async def create_team(
             field="name",
         )
 
-    existing = session.execute(
-        select(Team).where(
-            Team.league_id == league_id,
-            func.lower(Team.name) == name.lower(),
+    existing = (
+        session.execute(
+            select(Team).where(
+                Team.league_id == league_id,
+                func.lower(Team.name) == name.lower(),
+            )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if existing:
         raise api_error(
             status_code=status.HTTP_409_CONFLICT,
@@ -138,13 +139,17 @@ async def update_team(
                 message="Team name is required",
                 field="name",
             )
-        existing = session.execute(
-            select(Team).where(
-                Team.league_id == team.league_id,
-                func.lower(Team.name) == new_name.lower(),
-                Team.id != team.id,
+        existing = (
+            session.execute(
+                select(Team).where(
+                    Team.league_id == team.league_id,
+                    func.lower(Team.name) == new_name.lower(),
+                    Team.id != team.id,
+                )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if existing:
             raise api_error(
                 status_code=status.HTTP_409_CONFLICT,
@@ -183,7 +188,9 @@ async def delete_team(
     drivers = (
         session.execute(
             select(Driver).where(Driver.league_id == team.league_id, Driver.team_id == team.id)
-        ).scalars().all()
+        )
+        .scalars()
+        .all()
     )
     for driver in drivers:
         driver.team_id = None
@@ -191,5 +198,3 @@ async def delete_team(
     session.delete(team)
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-

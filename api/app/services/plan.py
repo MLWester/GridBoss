@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Final
 from uuid import UUID
 
@@ -12,10 +12,12 @@ _PLAN_ORDER: Final[tuple[str, ...]] = ("FREE", "PRO", "ELITE")
 DEFAULT_PLAN: Final[str] = "FREE"
 GRACE_PERIOD_DAYS: Final[int] = 7
 
+
 def normalize_plan(plan: str | None) -> str:
     if not plan:
         return DEFAULT_PLAN
     return plan.upper()
+
 
 def _plan_rank(plan: str | None) -> int:
     normalized = normalize_plan(plan)
@@ -24,8 +26,10 @@ def _plan_rank(plan: str | None) -> int:
     except ValueError:
         return _PLAN_ORDER.index(DEFAULT_PLAN)
 
+
 def is_plan_sufficient(current: str | None, required: str) -> bool:
     return _plan_rank(current) >= _plan_rank(required)
+
 
 def _max_plan(*plans: str | None) -> str:
     best = DEFAULT_PLAN
@@ -35,12 +39,14 @@ def _max_plan(*plans: str | None) -> str:
             best = normalized
     return best
 
+
 def _ensure_utc(dt: datetime | None) -> datetime | None:
     if dt is None:
         return None
     if dt.tzinfo is None:
         return dt.replace(tzinfo=UTC)
     return dt.astimezone(UTC)
+
 
 def effective_plan(
     league_plan: str | None,
@@ -58,6 +64,7 @@ def effective_plan(
             if expires_at > reference:
                 current = _max_plan(current, grace_plan)
     return current
+
 
 def effective_driver_limit(
     league: League,
@@ -78,17 +85,17 @@ def effective_driver_limit(
                 limit = max(limit, grace_limit)
     return limit
 
+
 def get_billing_account_for_owner(
     session: Session,
     owner_id: UUID,
 ) -> BillingAccount | None:
     return (
-        session.execute(
-            select(BillingAccount).where(BillingAccount.owner_user_id == owner_id)
-        )
+        session.execute(select(BillingAccount).where(BillingAccount.owner_user_id == owner_id))
         .scalars()
         .first()
     )
+
 
 __all__ = [
     "DEFAULT_PLAN",

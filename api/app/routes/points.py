@@ -33,7 +33,11 @@ DEFAULT_RULE_LIMIT = 20
 
 
 def _season_predicate(season_id: UUID | None):
-    return PointsScheme.season_id.is_(None) if season_id is None else PointsScheme.season_id == season_id
+    return (
+        PointsScheme.season_id.is_(None)
+        if season_id is None
+        else PointsScheme.season_id == season_id
+    )
 
 
 def _get_league(session: Session, league_id: UUID) -> League:
@@ -114,7 +118,6 @@ def _scheme_state(scheme: PointsScheme) -> dict[str, object]:
             for rule in sorted(scheme.rules, key=lambda r: r.position)
         ],
     }
-
 
 
 @router.get(
@@ -204,6 +207,8 @@ async def create_points_scheme(
     session.commit()
     session.refresh(scheme)
     return _scheme_to_read(scheme)
+
+
 @router.patch("/points-schemes/{scheme_id}", response_model=PointsSchemeRead)
 async def update_points_scheme(
     scheme_id: UUID,
@@ -268,14 +273,18 @@ async def update_points_scheme(
             )
             scheme.is_default = True
         else:
-            other_defaults = session.execute(
-                select(PointsScheme).where(
-                    PointsScheme.league_id == scheme.league_id,
-                    _season_predicate(scheme.season_id),
-                    PointsScheme.id != scheme.id,
-                    PointsScheme.is_default.is_(True),
+            other_defaults = (
+                session.execute(
+                    select(PointsScheme).where(
+                        PointsScheme.league_id == scheme.league_id,
+                        _season_predicate(scheme.season_id),
+                        PointsScheme.id != scheme.id,
+                        PointsScheme.is_default.is_(True),
+                    )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
             if not other_defaults:
                 raise api_error(
                     status_code=status.HTTP_400_BAD_REQUEST,

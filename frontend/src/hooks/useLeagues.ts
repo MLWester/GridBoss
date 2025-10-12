@@ -55,12 +55,18 @@ export function useLeagues(): UseLeaguesResult {
       name: membership.league_name,
       slug: membership.league_slug,
       plan: profile.billingPlan?.plan ?? 'FREE',
-      driverLimit: profile.billingPlan?.plan === 'ELITE' ? 9999 : profile.billingPlan?.plan === 'PRO' ? 100 : 20,
+      driverLimit:
+        profile.billingPlan?.plan === 'ELITE'
+          ? 9999
+          : profile.billingPlan?.plan === 'PRO'
+            ? 100
+            : 20,
       role: membership.role,
     }))
   }, [profile])
 
-  const [mockLeagues, setMockLeagues] = useState<LeagueSummary[]>(fallbackLeagues)
+  const [mockLeagues, setMockLeagues] =
+    useState<LeagueSummary[]>(fallbackLeagues)
 
   useEffect(() => {
     if (!shouldFetch) {
@@ -82,7 +88,7 @@ export function useLeagues(): UseLeaguesResult {
     leagues,
     isLoading: shouldFetch ? query.isLoading : false,
     isFetching: shouldFetch ? query.isFetching : false,
-    error: shouldFetch ? query.error ?? null : null,
+    error: shouldFetch ? (query.error ?? null) : null,
     refetch,
     isBypass: isBypassAuth,
     addLocalLeague: (league: LeagueSummary) => {

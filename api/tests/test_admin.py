@@ -23,9 +23,9 @@ from app.db.models import (
     User,
 )
 from app.db.session import get_session
+from app.dependencies.auth import get_current_user
 from app.main import app
 from app.services.plan import PLAN_DRIVER_LIMITS
-from app.dependencies.auth import get_current_user
 
 SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///:memory:"
 engine = create_engine(
@@ -44,7 +44,11 @@ TestingSessionLocal = sessionmaker(
 for table in Base.metadata.sorted_tables:
     for column in table.c:
         default = getattr(column, "server_default", None)
-        if default is not None and hasattr(default, "arg") and "gen_random_uuid" in str(default.arg):
+        if (
+            default is not None
+            and hasattr(default, "arg")
+            and "gen_random_uuid" in str(default.arg)
+        ):
             column.server_default = None
 
 Base.metadata.create_all(bind=engine)
@@ -126,7 +130,9 @@ def create_user(session: Session, *, email: str | None = None, is_founder: bool 
 
 
 def create_league(session: Session, *, owner: User, name: str = "Demo League") -> League:
-    league = League(name=name, slug=f"{name.lower().replace(' ', '-')}-{uuid4().hex[:6]}", owner_id=owner.id)
+    league = League(
+        name=name, slug=f"{name.lower().replace(' ', '-')}-{uuid4().hex[:6]}", owner_id=owner.id
+    )
     session.add(league)
     session.commit()
     session.refresh(league)
@@ -137,14 +143,18 @@ def create_league(session: Session, *, owner: User, name: str = "Demo League") -
 
 
 def create_billing_account(session: Session, owner: User, plan: str = "FREE") -> BillingAccount:
-    account = BillingAccount(owner_user_id=owner.id, plan=plan, stripe_customer_id=f"cus_{uuid4().hex[:6]}")
+    account = BillingAccount(
+        owner_user_id=owner.id, plan=plan, stripe_customer_id=f"cus_{uuid4().hex[:6]}"
+    )
     session.add(account)
     session.commit()
     session.refresh(account)
     return account
 
 
-def create_subscription(session: Session, account: BillingAccount, status: str = "active") -> Subscription:
+def create_subscription(
+    session: Session, account: BillingAccount, status: str = "active"
+) -> Subscription:
     subscription = Subscription(
         billing_account_id=account.id,
         plan=account.plan,
@@ -158,7 +168,9 @@ def create_subscription(session: Session, account: BillingAccount, status: str =
 
 
 class TestAdminConsole:
-    def test_search_requires_founder(self, client: TestClient, override_dependencies: Settings) -> None:
+    def test_search_requires_founder(
+        self, client: TestClient, override_dependencies: Settings
+    ) -> None:
         session = TestingSessionLocal()
         user = create_user(session, is_founder=False)
         with override_user(user):

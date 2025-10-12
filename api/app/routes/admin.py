@@ -52,9 +52,7 @@ def _collect_user_summaries(
         return []
 
     user_ids = {user.id for user, *_ in rows}
-    billing_account_ids = {
-        account_id for _, account_id, _, _ in rows if account_id is not None
-    }
+    billing_account_ids = {account_id for _, account_id, _, _ in rows if account_id is not None}
 
     league_counts: dict[UUID, int] = {}
     if user_ids:
@@ -179,9 +177,7 @@ def _league_summary(session: Session, league: League) -> AdminLeagueSummary:
         else None
     )
     integration = (
-        session.execute(
-            select(DiscordIntegration).where(DiscordIntegration.league_id == league.id)
-        )
+        session.execute(select(DiscordIntegration).where(DiscordIntegration.league_id == league.id))
         .scalars()
         .first()
     )
@@ -213,15 +209,12 @@ async def search_admin_resources(
     pattern = f"%{query.strip()}%" if query and query.strip() else None
     limit = 25
 
-    user_stmt = (
-        select(
-            User,
-            BillingAccount.id,
-            BillingAccount.plan,
-            BillingAccount.stripe_customer_id,
-        )
-        .outerjoin(BillingAccount, BillingAccount.owner_user_id == User.id)
-    )
+    user_stmt = select(
+        User,
+        BillingAccount.id,
+        BillingAccount.plan,
+        BillingAccount.stripe_customer_id,
+    ).outerjoin(BillingAccount, BillingAccount.owner_user_id == User.id)
     if pattern:
         user_stmt = user_stmt.where(
             or_(
@@ -254,9 +247,7 @@ async def search_admin_resources(
     league_rows = session.execute(league_stmt).all()
 
     # Ensure owners of matched leagues appear in user results
-    owner_ids = {
-        league.owner_id for league, *_ in league_rows if league.owner_id is not None
-    }
+    owner_ids = {league.owner_id for league, *_ in league_rows if league.owner_id is not None}
     existing_user_ids = {row[0].id for row in user_rows}
     missing_owner_ids = owner_ids.difference(existing_user_ids)
     if missing_owner_ids:
@@ -300,9 +291,7 @@ async def admin_toggle_discord_integration(
         )
 
     integration = (
-        session.execute(
-            select(DiscordIntegration).where(DiscordIntegration.league_id == league_id)
-        )
+        session.execute(select(DiscordIntegration).where(DiscordIntegration.league_id == league_id))
         .scalars()
         .first()
     )
@@ -445,10 +434,7 @@ async def admin_override_plan(
             "plan": owner_league.plan,
             "driver_limit": owner_league.driver_limit,
         }
-        if (
-            previous["plan"] == requested_plan
-            and previous["driver_limit"] == driver_limit
-        ):
+        if previous["plan"] == requested_plan and previous["driver_limit"] == driver_limit:
             continue
         owner_league.plan = requested_plan
         owner_league.driver_limit = driver_limit

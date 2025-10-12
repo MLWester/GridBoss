@@ -16,6 +16,7 @@ ROLE_PRIORITY = {
     LeagueRole.OWNER: 4,
 }
 
+
 def require_membership(session: Session, *, league_id: UUID, user_id: UUID) -> Membership:
     membership = session.execute(
         select(Membership).where(Membership.league_id == league_id, Membership.user_id == user_id)
@@ -27,6 +28,7 @@ def require_membership(session: Session, *, league_id: UUID, user_id: UUID) -> M
             message="Not a member of this league",
         )
     return membership
+
 
 def require_role_at_least(membership: Membership, *, minimum: LeagueRole) -> None:
     required_rank = ROLE_PRIORITY[minimum]

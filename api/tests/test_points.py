@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from http import HTTPStatus
 from uuid import UUID, uuid4
 
@@ -144,7 +144,7 @@ def create_event(session: Session, league: League, season: Season) -> Event:
         season_id=season.id,
         name="Race 1",
         track="Spa",
-        start_time=datetime.now(timezone.utc),
+        start_time=datetime.now(UTC),
         status="SCHEDULED",
     )
     session.add(event)

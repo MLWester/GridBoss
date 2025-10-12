@@ -3,6 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from scripts.seed_demo import (
+    DEMO_LEAGUE_SLUG,
+    DRIVER_NAMES,
+    seed_demo,
+)
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -20,12 +25,8 @@ from app.db.models import (
     Season,
     User,
 )
-from app.main import _prepare_sqlite_defaults, settings as app_settings
-from scripts.seed_demo import (
-    DEMO_LEAGUE_SLUG,
-    DRIVER_NAMES,
-    seed_demo,
-)
+from app.main import _prepare_sqlite_defaults
+from app.main import settings as app_settings
 from app.services.points import default_points_entries
 
 
@@ -77,9 +78,7 @@ def test_seed_demo_creates_expected_entities(session_factory: sessionmaker[Sessi
     assert summary.results == len(DRIVER_NAMES)
 
     with session_factory() as session:
-        league = session.execute(
-            select(League).where(League.slug == DEMO_LEAGUE_SLUG)
-        ).scalar_one()
+        league = session.execute(select(League).where(League.slug == DEMO_LEAGUE_SLUG)).scalar_one()
 
         driver_count, event_count, result_count = _counts(session, league)
         assert driver_count == len(DRIVER_NAMES)
@@ -96,16 +95,18 @@ def test_seed_demo_creates_expected_entities(session_factory: sessionmaker[Sessi
         ).scalar_one()
         assert len(points_scheme.rules) == len(default_points_entries())
 
-        season = session.execute(
-            select(Season).where(Season.league_id == league.id)
-        ).scalar_one()
+        season = session.execute(select(Season).where(Season.league_id == league.id)).scalar_one()
         assert season.is_active is True
 
-        completed_events = session.execute(
-            select(Event).where(
-                Event.league_id == league.id, Event.status == EventStatus.COMPLETED.value
+        completed_events = (
+            session.execute(
+                select(Event).where(
+                    Event.league_id == league.id, Event.status == EventStatus.COMPLETED.value
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         assert len(completed_events) == 1
 
         user_count = session.execute(select(func.count(User.id))).scalar_one()
@@ -119,9 +120,7 @@ def test_seed_demo_is_idempotent(session_factory: sessionmaker[Session]) -> None
     assert first.to_dict() == second.to_dict()
 
     with session_factory() as session:
-        league = session.execute(
-            select(League).where(League.slug == DEMO_LEAGUE_SLUG)
-        ).scalar_one()
+        league = session.execute(select(League).where(League.slug == DEMO_LEAGUE_SLUG)).scalar_one()
         driver_count, event_count, result_count = _counts(session, league)
 
         assert driver_count == len(DRIVER_NAMES)

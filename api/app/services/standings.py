@@ -126,9 +126,9 @@ def calculate_standings(
         ),
         0,
     ).label("wins")
-    best_finish_expr = func.min(
-        case((Event.id.isnot(None), Result.finish_position))
-    ).label("best_finish")
+    best_finish_expr = func.min(case((Event.id.isnot(None), Result.finish_position))).label(
+        "best_finish"
+    )
 
     stmt = (
         select(

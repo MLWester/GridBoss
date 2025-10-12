@@ -1,15 +1,24 @@
 import { apiFetch } from './client'
 import { ApiError } from './auth'
-import type { CreateLeagueRequest, LeagueRead, LeagueSummary, UpdateLeagueGeneralRequest } from '../types/leagues'
+import type {
+  CreateLeagueRequest,
+  LeagueRead,
+  LeagueSummary,
+  UpdateLeagueGeneralRequest,
+} from '../types/leagues'
 import type { LeagueRole } from '../types/auth'
 
-function toSummary(league: LeagueRead, role: LeagueRole | null = null): LeagueSummary {
+function toSummary(
+  league: LeagueRead,
+  role: LeagueRole | null = null,
+): LeagueSummary {
   return {
     id: league.id,
     name: league.name,
     slug: league.slug,
     plan: league.plan ?? null,
-    driverLimit: typeof league.driver_limit === 'number' ? league.driver_limit : null,
+    driverLimit:
+      typeof league.driver_limit === 'number' ? league.driver_limit : null,
     role,
   }
 }
@@ -25,7 +34,10 @@ export async function fetchLeagues(token: string): Promise<LeagueSummary[]> {
   return payload.map((league) => toSummary(league))
 }
 
-export async function createLeague(token: string, body: CreateLeagueRequest): Promise<LeagueSummary> {
+export async function createLeague(
+  token: string,
+  body: CreateLeagueRequest,
+): Promise<LeagueSummary> {
   const response = await apiFetch('/leagues', {
     method: 'POST',
     token,
