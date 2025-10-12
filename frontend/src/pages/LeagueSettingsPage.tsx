@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import type { ReactElement } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -9,6 +10,7 @@ import { usePointsScheme, DEFAULT_POINTS_SCHEME } from '../hooks/usePointsScheme
 import type { LeagueOutletContext } from '../components/layout/LeagueLayout'
 import type { LeagueRole } from '../types/auth'
 import type { PointsSchemeEntry, UpdateLeagueGeneralRequest } from '../types/leagues'
+import { useDiscordIntegration } from '../hooks/useDiscordIntegration'
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
@@ -20,6 +22,21 @@ function canEditPoints(role: LeagueRole | null): boolean {
   return role === 'OWNER' || role === 'ADMIN'
 }
 
+function formatTestTimestamp(value: string | null): string {
+  if (!value) {
+    return 'Never tested'
+  }
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return 'Never tested'
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  }).format(date)
+}
 function sanitizeSlug(value: string): string {
   return value
     .toLowerCase()
@@ -60,7 +77,7 @@ function arePointsEqual(rows: PointsRow[], entries: PointsSchemeEntry[]): boolea
 export function LeagueSettingsPage(): ReactElement {
   const { slug = '' } = useParams<{ slug: string }>()
   const { overview, refetch, isBypass } = useOutletContext<LeagueOutletContext>()
-  const { accessToken, isLoading: isAuthLoading } = useAuth()
+  const { accessToken, isLoading: isAuthLoading, billingPlan } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -72,6 +89,10 @@ export function LeagueSettingsPage(): ReactElement {
 
   const canEditGeneralSettings = canEditGeneral(membership)
   const canEditPointsScheme = canEditPoints(membership)
+  const canManageDiscord = canEditGeneral(membership)
+
+  const plan = useMemo(() => (overview?.league.plan ?? billingPlan?.plan ?? 'FREE').toUpperCase(), [overview?.league.plan, billingPlan?.plan])
+  const isProPlan = plan === 'PRO' || plan === 'ELITE'
 
   const [generalForm, setGeneralForm] = useState({
     name: overview?.league.name ?? '',
@@ -98,9 +119,23 @@ export function LeagueSettingsPage(): ReactElement {
   const { entries: pointsEntries, isLoading: isPointsLoading, error: pointsError, save, resetToDefault, isBypass: isPointsBypass } =
     usePointsScheme(slug)
 
+  const {
+    status: discordStatus,
+    isLoading: isDiscordLoading,
+    error: discordError,
+    refresh: refreshDiscord,
+    beginLink,
+    disconnect,
+    sendTest,
+    isBypass: isDiscordBypass,
+  } = useDiscordIntegration(slug)
+
   const [pointsRows, setPointsRows] = useState<PointsRow[]>(toRows(pointsEntries))
   const [pointsErrors, setPointsErrors] = useState<Record<number, string>>({})
   const [isPointsSaving, setIsPointsSaving] = useState(false)
+  const [isLinkingDiscord, setIsLinkingDiscord] = useState(false)
+  const [isTestingDiscord, setIsTestingDiscord] = useState(false)
+  const [isDisconnectingDiscord, setIsDisconnectingDiscord] = useState(false)
 
   useEffect(() => {
     setPointsRows(toRows(pointsEntries))
@@ -314,14 +349,162 @@ export function LeagueSettingsPage(): ReactElement {
 
   const planLabel = overview?.league.plan ? overview.league.plan.toUpperCase() : 'FREE'
   const bypassBanner = isBypass ? 'Bypass mode active: changes are stored locally.' : undefined
+  const discordBypassBanner = isDiscordBypass ? 'Discord demo mode: actions are simulated locally.' : undefined
+
+  const discordStatusLabel = discordStatus.linked
+    ? discordStatus.requiresReconnect
+      ? 'Reconnect required'
+      : 'Connected'
+    : 'Not linked'
+
+  const discordStatusTone = discordStatus.linked
+    ? discordStatus.requiresReconnect
+      ? 'border-amber-500/60 bg-amber-500/10 text-amber-100'
+      : 'border-emerald-500/60 bg-emerald-500/10 text-emerald-100'
+    : 'border-slate-700/70 bg-slate-900/60 text-slate-300'
+
+  const disableLinkButton = !canManageDiscord || isLinkingDiscord || isDiscordLoading
+  const disableUnlinkButton =
+    !canManageDiscord ||
+    !discordStatus.linked ||
+    isDisconnectingDiscord ||
+    isDiscordLoading
+  const disableTestButton =
+    !canManageDiscord ||
+    !discordStatus.linked ||
+    discordStatus.requiresReconnect ||
+    !isProPlan ||
+    isTestingDiscord ||
+    isDiscordLoading
+
+  const handleLinkDiscord = async () => {
+    if (!canManageDiscord) {
+      showToast({
+        title: 'Insufficient permissions',
+        description: 'Only owners or admins can manage the Discord integration.',
+        variant: 'error',
+      })
+      return
+    }
+
+    setIsLinkingDiscord(true)
+    try {
+      const url = await beginLink()
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }
+      await refreshDiscord()
+      await refetch()
+      showToast({
+        title: 'Link started',
+        description: 'Complete the Discord authorization flow and return here when finished.',
+        variant: 'info',
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to start the Discord linking flow.'
+      showToast({
+        title: 'Link failed',
+        description: message,
+        variant: 'error',
+      })
+    } finally {
+      setIsLinkingDiscord(false)
+    }
+  }
+
+  const handleDisconnectDiscord = async () => {
+    if (!canManageDiscord) {
+      showToast({
+        title: 'Insufficient permissions',
+        description: 'Only owners or admins can manage the Discord integration.',
+        variant: 'error',
+      })
+      return
+    }
+
+    setIsDisconnectingDiscord(true)
+    try {
+      await disconnect()
+      await refreshDiscord()
+      await refetch()
+      showToast({
+        title: 'Discord unlinked',
+        description: 'You can relink the integration at any time.',
+        variant: 'success',
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to unlink the Discord integration.'
+      showToast({
+        title: 'Unlink failed',
+        description: message,
+        variant: 'error',
+      })
+    } finally {
+      setIsDisconnectingDiscord(false)
+    }
+  }
+
+  const handleTestDiscord = async () => {
+    if (!canManageDiscord) {
+      showToast({
+        title: 'Insufficient permissions',
+        description: 'Only owners or admins can manage the Discord integration.',
+        variant: 'error',
+      })
+      return
+    }
+    if (!discordStatus.linked) {
+      showToast({
+        title: 'Integration required',
+        description: 'Link Discord before sending a test announcement.',
+        variant: 'error',
+      })
+      return
+    }
+    if (!isProPlan) {
+      showToast({
+        title: 'Upgrade to Pro',
+        description: 'Discord announcements are available on the Pro plan.',
+        variant: 'error',
+      })
+      return
+    }
+
+    setIsTestingDiscord(true)
+    try {
+      const message = await sendTest()
+      await refreshDiscord()
+      showToast({
+        title: 'Test sent',
+        description: message || 'Check your Discord server for the announcement.',
+        variant: 'success',
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to send test announcement.'
+      showToast({
+        title: 'Test failed',
+        description: message,
+        variant: 'error',
+      })
+    } finally {
+      setIsTestingDiscord(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
-      {bypassBanner ? (
-        <div className="rounded-3xl border border-sky-500/40 bg-sky-500/10 p-4 text-sm text-sky-100">
-          {bypassBanner}
-        </div>
-      ) : null}
+      <Fragment>
+        {bypassBanner ? (
+          <div className="rounded-3xl border border-sky-500/40 bg-sky-500/10 p-4 text-sm text-sky-100">
+            {bypassBanner}
+          </div>
+        ) : null}
+        {discordBypassBanner ? (
+          <div className="rounded-3xl border border-blue-500/40 bg-blue-500/10 p-4 text-sm text-blue-100">
+            {discordBypassBanner}
+          </div>
+        ) : null}
+      </Fragment>
 
       <section className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow shadow-slate-950/30">
         <header className="space-y-2">
@@ -496,6 +679,134 @@ export function LeagueSettingsPage(): ReactElement {
           </div>
         )}
       </section>
+
+      <section className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 shadow shadow-slate-950/30">
+        <header className="space-y-2">
+          <h2 className="text-xl font-semibold text-slate-100">Discord integration</h2>
+          <p className="text-sm text-slate-400">
+            Link your Discord server to announce race results and key updates automatically.
+          </p>
+        </header>
+
+        {isDiscordLoading ? (
+          <div className="mt-6 space-y-3">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div
+                key={index.toString()}
+                className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4"
+              >
+                <div>
+                  <div className="h-4 w-32 rounded bg-slate-800" />
+                  <div className="mt-2 h-3 w-48 rounded bg-slate-800" />
+                </div>
+                <div className="h-8 w-24 rounded-full bg-slate-800" />
+              </div>
+            ))}
+          </div>
+        ) : discordError ? (
+          <div className="mt-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
+            <p className="font-semibold">We could not load the Discord integration.</p>
+            <p className="mt-1 text-rose-100/80">{discordError.message}</p>
+          </div>
+        ) : (
+          <div className="mt-6 space-y-5">
+            <div className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${discordStatusTone}`}>
+                    {discordStatusLabel}
+                  </span>
+                  <div className="mt-3 space-y-1 text-sm text-slate-300">
+                    <p>
+                      <span className="text-slate-500">Guild:</span> {discordStatus.guildName || 'Not connected'}
+                    </p>
+                    <p>
+                      <span className="text-slate-500">Channel:</span> {discordStatus.channelName || 'Not connected'}
+                    </p>
+                    <p className="text-xs text-slate-500">Last test: {formatTestTimestamp(discordStatus.lastTestedAt)}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void handleLinkDiscord()
+                    }}
+                    disabled={disableLinkButton}
+                    className="inline-flex items-center gap-2 rounded-full bg-sky-500 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+                  >
+                    {isLinkingDiscord ? (
+                      <span className="inline-flex h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
+                    ) : null}
+                    {discordStatus.linked ? 'Reconnect Discord' : 'Link Discord'}
+                  </button>
+                  {discordStatus.linked ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleDisconnectDiscord()
+                      }}
+                      disabled={disableUnlinkButton}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:border-slate-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isDisconnectingDiscord ? (
+                        <span className="inline-flex h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
+                      ) : null}
+                      Unlink
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+              {discordStatus.requiresReconnect ? (
+                <p className="mt-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+                  Permissions changed or the bot was removed. Reconnect to restore announcements.
+                </p>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="text-xs text-slate-500">
+                {isProPlan
+                  ? 'Send a test message to verify the bot has the right channel permissions.'
+                  : 'Upgrade to the Pro plan to enable Discord announcements and test messages.'}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleTestDiscord()
+                }}
+                disabled={disableTestButton}
+                title={isProPlan ? undefined : 'Upgrade to the Pro plan to send test announcements.'}
+                className="inline-flex items-center gap-2 rounded-full bg-slate-100/10 px-5 py-2 text-sm font-semibold text-slate-100 transition hover:bg-slate-100/20 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+              >
+                {isTestingDiscord ? (
+                  <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-slate-950" />
+                ) : null}
+                Send test announcement
+              </button>
+            </div>
+
+            {!canManageDiscord ? (
+              <p className="rounded-2xl border border-slate-800/70 bg-slate-900/60 p-3 text-xs text-slate-400">
+                Only league owners or admins can manage the Discord integration.
+              </p>
+            ) : null}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
