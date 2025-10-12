@@ -48,6 +48,12 @@ const MOCK_ADMIN_RESPONSE: AdminSearchResponse = {
   ],
 }
 
+const PLAN_LIMITS: Record<BillingPlanTier, number> = {
+  FREE: 20,
+  PRO: 100,
+  ELITE: 9999,
+}
+
 interface ToggleArgs {
   leagueId: string
   isActive: boolean
@@ -113,10 +119,27 @@ export function useAdminConsole() {
         setMockData((current) => {
           const existing = current.leagues.find((league) => league.id === leagueId)
           if (!existing) {
-            updatedResult = undefined
-            return current
+            const fallbackPlan: BillingPlanTier = 'FREE'
+            const fallback: AdminLeagueSummary = {
+              id: leagueId,
+              name: 'Unknown league',
+              slug: leagueId,
+              plan: fallbackPlan,
+              driverLimit: PLAN_LIMITS[fallbackPlan],
+              driverCount: 0,
+              ownerId: null,
+              ownerDiscordUsername: null,
+              ownerEmail: null,
+              billingPlan: fallbackPlan,
+              discordActive: isActive,
+            }
+            updatedResult = fallback
+            return {
+              ...current,
+              leagues: [...current.leagues, fallback],
+            }
           }
-          const nextLeague = { ...existing, discordActive: isActive }
+          const nextLeague: AdminLeagueSummary = { ...existing, discordActive: isActive }
           updatedResult = nextLeague
           return {
             ...current,
@@ -126,7 +149,20 @@ export function useAdminConsole() {
           }
         })
         if (!updatedResult) {
-          throw new Error('League not found in mock data')
+          const fallbackPlan: BillingPlanTier = 'FREE'
+          return {
+            id: leagueId,
+            name: 'Unknown league',
+            slug: leagueId,
+            plan: fallbackPlan,
+            driverLimit: PLAN_LIMITS[fallbackPlan],
+            driverCount: 0,
+            ownerId: null,
+            ownerDiscordUsername: null,
+            ownerEmail: null,
+            billingPlan: fallbackPlan,
+            discordActive: isActive,
+          }
         }
         return updatedResult
       }
@@ -167,10 +203,31 @@ export function useAdminConsole() {
         setMockData((current) => {
           const existing = current.leagues.find((league) => league.id === leagueId)
           if (!existing) {
-            updatedResult = undefined
-            return current
+            const fallback: AdminLeagueSummary = {
+              id: leagueId,
+              name: 'Unknown league',
+              slug: leagueId,
+              plan,
+              driverLimit: PLAN_LIMITS[plan],
+              driverCount: 0,
+              ownerId: null,
+              ownerDiscordUsername: null,
+              ownerEmail: null,
+              billingPlan: plan,
+              discordActive: false,
+            }
+            updatedResult = fallback
+            return {
+              ...current,
+              leagues: [...current.leagues, fallback],
+            }
           }
-          const nextLeague = { ...existing, plan, billingPlan: plan }
+          const nextLeague: AdminLeagueSummary = {
+            ...existing,
+            plan,
+            billingPlan: plan,
+            driverLimit: PLAN_LIMITS[plan],
+          }
           updatedResult = nextLeague
           return {
             ...current,
@@ -180,7 +237,19 @@ export function useAdminConsole() {
           }
         })
         if (!updatedResult) {
-          throw new Error('League not found in mock data')
+          return {
+            id: leagueId,
+            name: 'Unknown league',
+            slug: leagueId,
+            plan,
+            driverLimit: PLAN_LIMITS[plan],
+            driverCount: 0,
+            ownerId: null,
+            ownerDiscordUsername: null,
+            ownerEmail: null,
+            billingPlan: plan,
+            discordActive: false,
+          }
         }
         return updatedResult
       }
@@ -239,3 +308,6 @@ export function useAdminConsole() {
     shouldFetch,
   }
 }
+
+
+

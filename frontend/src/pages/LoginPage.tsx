@@ -49,7 +49,7 @@ export function LoginPage(): ReactElement {
           </svg>
           Continue with Discord
         </button>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-200">
           You will be redirected to Discord to authorise the GridBoss app. Once complete you&apos;ll return here with your session
           ready to go.
         </p>
@@ -57,3 +57,5 @@ export function LoginPage(): ReactElement {
     </main>
   )
 }
+
+

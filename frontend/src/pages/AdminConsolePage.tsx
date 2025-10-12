@@ -58,7 +58,7 @@ export function AdminConsolePage(): ReactElement {
 
   if (!adminEnabled) {
     return (
-      <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-300">
+      <div className="rounded-3xl border border-slate-800/70 bg-slate-900/60 p-6 text-sm text-slate-200">
         <h2 className="text-xl font-semibold text-slate-100">Admin console disabled</h2>
         <p className="mt-2 text-slate-400">
           Enable the console by setting <code className="font-mono text-slate-200">ADMIN_MODE=true</code>{' '}
@@ -185,7 +185,7 @@ export function AdminConsolePage(): ReactElement {
             ))}
           </div>
         ) : users.length === 0 ? (
-          <p className="mt-4 rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4 text-sm text-slate-300">
+          <p className="mt-4 rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4 text-sm text-slate-200">
             No users matched this query.
           </p>
         ) : (
@@ -197,7 +197,7 @@ export function AdminConsolePage(): ReactElement {
                     <p className="text-lg font-semibold text-slate-100">
                       {user.discordUsername || 'Unknown Discord user'}
                     </p>
-                    <p className="text-xs text-slate-500">{user.email || 'No email provided'}</p>
+                    <p className="text-xs text-slate-200">{user.email || 'No email provided'}</p>
                   </div>
                   <div className="text-xs text-slate-400">
                     <p>
@@ -210,15 +210,15 @@ export function AdminConsolePage(): ReactElement {
                 </div>
                 <div className="mt-3 grid gap-3 text-xs text-slate-400 sm:grid-cols-3">
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-900/40 p-3">
-                    <p className="font-semibold text-slate-300">Billing plan</p>
+                    <p className="font-semibold text-slate-200">Billing plan</p>
                     <p className="mt-1 text-slate-200">{user.billingPlan}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-900/40 p-3">
-                    <p className="font-semibold text-slate-300">Subscription status</p>
+                    <p className="font-semibold text-slate-200">Subscription status</p>
                     <p className="mt-1 text-slate-200">{user.subscriptionStatus ?? 'n/a'}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800/70 bg-slate-900/40 p-3">
-                    <p className="font-semibold text-slate-300">Stripe customer</p>
+                    <p className="font-semibold text-slate-200">Stripe customer</p>
                     <p className="mt-1 text-slate-200">{user.stripeCustomerId ?? 'n/a'}</p>
                   </div>
                 </div>
@@ -258,7 +258,7 @@ export function AdminConsolePage(): ReactElement {
             ))}
           </div>
         ) : leagues.length === 0 ? (
-          <p className="mt-4 rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4 text-sm text-slate-300">
+          <p className="mt-4 rounded-2xl border border-slate-800/70 bg-slate-900/50 p-4 text-sm text-slate-200">
             No leagues matched this query.
           </p>
         ) : (
@@ -271,7 +271,7 @@ export function AdminConsolePage(): ReactElement {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-lg font-semibold text-slate-100">{league.name}</p>
-                      <p className="text-xs text-slate-500">slug: {league.slug}</p>
+                      <p className="text-xs text-slate-200">slug: {league.slug}</p>
                       <p className="mt-2 text-xs text-slate-400">
                         Owner: <span className="text-slate-200">{league.ownerDiscordUsername ?? 'Unknown'}</span> ·{' '}
                         <span className="text-slate-200">{league.ownerEmail ?? 'n/a'}</span>
@@ -312,7 +312,7 @@ export function AdminConsolePage(): ReactElement {
                       {league.discordActive ? 'Disable Discord' : 'Enable Discord'}
                     </button>
                     <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <label htmlFor={`plan-${league.id}`} className="font-semibold text-slate-300">
+                      <label htmlFor={`plan-${league.id}`} className="font-semibold text-slate-200">
                         Override plan
                       </label>
                       <select
@@ -324,7 +324,7 @@ export function AdminConsolePage(): ReactElement {
                         }}
                         disabled={disablePlanOverride || isUpdatingPlan}
                         title={planOverrideHelp}
-                        className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-100 transition hover:border-slate-500 focus:border-sky-500 focus:outline-none disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500"
+                        className="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-xs text-slate-100 transition hover:border-slate-500 focus:border-sky-500 focus:outline-none disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-200"
                       >
                         {PLAN_OPTIONS.map((plan) => (
                           <option key={plan} value={plan}>
@@ -352,3 +352,4 @@ export function AdminConsolePage(): ReactElement {
     </div>
   )
 }
+

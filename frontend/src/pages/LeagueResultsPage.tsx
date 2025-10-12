@@ -330,11 +330,17 @@ export function LeagueResultsPage(): ReactElement {
                 <p className="text-sm font-semibold text-slate-100">
                   {driver ? formatDriverName(driver) : 'Unknown driver'}
                 </p>
-                <p className="text-xs text-slate-500">{driver?.teamName ?? 'Unassigned'}</p>
+                <p className="text-xs text-slate-200">{driver?.teamName ?? 'Unassigned'}</p>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status</label>
+                <label
+                  htmlFor={`result-status-${index.toString()}`}
+                  className="text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Status
+                </label>
                 <select
+                  id={`result-status-${index.toString()}`}
                   value={entry.status}
                   disabled={!canEdit}
                   onChange={(event) => {
@@ -350,8 +356,14 @@ export function LeagueResultsPage(): ReactElement {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Bonus</label>
+                <label
+                  htmlFor={`result-bonus-${index.toString()}`}
+                  className="text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Bonus
+                </label>
                 <input
+                  id={`result-bonus-${index.toString()}`}
                   type="number"
                   inputMode="numeric"
                   value={entry.bonusPoints}
@@ -363,8 +375,14 @@ export function LeagueResultsPage(): ReactElement {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Penalty</label>
+                <label
+                  htmlFor={`result-penalty-${index.toString()}`}
+                  className="text-xs font-semibold uppercase tracking-wide text-slate-400"
+                >
+                  Penalty
+                </label>
                 <input
+                  id={`result-penalty-${index.toString()}`}
                   type="number"
                   inputMode="numeric"
                   value={entry.penaltyPoints}
@@ -375,7 +393,7 @@ export function LeagueResultsPage(): ReactElement {
                   className="mt-1 w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40 disabled:opacity-60"
                 />
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-200">
                 <p>Base points calculated server-side.</p>
               </div>
             </div>
@@ -384,7 +402,7 @@ export function LeagueResultsPage(): ReactElement {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-200">
           Need to tweak? Reorder drivers, adjust modifiers, and submit again. Standings recompute automatically.
         </p>
         {canEdit ? (
@@ -402,7 +420,7 @@ export function LeagueResultsPage(): ReactElement {
             Submit results
           </button>
         ) : (
-          <span className="text-xs text-slate-500">Read-only access</span>
+          <span className="text-xs text-slate-200">Read-only access</span>
         )}
       </div>
 
@@ -417,3 +435,5 @@ export function LeagueResultsPage(): ReactElement {
     </div>
   )
 }
+
+

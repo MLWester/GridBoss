@@ -331,7 +331,7 @@ Acceptance Criteria:
 Dependencies: PBI-018, PBI-017, PBI-032
 Branch: pbi/033-admin-console
 
-## PBI-034 - Frontend Testing and QA
+## PBI-034 - Frontend Testing and QA (complete)
 Summary: Establish frontend automated testing and accessibility checks.
 Scope: Frontend
 Acceptance Criteria:
