@@ -372,3 +372,168 @@ Acceptance Criteria:
 - AppPBIs.md updated when PBIs close and docs/CURSOR_PROMPTS.md refreshed with relevant prompts.
 Dependencies: PBI-001, PBI-020
 Branch: pbi/037-documentation
+
+## PBI-038 - App Security Hardening + Profile Settings
+Summary: Tighten auth/session/logout and add secure profile management.
+Scope: Backend, Frontend
+Acceptance Criteria:
+- OAuth refresh rotation implemented, token reuse invalidates the session family, and logout clears refresh cookies plus server-side state.
+- CSRF protection enforced for all mutating routes via double-submit token or header strategy.
+- Profile endpoints allow updating username, bio, and avatars with MIME/size validation, EXIF stripping, and S3/local storage support.
+- `/me` response includes new profile fields; security-sensitive actions logged to audit logs.
+Dependencies: PBI-004, PBI-005, PBI-015
+Branch: pbi/038-security-profile
+
+## PBI-039 - Env & Secrets Audit
+Summary: Centralize configuration management and ensure environment variables are production safe.
+Scope: Ops, Backend
+Acceptance Criteria:
+- `pydantic-settings` model provides typed access to every env var with defaults and descriptive errors on missing/invalid values.
+- `.env.example` documents 100% of required keys with comments and safe sample defaults; optional S3/email keys included.
+- `docs/CONFIG.md` lists each key, type, default, and production guidance.
+- Bootstrap fails fast when required secrets are absent or production uses placeholder credentials.
+Dependencies: PBI-001, PBI-002
+Branch: pbi/039-env-secrets-audit
+
+## PBI-040 - Analytics Foundation (Events & Dashboard)
+Summary: Capture product analytics events and expose founder dashboards.
+Scope: Backend, Frontend
+Acceptance Criteria:
+- Schema `analytics_events` records discrete events (type, ts, user_id?, league_id?, props JSON).
+- Tracking implemented for login, league_created, driver_added, event_scheduled, results_posted, discord_posted, subscription_updated.
+- Founder dashboards show last 30 days of activity, top leagues, and usage charts with caching; analytics disabled when feature flag off.
+- user_id values hashed with env salt and no PII stored in props.
+Dependencies: PBI-018, PBI-020, PBI-029
+Branch: pbi/040-analytics-foundation
+
+## PBI-041 - Downloadable Standings & League Export
+Summary: Provide bulk exports for standings and league data.
+Scope: Backend
+Acceptance Criteria:
+- Standings export available in CSV, XLSX, and PDF (A4 and Letter) with formatted headers and typed columns.
+- Full league export produces ZIP containing league.json, standings.csv, events.csv, and classes.csv when applicable.
+- Exports up to 10k results complete via async jobs within 5 seconds and issue pre-signed URLs valid for 30 minutes.
+- Progress updates exposed via status endpoint and audit logs capture export activity.
+Dependencies: PBI-011, PBI-029
+Branch: pbi/041-exports-standings
+
+## PBI-042 - Advanced Standings Views
+Summary: Support multiple standings modes and richer statistics.
+Scope: Backend, Frontend
+Acceptance Criteria:
+- API accepts `mode` query for points, penalties, delta, consistency, and class filters; responses cached per mode/class.
+- Frontend UI toggles modes without full reload, updates columns, and provides CSV export respecting active mode.
+- Large seasons (10k results) render under 300ms from warm cache.
+- Tests cover stat reducers and end-to-end mode switching plus export flow.
+Dependencies: PBI-029, PBI-040, PBI-045
+Branch: pbi/042-standings-advanced
+
+## PBI-043 - League Settings v2 (Extensibility & Edge Cases)
+Summary: Extend league settings to cover advanced scenarios and ensure auditing.
+Scope: Backend, Frontend
+Acceptance Criteria:
+- Settings split into General, Points, Classes (placeholder), Discord, Privacy, and Deletion sections with consistent UX.
+- Slug rename maintains history and serves 301 redirects from old slugs for 30 days.
+- Driver limit enforcement returns `{code:"PLAN_LIMIT"}` and disables restricted actions; every change writes to audit_logs.
+- UI handles error surfacing and protects critical actions with confirmations.
+Dependencies: PBI-030, PBI-031, PBI-017
+Branch: pbi/043-league-settings-v2
+
+## PBI-044 - Light & Dark Mode (Design System)
+Summary: Deliver responsive theming with accessibility guarantees.
+Scope: Frontend
+Acceptance Criteria:
+- Design tokens expressed as CSS variables for light and dark palettes; zero-FoUC init script applies theme before first paint respecting system preference.
+- Theme toggle persists selection (localStorage) and updates instantly across the app.
+- Components documented in Storybook/Docs with both themes and pass WCAG AA contrast for text and buttons.
+- Visual regression tests capture both themes to prevent future breakage.
+Dependencies: PBI-022, PBI-030
+Branch: pbi/044-theme-system
+
+## PBI-045 - Multi-Class Racers (Amateur/Pro)
+Summary: Introduce driver classes and class-based standings.
+Scope: Backend, Frontend
+Acceptance Criteria:
+- Database supports `classes` table and optional `drivers.class_id`; CRUD APIs scoped to league.
+- Results/standings endpoints filter by class and maintain cache keys including class_id.
+- UI allows assigning drivers to classes and switching between overall plus per-class tabs.
+- Exports include class information and validation enforces league scoping.
+Dependencies: PBI-029, PBI-024, PBI-011
+Branch: pbi/045-classes-multiclass
+
+## PBI-046 - API Completeness & Contract Tests
+Summary: Guarantee documented routes align with implementation.
+Scope: Backend, Ops
+Acceptance Criteria:
+- OpenAPI spec generated and committed (`docs/API.md`) as part of CI, failing on drift.
+- Schemathesis or similar contract tests hit every documented route with success and failure cases.
+- Responses conform to the standard error envelope; CI fails on schema mismatches.
+- Smoke test ensures `/healthz` and key routes respond before running contract suite.
+Dependencies: PBI-020, PBI-037
+Branch: pbi/046-api-contract-tests
+
+## PBI-047 - Discord Integration & Auth E2E
+Summary: Provide end-to-end test coverage for Discord flows.
+Scope: Backend
+Acceptance Criteria:
+- Mock Discord server covers OAuth, guild listing, and message posting for deterministic tests.
+- `/auth/discord` flow protected against replay and validates state tokens with comprehensive E2E coverage.
+- Worker job enqueue and execution verified, including permission errors and retry logging.
+- CI harness runs Discord E2E suite using mocks without hitting real Discord APIs.
+Dependencies: PBI-013, PBI-031, PBI-018
+Branch: pbi/047-discord-e2e
+
+## PBI-048 - Stripe E2E & Billing Page
+Summary: Finalize billing UX and ensure backend webhooks operate end-to-end.
+Scope: Backend, Frontend
+Acceptance Criteria:
+- Billing page shows plan, driver usage, invoices list, and provides upgrade/downgrade buttons with optimistic feedback.
+- Stripe checkout and billing portal flows verified, including grace period messaging and restricted actions.
+- Webhooks handle `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, and `invoice.payment_failed`, updating billing/leagues plus audit logs.
+- Integration tests use Stripe test mode (CLI forwarding) to validate webhook handling, and frontend e2e covers upgrade/downgrade happy/sad paths.
+Dependencies: PBI-015, PBI-032, PBI-017
+Branch: pbi/048-stripe-e2e
+
+## PBI-049 - Discord Bot Commands Pack
+Summary: Expand Discord bot capabilities for league admins.
+Scope: Bot, Backend
+Acceptance Criteria:
+- Implement `/gb announceresults`, `/gb standings`, `/gb config` commands with permission checks (OWNER/ADMIN only).
+- Commands log structured output, respect rate limits/cooldowns, and integrate with existing audit logging.
+- Command output leverages embeds with league and event context.
+- Tests cover command dispatch, permission enforcement, and Discord API interactions via mocks.
+Dependencies: PBI-014, PBI-013, PBI-027
+Branch: pbi/049-bot-commands
+
+## PBI-050 - Email Integration (Transactional)
+Summary: Deliver transactional email capability with feature gating.
+Scope: Backend
+Acceptance Criteria:
+- Email providers (SMTP or SendGrid/Postmark) selectable via env; `EMAIL_ENABLED` gates sending.
+- Templates for welcome, league invite, payment issue, and results posted summary stored with localization-ready structure.
+- Email metadata (recipient, template, status) logged to `audit_logs` without storing body content.
+- Retries configured (three attempts) and failures surfaced in admin UI.
+Dependencies: PBI-015, PBI-021
+Branch: pbi/050-email-connection
+
+## PBI-051 - League Description Field
+Summary: Allow leagues to publish rich descriptions safely.
+Scope: Backend, Frontend
+Acceptance Criteria:
+- Database migration adds `leagues.description` (text) with API and UI support for editing.
+- Markdown subset allowed; rendering sanitizes HTML (links, strong, em, lists only) to prevent XSS.
+- Description displayed on league overview and included in exports.
+- Tests cover sanitization, length validation (500-1000 chars), and rendering in UI.
+Dependencies: PBI-024, PBI-030
+Branch: pbi/051-league-description
+
+## PBI-052 - Health Checks & API Self-Tests
+Summary: Increase operational confidence with deep health checks.
+Scope: Ops, Backend
+Acceptance Criteria:
+- `/healthz` remains lightweight; `/readyz` performs DB migration check, Redis ping, Stripe/Discord credential verification, and queue liveness.
+- Nightly synthetic job creates an ephemeral league, runs CRUD sanity tests, queues worker tasks, and tears down with structured logging.
+- Dependency failures return 503 on `/readyz` with reason codes JSON and alert hooks.
+- Unit tests cover health adapters; e2e tests simulate missing dependencies to validate error codes.
+Dependencies: PBI-012, PBI-018, PBI-020
+Branch: pbi/052-health-selftest
