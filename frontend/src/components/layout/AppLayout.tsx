@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { ReactElement } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { ThemeToggle } from '../common/ThemeToggle'
 
 export function AppLayout(): ReactElement {
   const { user, memberships, billingPlan, logout, isFounder } = useAuth()
@@ -25,30 +26,27 @@ export function AppLayout(): ReactElement {
   }, [adminModeEnabled, isFounder])
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="border-b border-slate-800 bg-slate-900/70 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <div className="min-h-screen bg-app text-text transition-colors duration-300">
+      <header className="border-border/70 bg-surface/80 border-b backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-sky-400">
+            <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-accent">
               GridBoss
             </span>
-            <span className="text-sm text-slate-400">
-              League Control Center
-            </span>
+            <span className="text-sm text-muted">League Control Center</span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium">
-                {user?.discord_username ?? 'Driver'}
-              </p>
-              <p className="text-xs text-slate-400">{membershipLabel}</p>
+            <ThemeToggle />
+            <div className="hidden text-right sm:block">
+              <p className="text-sm font-medium">{user?.discord_username ?? 'Driver'}</p>
+              <p className="text-xs text-muted">{membershipLabel}</p>
             </div>
             <button
               type="button"
               onClick={() => {
                 void logout()
               }}
-              className="rounded-full border border-slate-700 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-300 transition hover:border-slate-500 hover:text-slate-100"
+              className="border-border/70 rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-text transition hover:border-accent hover:text-accent"
             >
               Logout
             </button>
@@ -56,11 +54,9 @@ export function AppLayout(): ReactElement {
         </div>
       </header>
       <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10">
-        <section className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 shadow-lg shadow-slate-950/40">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Welcome back
-          </h1>
-          <p className="mt-2 text-sm text-slate-400">
+        <section className="border-border/70 bg-surface/80 rounded-3xl border p-6 shadow-soft">
+          <h1 className="text-3xl font-semibold tracking-tight">Welcome back</h1>
+          <p className="mt-2 text-sm text-muted">
             {billingPlan?.plan
               ? `You are on the ${billingPlan.plan} plan. Manage your leagues, events, and drivers from this hub as upcoming PBIs bring the full experience to life.`
               : 'Connect a Discord account, create a league, and keep an eye out for new modules as the build progresses.'}
@@ -74,10 +70,10 @@ export function AppLayout(): ReactElement {
               end={tab.path === '.'}
               className={({ isActive }) =>
                 [
-                  'inline-flex items-center rounded-full border border-slate-800/70 bg-slate-900/50 px-4 py-2 transition hover:border-sky-500/60 hover:text-sky-100',
+                  'inline-flex items-center rounded-full border border-border/70 px-4 py-2 bg-surface-muted/80 transition',
                   isActive
-                    ? 'border-sky-500/60 bg-sky-500/10 text-sky-100'
-                    : '',
+                    ? 'border-accent bg-accent-soft text-accent'
+                    : 'hover:border-accent/70 hover:text-text',
                 ]
                   .filter(Boolean)
                   .join(' ')

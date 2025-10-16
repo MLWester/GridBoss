@@ -61,6 +61,7 @@ Each package will carry its own README or docs as functionality is implemented. 
    .venv\Scripts\pip install -r requirements.txt
    ```
 6. Follow PBIs in `docs/AppPBIs.md`, starting with `pbi/002-env-and-docker` for environment parity.
+7. Configuration reference lives in `docs/CONFIG.md`; review before deploying to new environments.
 
 ## Docker Development Stack
 The Docker Compose setup lives in `infra/docker-compose.yml` and mirrors the production topology.

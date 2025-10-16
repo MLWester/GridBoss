@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import {
   ToastContext,
   type ToastInput,
@@ -12,20 +12,20 @@ interface ToastRecord extends ToastInput {
 
 function getVariantStyles(variant: ToastVariant = 'info'): string {
   if (variant === 'success') {
-    return 'border-emerald-400/60 bg-emerald-500/10 text-emerald-50'
+    return 'border-success/50 bg-success/10 text-text'
   }
 
   if (variant === 'error') {
-    return 'border-rose-400/60 bg-rose-500/10 text-rose-50'
+    return 'border-danger/50 bg-danger/10 text-text'
   }
 
-  return 'border-sky-400/40 bg-slate-900/90 text-slate-100'
+  return 'border-accent/40 bg-surface/90 text-text'
 }
 
 export function ToastProvider({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }): ReactElement {
   const [toasts, setToasts] = useState<ToastRecord[]>([])
   const timers = useRef<Map<number, number>>(new Map())
@@ -80,7 +80,7 @@ export function ToastProvider({
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto overflow-hidden rounded-2xl border px-4 py-3 shadow-lg shadow-slate-950/60 backdrop-blur ${getVariantStyles(
+            className={`pointer-events-auto overflow-hidden rounded-2xl border px-4 py-3 shadow-elevated backdrop-blur-sm transition-colors ${getVariantStyles(
               toast.variant,
             )}`}
           >
@@ -88,9 +88,7 @@ export function ToastProvider({
               <div className="flex-1">
                 <p className="text-sm font-semibold">{toast.title}</p>
                 {toast.description ? (
-                  <p className="mt-1 text-xs text-slate-200/80">
-                    {toast.description}
-                  </p>
+                  <p className="mt-1 text-xs text-muted">{toast.description}</p>
                 ) : null}
               </div>
               <button
@@ -98,7 +96,7 @@ export function ToastProvider({
                 onClick={() => {
                   removeToast(toast.id)
                 }}
-                className="rounded-full border border-slate-500/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-200 transition hover:border-slate-300/70 hover:text-slate-50"
+                className="border-border/60 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted transition hover:border-accent hover:text-accent"
               >
                 Close
               </button>
