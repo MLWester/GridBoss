@@ -363,7 +363,7 @@ Acceptance Criteria:
 Dependencies: PBI-012, PBI-010, PBI-020
 Branch: pbi/036-performance-tests
 
-## PBI-037 - Documentation and API Specification
+## PBI-037 - Documentation and API Specification (still needs to be completed)
 Summary: Maintain documentation set and automated API spec publication.
 Scope: Backend, Frontend, Ops
 Acceptance Criteria:
@@ -373,7 +373,7 @@ Acceptance Criteria:
 Dependencies: PBI-001, PBI-020
 Branch: pbi/037-documentation
 
-## PBI-038 - App Security Hardening + Profile Settings
+## PBI-038 - App Security Hardening + Profile Settings (still needs to be completed)
 Summary: Tighten auth/session/logout and add secure profile management.
 Scope: Backend, Frontend
 Acceptance Criteria:
@@ -384,7 +384,7 @@ Acceptance Criteria:
 Dependencies: PBI-004, PBI-005, PBI-015
 Branch: pbi/038-security-profile
 
-## PBI-039 - Env & Secrets Audit
+## PBI-039 - Env & Secrets Audit (still needs to be completed)
 Summary: Centralize configuration management and ensure environment variables are production safe.
 Scope: Ops, Backend
 Acceptance Criteria:
@@ -395,7 +395,7 @@ Acceptance Criteria:
 Dependencies: PBI-001, PBI-002
 Branch: pbi/039-env-secrets-audit
 
-## PBI-040 - Analytics Foundation (Events & Dashboard)
+## PBI-040 - Analytics Foundation (Events & Dashboard) (still needs to be completed)
 Summary: Capture product analytics events and expose founder dashboards.
 Scope: Backend, Frontend
 Acceptance Criteria:

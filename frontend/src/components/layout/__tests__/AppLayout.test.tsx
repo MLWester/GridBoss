@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { AuthContextValue } from '../../../providers/AuthContext'
 import { AuthContext } from '../../../providers/AuthContext'
+import { ThemeProvider } from '../../../providers/ThemeProvider'
 import { AppLayout } from '../AppLayout'
 
 const baseAuthValue = (
@@ -33,6 +34,17 @@ const founderProfile = {
   billingPlan: { plan: 'ELITE', current_period_end: null },
 }
 
+const renderWithProviders = (value: AuthContextValue) =>
+  render(
+    <ThemeProvider>
+      <AuthContext.Provider value={value}>
+        <MemoryRouter>
+          <AppLayout />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </ThemeProvider>,
+  )
+
 describe('AppLayout', () => {
   beforeEach(() => {
     Object.assign(import.meta.env, { VITE_ADMIN_MODE: 'true' })
@@ -43,13 +55,7 @@ describe('AppLayout', () => {
       profile: founderProfile,
     })
 
-    render(
-      <AuthContext.Provider value={value}>
-        <MemoryRouter>
-          <AppLayout />
-        </MemoryRouter>
-      </AuthContext.Provider>,
-    )
+    renderWithProviders(value)
 
     expect(screen.getByText(/You are on the ELITE plan/i)).toBeInTheDocument()
   })
@@ -59,13 +65,7 @@ describe('AppLayout', () => {
       profile: founderProfile,
     })
 
-    render(
-      <AuthContext.Provider value={value}>
-        <MemoryRouter>
-          <AppLayout />
-        </MemoryRouter>
-      </AuthContext.Provider>,
-    )
+    renderWithProviders(value)
 
     expect(screen.getByText('Admin')).toBeInTheDocument()
   })
@@ -78,13 +78,7 @@ describe('AppLayout', () => {
       },
     })
 
-    render(
-      <AuthContext.Provider value={value}>
-        <MemoryRouter>
-          <AppLayout />
-        </MemoryRouter>
-      </AuthContext.Provider>,
-    )
+    renderWithProviders(value)
 
     expect(screen.queryByText('Admin')).not.toBeInTheDocument()
   })

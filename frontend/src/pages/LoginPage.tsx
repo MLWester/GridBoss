@@ -3,6 +3,7 @@ import type { ReactElement } from 'react'
 import { useLocation, useNavigate, type Location } from 'react-router-dom'
 import { API_URL } from '../lib/env'
 import { useAuth } from '../hooks/useAuth'
+import { ThemeToggle } from '../components/common/ThemeToggle'
 
 export function LoginPage(): ReactElement {
   const { isAuthenticated, isLoading } = useAuth()
@@ -22,16 +23,19 @@ export function LoginPage(): ReactElement {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-slate-100">
-      <div className="w-full max-w-md space-y-6 rounded-3xl border border-slate-800 bg-slate-900/40 p-8 text-center shadow-lg shadow-slate-950/40">
+    <main className="relative flex min-h-screen items-center justify-center bg-app px-6 text-text transition-colors">
+      <div className="absolute right-6 top-6">
+        <ThemeToggle />
+      </div>
+      <div className="border-border/70 bg-surface/80 w-full max-w-md space-y-6 rounded-3xl border p-8 text-center shadow-soft backdrop-blur-sm">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent">
             GridBoss
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">
             Sign in with Discord
           </h1>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted">
             Authenticate via Discord to access your leagues, manage results, and
             prepare for the full GridBoss rollout.
           </p>
@@ -39,7 +43,7 @@ export function LoginPage(): ReactElement {
         <button
           type="button"
           onClick={handleLogin}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-accent-contrast transition hover:brightness-110"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -54,7 +58,7 @@ export function LoginPage(): ReactElement {
           </svg>
           Continue with Discord
         </button>
-        <p className="text-xs text-slate-200">
+        <p className="text-xs text-muted">
           You will be redirected to Discord to authorise the GridBoss app. Once
           complete you&apos;ll return here with your session ready to go.
         </p>
