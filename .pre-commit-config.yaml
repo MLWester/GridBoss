@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        language_version: python3
+  - repo: local
+    hooks:
+      - id: frontend-eslint
+        name: Frontend ESLint
+        entry: npm run lint --prefix frontend
+        language: system
+        pass_filenames: false
+        files: ^frontend/
+      - id: frontend-prettier
+        name: Frontend Prettier Check
+        entry: npm run format --prefix frontend
+        language: system
+        pass_filenames: false
+        files: ^frontend/
