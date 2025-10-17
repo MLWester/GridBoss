@@ -16,6 +16,7 @@ from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.schemas.leagues import LeagueCreate, LeagueRead, LeagueUpdate
 from app.services.audit import record_audit_log
+from app.services.sanitization import sanitize_league_description
 
 router = APIRouter(prefix="/leagues", tags=["leagues"])
 
@@ -45,7 +46,13 @@ async def create_league(
 ) -> LeagueRead:
     _ensure_slug_available(session, payload.slug)
 
-    league = League(name=payload.name, slug=payload.slug, owner_id=current_user.id)
+    description = sanitize_league_description(payload.description)
+    league = League(
+        name=payload.name,
+        slug=payload.slug,
+        owner_id=current_user.id,
+        description=description,
+    )
     season = Season(league=league, name=f"{payload.name} Season", is_active=True)
     membership = Membership(league=league, user_id=current_user.id, role=LeagueRole.OWNER)
 
@@ -115,7 +122,11 @@ async def update_league(
             status_code=status.HTTP_403_FORBIDDEN, detail="Only the owner may update"
         )
 
-    before_state = {"name": league.name, "slug": league.slug}
+    before_state = {
+        "name": league.name,
+        "slug": league.slug,
+        "description": league.description,
+    }
 
     if payload.slug and payload.slug != league.slug:
         _ensure_slug_available(session, payload.slug)
@@ -124,7 +135,16 @@ async def update_league(
     if payload.name:
         league.name = payload.name
 
-    if before_state != {"name": league.name, "slug": league.slug}:
+    if payload.description is not None:
+        league.description = sanitize_league_description(payload.description)
+
+    after_state = {
+        "name": league.name,
+        "slug": league.slug,
+        "description": league.description,
+    }
+
+    if before_state != after_state:
         record_audit_log(
             session,
             actor_id=current_user.id,
@@ -133,7 +153,7 @@ async def update_league(
             entity_id=str(league.id),
             action="update",
             before=before_state,
-            after={"name": league.name, "slug": league.slug},
+            after=after_state,
         )
 
     session.commit()

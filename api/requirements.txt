@@ -11,4 +11,5 @@ httpx==0.28.1
 PyJWT==2.9.0
 dramatiq[redis]==1.15.0
 stripe==10.8.0
+bleach==6.2.0
 

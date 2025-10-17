@@ -3,6 +3,7 @@ import type { ReactElement } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import type { LeagueOutletContext } from '../components/layout/LeagueLayout'
 import { useToast } from '../hooks/useToast'
+import { renderSafeMarkdown } from '../utils/markdown'
 
 function SectionCard({
   children,
@@ -56,6 +57,11 @@ export function LeagueOverviewPage(): ReactElement {
   const podium = useMemo(
     () => recentResult?.podium ?? [],
     [recentResult?.podium],
+  )
+
+  const descriptionHtml = useMemo(
+    () => renderSafeMarkdown(overview?.league.description ?? null),
+    [overview?.league.description],
   )
 
   useEffect(() => {
@@ -116,6 +122,18 @@ export function LeagueOverviewPage(): ReactElement {
   return (
     <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
       <div className="space-y-4">
+        {descriptionHtml ? (
+          <SectionCard>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              About this league
+            </p>
+            <div
+              className="mt-3 space-y-3 text-sm leading-relaxed text-slate-200 [a]:text-sky-300 [a]:underline"
+              dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+            />
+          </SectionCard>
+        ) : null}
+
         <SectionCard>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Next event

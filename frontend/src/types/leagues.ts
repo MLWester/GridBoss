@@ -9,6 +9,7 @@ export interface LeagueRead {
   owner_id?: string | null
   is_deleted?: boolean
   deleted_at?: string | null
+  description?: string | null
 }
 
 export interface LeagueSummary {
@@ -18,16 +19,19 @@ export interface LeagueSummary {
   plan: string | null
   driverLimit: number | null
   role: LeagueRole | null
+  description: string | null
 }
 
 export interface UpdateLeagueGeneralRequest {
   name: string
   slug: string
+  description: string | null
 }
 
 export interface CreateLeagueRequest {
   name: string
   slug: string
+  description?: string | null
 }
 
 export interface LeagueEventSummary {

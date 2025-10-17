@@ -273,6 +273,7 @@ export function DashboardPage(): ReactElement {
           plan: billingPlan?.plan ?? 'FREE',
           driverLimit: computeDriverLimit(),
           role: 'OWNER',
+          description: payload.description ?? null,
         }
         addLocalLeague(mockLeague)
         return mockLeague

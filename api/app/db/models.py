@@ -13,6 +13,7 @@ from sqlalchemy import (
     Index,
     Integer,
     Numeric,
+    Text,
     String,
     UniqueConstraint,
     func,
@@ -76,6 +77,7 @@ class League(Base):
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     slug: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     plan: Mapped[str] = mapped_column(String, nullable=False, server_default=text("'FREE'"))
     driver_limit: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("20"))
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))
