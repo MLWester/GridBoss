@@ -12,6 +12,20 @@ permissions:
   contents: read
 
 jobs:
+  gitleaks:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source=. --no-banner --redact
+
   backend:
     name: Backend Lint & Tests
     runs-on: ubuntu-latest

@@ -106,8 +106,21 @@ Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml 
   npm run test:coverage
   npm run build
   ```
-  Use `npm run test:watch` for interactive development and `npm run test:e2e` once Playwright fixtures are populated.
+ Use `npm run test:watch` for interactive development and `npm run test:e2e` once Playwright fixtures are populated.
 - **End-to-end**: Playwright config lives at `frontend/playwright.config.ts`; tests expect the Docker stack to be running locally.
+
+## Pre-commit Hooks & Secret Scanning
+- Install the shared hooks once per machine:
+  ```powershell
+  python -m pip install pre-commit
+  pre-commit install
+  ```
+  Hooks run Ruff (lint), Black (format), ESLint, and Prettier before every commit.
+- To run hooks across the whole repo manually, execute `pre-commit run --all-files`.
+- Scan for leaked secrets locally with the helper script:
+  - Unix/macOS: `./scripts/gitleaks-scan.sh`
+  - Windows PowerShell: `./scripts/gitleaks-scan.ps1`
+  The script uses a local `gitleaks` binary when available and falls back to Docker.
 
 ## Tooling Commands
 - Frontend lint: `npm run lint`

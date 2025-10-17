@@ -537,3 +537,277 @@ Acceptance Criteria:
 - Unit tests cover health adapters; e2e tests simulate missing dependencies to validate error codes.
 Dependencies: PBI-012, PBI-018, PBI-020
 Branch: pbi/052-health-selftest
+
+# GridBoss - New Product Backlog Items (starting at PBI-065)
+
+---
+
+## PBI-065 - Env Keys Audit & Secrets Wiring (`ops/env-keys-audit`)
+**Goal**  
+Ensure every required env key exists, is validated at boot, and all secrets are actually used by the code paths that need them.
+
+**Scope**
+- Centralize config with `pydantic-settings` (`api/core/config.py`) and fail fast on missing/invalid keys.
+- Update `.env.example`, `api/.env.dev.example`, `worker/.env.dev.example`, `frontend/.env.example` with comments.
+- Secrets used by runtime code:
+  - JWT: `JWT_SECRET`, `JWT_ACCESS_TTL_MIN`, `JWT_REFRESH_TTL_DAYS`
+  - Discord: `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_REDIRECT_URI`, `DISCORD_BOT_TOKEN`
+  - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_ELITE`, `STRIPE_WEBHOOK_SECRET`
+  - DB/Cache: `DATABASE_URL`, `REDIS_URL`
+  - Email: `SENDGRID_API_KEY`, `EMAIL_ENABLED`, `EMAIL_FROM_ADDRESS`
+  - S3: `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_ENDPOINT?`
+  - Observability: `SENTRY_DSN?`, `SENTRY_TRACES_SAMPLE_RATE?`, `OTEL_ENABLED?`, `OTEL_EXPORTER_ENDPOINT?`, `OTEL_SERVICE_NAME?`
+  - App/Origin: `APP_ENV`, `APP_URL`, `API_URL`, `CORS_ORIGINS`
+- Generate a markdown table in `docs/ConfigMatrix.md` describing each key, defaults, and environments (dev/staging/prod).
+- Worker/bot reuse shared settings module; env var drift detected during startup and logged.
+
+**Acceptance**
+- Missing critical env vars abort application startup with actionable error messages.
+- `ConfigMatrix` stays in sync with settings module (pre-commit protects drift).
+- Secrets are read from env only in the settings layer; no ad-hoc `os.getenv` calls remain in codebase.
+
+**Tests**
+- Unit tests for settings validation (factory to override env).
+- CLI smoke: `scripts/check_env.py` reports unset keys and mismatched configs.
+
+---
+
+## PBI-066 - Stripe Webhook Hardening (`ops/stripe-webhook-handoff`)
+**Goal**  
+Lock down Stripe webhooks and provide replay tooling.
+
+**Scope**
+- Rotate `STRIPE_WEBHOOK_SECRET` per environment; store in secrets manager.
+- Proxy webhooks via Render cron job fallback; implement signature validation and idempotency keys.
+- Add `scripts/replay_stripe_webhook.py` to fetch and replay payloads for debugging.
+
+**Acceptance**
+- Webhook endpoint rejects unsigned/expired payloads (unit tests and manual Stripe CLI).
+- Replay script can target staging/prod with dry-run toggle.
+- Audit logs record webhook outcomes and replay attempts.
+
+**Tests**
+- Integration tests hitting `/webhooks/stripe` with signed payloads.
+- Replay script exercised against fixture payloads.
+
+---
+
+## PBI-067 - League Onboarding Wizard (`fe/league-onboarding`)
+**Goal**  
+Guide new league owners through critical setup steps.
+
+**Scope**
+- Multi-step modal after first login: league basics, drivers import, schedule skeleton, Discord linking, billing plan.
+- Progress indicator with ability to skip/return later; store completion state per user.
+- Contextual docs links and short explainer videos.
+
+**Acceptance**
+- Wizard appears once per owner until completed or dismissed.
+- Completing steps updates corresponding backend resources.
+- Analytics events fire for each step (Segment stub for now).
+
+**Tests**
+- Cypress flow covering happy path and skip path.
+- Vitest unit tests for state machine/controller logic.
+
+---
+
+## PBI-068 - Standings Calculation Engine V2 (`be/standings-v2`)
+**Goal**  
+Handle complex points systems and tiebreakers per season.
+
+**Scope**
+- Support per-event weighting, drop-week rules, fastest lap bonuses, and team vs. driver aggregation.
+- Configurable tiebreaker stack (wins, podiums, average finish, qualifying, best result last race).
+- Materialized standings persisted per event/season to speed dashboard queries.
+
+**Acceptance**
+- Worker job recomputes standings on result submission; admin UI shows calculation timestamp.
+- Tiebreakers align with configurable priority order.
+- Regression fixtures cover current leagues.
+
+**Tests**
+- Extensive unit tests for `standings.calculate()` permutations.
+- Integration test hitting `/leagues/{id}/standings` after ingesting fixture events.
+
+---
+
+## PBI-069 - Admin Console 1.0 (`fe/admin-console`)
+**Goal**  
+Ship an internal admin console for support operations.
+
+**Scope**
+- Protected route `/admin` with feature flag and RBAC.
+- Search users/leagues, view audit log timeline, impersonation flow (read-only).
+- Support actions: resend invite, trigger billing sync, toggle league status.
+
+**Acceptance**
+- Only staff users (role `STAFF`) reach the console.
+- Actions log to `audit_logs` with actor metadata.
+- Console has responsive layout with dark theme parity.
+
+**Tests**
+- Vitest/RTL coverage for console components.
+- API contract tests for impersonation and support actions.
+
+---
+
+## PBI-070 - League Onboarding Content Refresh (`content/onboarding-refresh`)
+**Goal**  
+Update email and in-app copy for first-week retention.
+
+**Scope**
+- Rewrite welcome email, day 3 checklist, day 7 power tips.
+- In-app empty states tailored by league size/plan; embed quick actions.
+- Add video walkthrough placeholders with tracking for clicks.
+
+**Acceptance**
+- Content reviewed by marketing; translations placeholders preserved.
+- Copy references current product terminology.
+- Click tracking wired via analytic events.
+
+**Tests**
+- Manual review checklist.
+- Snapshot tests for empty-state components.
+
+---
+
+## PBI-071 - S3 Asset Uploads (`ops/s3-assets`)
+**Goal**  
+Stand up S3 and wire uploads for avatars/exports.
+
+**Scope**
+- Create bucket `gridboss-prod-assets`, IAM user with least-privilege policy (Put/Get/List bucket only).
+- Backend: EXIF strip, size/MIME validation (avatars ≤2MB), signed GET/PUT.
+- Optional CloudFront; note `cdn.grid-boss.com` for later.
+- Env keys: `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_ENDPOINT?`.
+
+**Acceptance**
+- Upload and retrieval flows succeed; signed URLs expire after configured TTL.
+- Exports written to S3 and downloadable from admin.
+- No public ACLs; buckets enforce least-privilege policy.
+
+**Tests**
+- Unit tests for validators and S3 adapter.
+- Integration smoke hitting localstack or moto.
+
+---
+
+## PBI-072 - Observability Env & Hooks (`ops/observability-env`)
+**Goal**  
+Wire Sentry and optional OTEL via env toggles.
+
+**Scope**
+- Add `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE` in API/Worker/FE.
+- Optional: `OTEL_ENABLED`, `OTEL_EXPORTER_ENDPOINT`, `OTEL_SERVICE_NAME`.
+- Logger middleware adds `x-request-id` and correlates jobs.
+
+**Acceptance**
+- Exceptions in API/Worker appear in Sentry with releases and traces (if sampling on).
+- `/readyz` includes `sentry_ok` when DSN set.
+- OTEL exporters can be toggled without code changes.
+
+**Tests**
+- Manual throw route behind admin flag; verify Sentry receives event.
+- Unit tests for logger middleware when headers missing.
+
+---
+
+## PBI-073 - Cloudflare Cutover Finalization (`ops/cloudflare-finalize`)
+**Goal**  
+Finish Cloudflare setup once nameservers are active.
+
+**Scope**
+- DNS: `CNAME app -> <vercel target>`, `CNAME api -> <render target>`, TXT `_vercel` verify; optional `CNAME cdn -> <cloudfront>`.
+- Redirect apex and `www` to `https://app.grid-boss.com` (via Cloudflare Rules or Vercel redirects).
+- SSL/TLS: Mode Full; Always Use HTTPS ON; cache rule to bypass `api.grid-boss.com/*`.
+
+**Acceptance**
+- `https://app.grid-boss.com` serves frontend; apex and www 301 to app.
+- `https://api.grid-boss.com/healthz` returns 200.
+- Universal certificate active.
+
+**Tests**
+- `curl -I` checks for redirects and cache headers.
+- Cloudflare analytics show cache bypass for API.
+
+---
+
+## PBI-074 - Favicon & App Icons (`fe/favicon-icons`)
+**Goal**  
+Replace Vite icon with GridBoss monogram in all places.
+
+**Scope**
+- Generate `favicon.ico` (16/32), `apple-touch-icon-180.png`, `icon-192.png`, `icon-512-maskable.png`.
+- Add `manifest.webmanifest` and `<link rel="icon">`/`<link rel="apple-touch-icon">` to `index.html`.
+
+**Acceptance**
+- Browser tab shows GridBoss icon; PWA audit clean.
+- Icons look crisp on iOS/Android.
+- Manifest passes Lighthouse checks.
+
+**Tests**
+- Lighthouse audit fixtures.
+- Visual QA on primary devices.
+
+---
+
+## PBI-075 - Git Hygiene: .gitignore & Secret Scanning (`ops/gitignore-secrets`) (complete)
+**Goal**  
+Prevent accidental commits of secrets/build artifacts.
+
+**Scope**
+- Harden `.gitignore` across repo: `node_modules/`, `dist/`, `.env*`, `.DS_Store`, `__pycache__/`, `.pytest_cache/`, `coverage/`, etc.
+- Pre-commit hooks (Ruff/Black for Python, ESLint/Prettier for FE).
+- Add **gitleaks** to CI and a one-shot scan script.
+
+**Acceptance**
+- `.gitignore` now covers environment files, caches, build outputs, and local tooling artifacts.
+- Pre-commit runs Ruff, Black, ESLint, and Prettier before every commit.
+- CI executes `gitleaks` on each push and pull request.
+
+**Tests**
+- Manual: `pre-commit run --all-files` and `./scripts/gitleaks-scan.sh` (or `./scripts/gitleaks-scan.ps1`) pass after the updates.
+
+---
+
+## PBI-076 - Discord Linking Finalization & Prod Redirect URI (`be/discord-finalize`)
+**Goal**  
+Finish Discord integration for production.
+
+**Scope**
+- Set `DISCORD_REDIRECT_URI=https://api.grid-boss.com/auth/discord/callback` in prod.
+- Owner/Admin-only linking endpoint persists `guild_id`, `channel_id`; writes `audit_logs`.
+- `/discord/test` posts to the configured channel; mark integration inactive on 403/404.
+
+**Acceptance**
+- Removing the bot flips `is_active=false` and returns actionable error to UI.
+- Linking flow works in production with PRO-gated test post.
+- Audit logs capture link/unlink and failure scenarios.
+
+**Tests**
+- Integration tests with mocked Discord API.
+- Manual verification against staging guild.
+
+---
+
+## PBI-077 - SendGrid Email Enablement (`be/email-sendgrid`)
+**Goal**  
+Complete SendGrid setup and send transactional emails.
+
+**Scope**
+- Env: `EMAIL_ENABLED=true`, `SENDGRID_API_KEY`, `EMAIL_FROM_ADDRESS`.
+- Verify domain DNS (SPF include, DKIM CNAMEs, DMARC TXT to be added in Cloudflare when active).
+- API adapter for SendGrid (retry three times, log metadata only).
+- Templates: welcome, league invite, payment issue, results summary (store as files with variables).
+
+**Acceptance**
+- Emails send when `EMAIL_ENABLED=true`; failures retried and surfaced in Admin.
+- Provider dashboard shows verified domain (SPF/DKIM/DMARC pass).
+- Templates stored in repo with placeholders, no secrets.
+
+**Tests**
+- Unit tests for adapter and template rendering.
+- End-to-end test sends to sandbox inbox.
+
+---
