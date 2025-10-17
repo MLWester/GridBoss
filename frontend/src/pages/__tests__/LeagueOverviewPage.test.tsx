@@ -1,17 +1,21 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Mock } from 'vitest'
+import type { LeagueOutletContext } from '../../components/layout/LeagueLayout'
 import type { LeagueOverviewData } from '../../types/leagues'
 import { LeagueOverviewPage } from '../LeagueOverviewPage'
 
-const mockUseOutletContext = vi.fn()
+const useOutletContextMock = vi.hoisted(() =>
+  vi.fn<() => LeagueOutletContext>(),
+) as Mock<() => LeagueOutletContext>
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>(
-    'react-router-dom',
-  )
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
   return {
     ...actual,
-    useOutletContext: () => mockUseOutletContext(),
+    useOutletContext:
+      useOutletContextMock as unknown as typeof actual.useOutletContext,
   }
 })
 
@@ -23,7 +27,7 @@ vi.mock('../../hooks/useToast', () => ({
 
 describe('LeagueOverviewPage', () => {
   beforeEach(() => {
-    mockUseOutletContext.mockReset()
+    useOutletContextMock.mockReset()
   })
 
   it('renders sanitized league description', () => {
@@ -43,18 +47,19 @@ describe('LeagueOverviewPage', () => {
       discordLinked: false,
     }
 
-    mockUseOutletContext.mockReturnValue({
+    useOutletContextMock.mockReturnValue({
       overview,
       isLoading: false,
       error: null,
-      refetch: vi.fn(),
+      refetch: vi.fn(() => Promise.resolve(overview)),
       isBypass: false,
     })
 
     render(<LeagueOverviewPage />)
 
-    const matches = screen.getAllByText((_, element) =>
-      element?.textContent?.includes('Welcome racers!') ?? false,
+    const matches = screen.getAllByText(
+      (_, element) =>
+        element?.textContent?.includes('Welcome racers!') ?? false,
     )
     expect(matches.length).toBeGreaterThan(0)
     const link = screen.getByRole('link', { name: 'Rules' })
@@ -62,4 +67,3 @@ describe('LeagueOverviewPage', () => {
     expect(document.querySelector('script')).toBeNull()
   })
 })
-

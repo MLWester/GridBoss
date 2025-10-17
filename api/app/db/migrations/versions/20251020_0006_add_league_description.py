@@ -18,4 +18,3 @@ def upgrade() -> None:  # pragma: no cover - migration script
 
 def downgrade() -> None:  # pragma: no cover - migration script
     op.drop_column("leagues", "description")
-

@@ -128,7 +128,7 @@ export function LeagueOverviewPage(): ReactElement {
               About this league
             </p>
             <div
-              className="mt-3 space-y-3 text-sm leading-relaxed text-slate-200 [a]:text-sky-300 [a]:underline"
+              className="[a]:underline [a]:text-sky-300 mt-3 space-y-3 text-sm leading-relaxed text-slate-200"
               dangerouslySetInnerHTML={{ __html: descriptionHtml }}
             />
           </SectionCard>

@@ -6,7 +6,9 @@ const ALLOWED_ATTR = ['href', 'title']
 
 marked.setOptions({ gfm: true, breaks: true })
 
-export function renderSafeMarkdown(markdown: string | null | undefined): string {
+export function renderSafeMarkdown(
+  markdown: string | null | undefined,
+): string {
   if (!markdown) {
     return ''
   }
@@ -16,7 +18,9 @@ export function renderSafeMarkdown(markdown: string | null | undefined): string 
     return ''
   }
 
-  const rawHtml = marked.parse(trimmed)
+  const parsed = marked.parse(trimmed, { async: false })
+  const rawHtml = typeof parsed === 'string' ? parsed : ''
+
   const sanitized = DOMPurify.sanitize(rawHtml, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
@@ -26,4 +30,3 @@ export function renderSafeMarkdown(markdown: string | null | undefined): string 
 
   return sanitized
 }
-

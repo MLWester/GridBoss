@@ -9,7 +9,9 @@ import bleach
 ALLOWED_TAGS = ["a", "strong", "em", "ul", "ol", "li", "p", "br"]
 ALLOWED_ATTRIBUTES = {"a": ["href", "title"]}
 ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
-SCRIPT_STYLE_PATTERN = re.compile(r"<\s*(script|style)[^>]*>.*?<\s*/\s*\1\s*>", re.IGNORECASE | re.DOTALL)
+SCRIPT_STYLE_PATTERN = re.compile(
+    r"<\s*(script|style)[^>]*>.*?<\s*/\s*\1\s*>", re.IGNORECASE | re.DOTALL
+)
 
 
 def sanitize_league_description(value: str | None) -> str | None:
@@ -33,4 +35,3 @@ def sanitize_league_description(value: str | None) -> str | None:
     )
     normalized = cleaned.strip()
     return normalized if normalized else None
-

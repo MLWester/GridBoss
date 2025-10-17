@@ -120,7 +120,12 @@ export function LeagueSettingsPage(): ReactElement {
       slug: overview?.league.slug ?? slug,
       description: overview?.league.description ?? '',
     })
-  }, [overview?.league.name, overview?.league.slug, overview?.league.description, slug])
+  }, [
+    overview?.league.name,
+    overview?.league.slug,
+    overview?.league.description,
+    slug,
+  ])
 
   const generalMutation = useMutation({
     mutationFn: async (payload: UpdateLeagueGeneralRequest) => {
