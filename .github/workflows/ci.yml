@@ -19,7 +19,7 @@ jobs:
       run:
         working-directory: api
     env:
-      PYTHONPATH: ${{ github.workspace }}/api
+      PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/api
     steps:
       - name: Checkout
         uses: actions/checkout@v4

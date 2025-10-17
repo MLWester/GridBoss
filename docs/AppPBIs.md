@@ -363,7 +363,7 @@ Acceptance Criteria:
 Dependencies: PBI-012, PBI-010, PBI-020
 Branch: pbi/036-performance-tests
 
-## PBI-037 - Documentation and API Specification
+## PBI-037 - Documentation and API Specification (still needs to be completed)
 Summary: Maintain documentation set and automated API spec publication.
 Scope: Backend, Frontend, Ops
 Acceptance Criteria:

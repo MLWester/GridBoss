@@ -4,7 +4,35 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>GridBoss</title>
+    <script>
+      ;(() => {
+        const storageKey = 'gridboss-theme'
+        const root = document.documentElement
+        const systemPreference = window.matchMedia('(prefers-color-scheme: dark)')
+
+        const resolveTheme = (mode) => {
+          if (mode === 'dark' || mode === 'light') {
+            return mode
+          }
+          return systemPreference.matches ? 'dark' : 'light'
+        }
+
+        const applyTheme = (mode) => {
+          const resolved = resolveTheme(mode)
+          root.setAttribute('data-theme', resolved)
+          root.setAttribute('data-user-theme', mode ?? 'system')
+          root.style.colorScheme = resolved
+        }
+
+        try {
+          const stored = localStorage.getItem(storageKey)
+          applyTheme(stored ?? 'system')
+        } catch {
+          applyTheme('system')
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

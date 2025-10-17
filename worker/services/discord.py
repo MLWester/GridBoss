@@ -1,12 +1,13 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import logging
-import os
 from dataclasses import dataclass
 from typing import Any, Iterable
 
 import httpx
+
+from gridboss_config import get_settings
 
 logger = logging.getLogger("worker.discord")
 
@@ -57,23 +58,40 @@ class DiscordNotifier:
             response = client.post(url, headers=headers, json=payload)
 
         if response.status_code == 429:
-            retry_after = response.headers.get("Retry-After") or response.json().get("retry_after")
-            logger.warning("Discord rate limit encountered", extra={"channel_id": channel_id, "retry_after": retry_after})
+            retry_after = response.headers.get("Retry-After") or response.json().get(
+                "retry_after"
+            )
+            logger.warning(
+                "Discord rate limit encountered",
+                extra={"channel_id": channel_id, "retry_after": retry_after},
+            )
             raise DiscordRateLimitError(f"Rate limited posting to channel {channel_id}")
 
         if response.status_code in {401, 403, 404}:
             logger.error(
                 "Discord permission failure",
-                extra={"channel_id": channel_id, "payload": _safe_json(payload), "status": response.status_code},
+                extra={
+                    "channel_id": channel_id,
+                    "payload": _safe_json(payload),
+                    "status": response.status_code,
+                },
             )
-            raise DiscordPermissionError(f"Bot lacks permission for channel {channel_id}")
+            raise DiscordPermissionError(
+                f"Bot lacks permission for channel {channel_id}"
+            )
 
         try:
             response.raise_for_status()
-        except httpx.HTTPStatusError as exc:  # pragma: no cover - unexpected HTTP errors
+        except (
+            httpx.HTTPStatusError
+        ) as exc:  # pragma: no cover - unexpected HTTP errors
             logger.error(
                 "Discord API error",
-                extra={"channel_id": channel_id, "status": response.status_code, "body": response.text},
+                extra={
+                    "channel_id": channel_id,
+                    "status": response.status_code,
+                    "body": response.text,
+                },
             )
             raise DiscordPermissionError("Discord API returned an error") from exc
 
@@ -86,8 +104,8 @@ def _safe_json(payload: dict[str, Any]) -> str:
 
 
 def create_notifier_from_env() -> DiscordNotifier:
-    token = os.getenv("DISCORD_BOT_TOKEN", "").strip()
-    return DiscordNotifier(token)
+    settings = get_settings()
+    return DiscordNotifier(settings.discord_bot_token.strip())
 
 
 def build_results_embed(
@@ -113,7 +131,8 @@ def build_results_embed(
         "description": description,
         "color": 0x5865F2,  # Discord blurple
         "footer": {
-            "text": f"League: {league_name}" + (f" • Season: {season_name}" if season_name else "")
+            "text": f"League: {league_name}"
+            + (f" • Season: {season_name}" if season_name else "")
         },
     }
     return embed

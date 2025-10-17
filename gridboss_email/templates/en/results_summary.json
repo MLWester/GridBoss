@@ -1,0 +1,5 @@
+{
+  "subject": "Results posted for {event_name} in {league_name}",
+  "html": "<p>Hi there,</p><p>The results for <strong>{event_name}</strong> in {league_name} are live.</p><p><strong>Podium:</strong><br>{podium_html}</p><p>See full results at <a href=\"{event_url}\">{event_url}</a>.</p>",
+  "text": "Hi there,\n\nThe results for {event_name} in {league_name} are live.\n\nPodium:\n{podium_plain}\n\nSee full results: {event_url}"
+}

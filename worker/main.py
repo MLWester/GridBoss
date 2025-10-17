@@ -46,7 +46,14 @@ def main() -> None:
     dramatiq.set_broker(broker)
 
     # Import actors so Dramatiq registers them with the broker.
-    from worker.jobs import announce_results, heartbeat, recompute_standings, send_test_message, sync_plan_from_stripe  # noqa: F401  # pylint: disable=unused-import
+    from worker.jobs import (  # noqa: F401  # pylint: disable=unused-import
+        announce_results,
+        heartbeat,
+        recompute_standings,
+        send_test_message,
+        send_transactional_email,
+        sync_plan_from_stripe,
+    )
 
     worker = Worker(broker, worker_threads=config.worker_threads, worker_name=config.worker_name)
 

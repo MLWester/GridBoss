@@ -15,7 +15,9 @@ from app.db.models import (
     Driver,
     Event,
     EventStatus,
+    League,
     LeagueRole,
+    Membership,
     PointsScheme,
     Result,
     ResultStatus,
@@ -26,6 +28,7 @@ from app.dependencies.auth import get_current_user
 from app.schemas.results import EventResultsRead, ResultEntryRead, ResultSubmission
 from app.services.audit import record_audit_log
 from app.services.idempotency import IdempotencyConfig, get_idempotency_service
+from app.services.email import queue_transactional_email
 from app.services.points import build_points_map, default_points_entries
 from app.services.rbac import require_membership, require_role_at_least
 from app.services.standings import StandingsCacheConfig, get_standings_cache
@@ -333,6 +336,7 @@ async def submit_results(
     )
 
     _trigger_standings_jobs(event)
+    _queue_results_summary_email(session, event, refreshed_results, settings)
 
     return _build_response(event, refreshed_results)
 
@@ -359,6 +363,65 @@ def _trigger_standings_jobs(event: Event) -> None:
         except Exception as exc:  # pragma: no cover - best effort logging
             logger.warning("Failed to enqueue Discord announcement: %s", exc)
 
+
+def _queue_results_summary_email(
+    session: Session,
+    event: Event,
+    results: list[Result],
+    settings: Settings,
+) -> None:
+    league = event.league or session.get(League, event.league_id)
+    if league is None or not league.slug:
+        return
+
+    recipient_rows = (
+        session.execute(
+            select(User.email, User.discord_username)
+            .join(Membership, Membership.user_id == User.id)
+            .where(
+                Membership.league_id == league.id,
+                Membership.role.in_([LeagueRole.OWNER, LeagueRole.ADMIN]),
+                User.email.is_not(None),
+            )
+        )
+        .all()
+    )
+    recipients: dict[str, str | None] = {}
+    for email, display_name in recipient_rows:
+        if email:
+            recipients[email] = display_name
+    if not recipients:
+        return
+
+    sorted_results = sorted(results, key=lambda item: item.finish_position)
+    podium_entries = sorted_results[:3]
+    if podium_entries:
+        podium_lines = [
+            f"{entry.finish_position}. "
+            f"{entry.driver.display_name if entry.driver else 'Unknown'} "
+            f"({entry.total_points} pts)"
+            for entry in podium_entries
+        ]
+    else:
+        podium_lines = ["Results are available in GridBoss."]
+    podium_html = "<br>".join(podium_lines)
+    podium_plain = "\n".join(podium_lines)
+
+    event_url = f"{settings.app_url}/leagues/{league.slug}/events/{event.id}"
+
+    for email, _display_name in recipients.items():
+        queue_transactional_email(
+            template_id="results_summary",
+            recipient=email,
+            context={
+                "league_name": league.name,
+                "event_name": event.name,
+                "podium_html": podium_html,
+                "podium_plain": podium_plain,
+                "event_url": event_url,
+            },
+            league_id=str(league.id),
+        )
 
 @router.get("/events/{event_id}/results", response_model=EventResultsRead)
 async def read_results(
