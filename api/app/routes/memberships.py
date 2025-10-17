@@ -12,6 +12,7 @@ from app.db.models import League, LeagueRole, Membership, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.schemas.memberships import MembershipCreate, MembershipRead, MembershipUpdate
+from app.services.email import queue_transactional_email
 
 router = APIRouter(prefix="/leagues/{league_id}/memberships", tags=["memberships"])
 
@@ -106,6 +107,22 @@ async def create_membership(
     session.add(membership)
     session.commit()
     session.refresh(membership)
+
+    if target_user.email:
+        inviter_name = current_user.discord_username or current_user.email or "League admin"
+        queue_transactional_email(
+            template_id="league_invite",
+            recipient=target_user.email,
+            context={
+                "display_name": target_user.discord_username or "Driver",
+                "inviter_name": inviter_name,
+                "league_name": league.name,
+                "league_url": f"{settings.app_url}/leagues/{league.slug}",
+            },
+            league_id=str(league.id),
+            actor_id=str(current_user.id),
+        )
+
     return _membership_to_read(membership)
 
 

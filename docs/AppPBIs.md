@@ -406,7 +406,7 @@ Acceptance Criteria:
 Dependencies: PBI-018, PBI-020, PBI-029
 Branch: pbi/040-analytics-foundation
 
-## PBI-041 - Downloadable Standings & League Export
+## PBI-041 - Downloadable Standings & League Export (going to try first with cloud, if its not a sucess I wil try again with local agent for more control)
 Summary: Provide bulk exports for standings and league data.
 Scope: Backend
 Acceptance Criteria:
@@ -439,7 +439,7 @@ Acceptance Criteria:
 Dependencies: PBI-030, PBI-031, PBI-017
 Branch: pbi/043-league-settings-v2
 
-## PBI-044 - Light & Dark Mode (Design System)
+## PBI-044 - Light & Dark Mode (Design System) (possibly complete??)
 Summary: Deliver responsive theming with accessibility guarantees.
 Scope: Frontend
 Acceptance Criteria:
@@ -516,7 +516,7 @@ Acceptance Criteria:
 Dependencies: PBI-015, PBI-021
 Branch: pbi/050-email-connection
 
-## PBI-051 - League Description Field
+## PBI-051 - League Description Field ( still needs checking (some work done from cloud agent))
 Summary: Allow leagues to publish rich descriptions safely.
 Scope: Backend, Frontend
 Acceptance Criteria:

@@ -13,6 +13,7 @@ from app.core.settings import Settings, get_settings
 from app.db.models import BillingAccount, League, StripeEvent, Subscription
 from app.db.session import get_session
 from app.services.audit import record_audit_log
+from app.services.email import queue_transactional_email
 from app.services.plan import (
     GRACE_PERIOD_DAYS,
     PLAN_DRIVER_LIMITS,
@@ -337,8 +338,32 @@ def _handle_invoice_payment_failed(
         .scalars()
         .first()
     )
+    billing_account: BillingAccount | None = None
     if subscription is not None:
         subscription.status = "past_due"
+        billing_account = subscription.billing_account
+
+    if billing_account is None:
+        billing_account = (
+            session.execute(
+                select(BillingAccount).where(BillingAccount.stripe_customer_id == customer_id)
+            )
+            .scalars()
+            .first()
+        )
+
+    if billing_account and billing_account.owner and billing_account.owner.email:
+        owner = billing_account.owner
+        queue_transactional_email(
+            template_id="payment_issue",
+            recipient=owner.email,
+            context={
+                "owner_name": owner.discord_username or owner.email or "there",
+                "plan_name": billing_account.plan,
+                "billing_url": f"{settings.app_url}/billing",
+            },
+            actor_id=str(owner.id),
+        )
 
 
 EVENT_HANDLERS = {

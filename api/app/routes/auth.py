@@ -25,6 +25,7 @@ from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.schemas.auth import BillingPlanOut, MembershipOut, MeResponse, TokenResponse, UserOut
 from app.services.discord import DiscordOAuthClient, get_discord_client
+from app.services.email import queue_transactional_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -141,6 +142,7 @@ async def discord_callback(
         )
 
     user = session.execute(select(User).where(User.discord_id == discord_id)).scalar_one_or_none()
+    is_new_user = user is None
     if user is None:
         user = User(discord_id=discord_id)
         session.add(user)
@@ -150,6 +152,18 @@ async def discord_callback(
     user.email = user_payload.get("email")
     user.is_active = True
     session.commit()
+
+    if is_new_user and user.email:
+        display_name = user.discord_username or "Racer"
+        queue_transactional_email(
+            template_id="welcome",
+            recipient=user.email,
+            context={
+                "display_name": display_name,
+                "app_url": str(settings.app_url),
+            },
+            actor_id=str(user.id),
+        )
 
     access_token = create_access_token(subject=str(user.id), settings=settings)
     refresh_token = create_refresh_token(subject=str(user.id), settings=settings)

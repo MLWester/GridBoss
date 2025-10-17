@@ -1,0 +1,5 @@
+{
+  "subject": "Welcome to GridBoss, {display_name}!",
+  "html": "<p>Hi {display_name},</p><p>Your GridBoss account is ready to go. Explore your leagues, manage events, and invite your team with just a few clicks.</p><p><a href=\"{app_url}\">Open GridBoss</a></p><p>See you on the grid!</p>",
+  "text": "Hi {display_name},\n\nYour GridBoss account is ready to go. Explore your leagues, manage events, and invite your team with just a few clicks.\n\nOpen GridBoss: {app_url}\n\nSee you on the grid!"
+}
