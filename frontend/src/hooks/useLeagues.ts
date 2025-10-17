@@ -62,6 +62,7 @@ export function useLeagues(): UseLeaguesResult {
             ? 100
             : 20,
       role: membership.role,
+      description: null,
     }))
   }, [profile])
 

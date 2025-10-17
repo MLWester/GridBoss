@@ -505,7 +505,7 @@ Acceptance Criteria:
 Dependencies: PBI-014, PBI-013, PBI-027
 Branch: pbi/049-bot-commands
 
-## PBI-050 - Email Integration (Transactional)
+## PBI-050 - Email Integration (Transactional) (needs api keys hooked up)
 Summary: Deliver transactional email capability with feature gating.
 Scope: Backend
 Acceptance Criteria:

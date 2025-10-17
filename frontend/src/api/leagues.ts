@@ -20,6 +20,7 @@ function toSummary(
     driverLimit:
       typeof league.driver_limit === 'number' ? league.driver_limit : null,
     role,
+    description: league.description ?? null,
   }
 }
 

@@ -31,6 +31,7 @@ function buildFallbackOverview(
     plan: 'FREE',
     driverLimit: 20,
     role: null,
+    description: null,
   }
 
   const now = new Date()
@@ -106,6 +107,7 @@ export function useLeagueOverview(slug: string): UseLeagueOverviewResult {
             ? 100
             : 20,
       role: membership.role,
+      description: null,
     }
   }, [memberships, slug, billingPlan?.plan])
 

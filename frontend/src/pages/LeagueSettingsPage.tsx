@@ -55,6 +55,7 @@ function sanitizeSlug(value: string): string {
 interface GeneralErrors {
   name?: string
   slug?: string
+  description?: string
 }
 
 interface PointsRow {
@@ -109,6 +110,7 @@ export function LeagueSettingsPage(): ReactElement {
   const [generalForm, setGeneralForm] = useState({
     name: overview?.league.name ?? '',
     slug: overview?.league.slug ?? slug,
+    description: overview?.league.description ?? '',
   })
   const [generalErrors, setGeneralErrors] = useState<GeneralErrors>({})
 
@@ -116,8 +118,14 @@ export function LeagueSettingsPage(): ReactElement {
     setGeneralForm({
       name: overview?.league.name ?? '',
       slug: overview?.league.slug ?? slug,
+      description: overview?.league.description ?? '',
     })
-  }, [overview?.league.name, overview?.league.slug, slug])
+  }, [
+    overview?.league.name,
+    overview?.league.slug,
+    overview?.league.description,
+    slug,
+  ])
 
   const generalMutation = useMutation({
     mutationFn: async (payload: UpdateLeagueGeneralRequest) => {
@@ -161,9 +169,13 @@ export function LeagueSettingsPage(): ReactElement {
     setPointsRows(toRows(pointsEntries))
   }, [pointsEntries])
 
+  const normalizedFormDescription = generalForm.description.trim()
+  const currentDescription = (overview?.league.description ?? '').trim()
+
   const isGeneralDirty =
     generalForm.name !== (overview?.league.name ?? '') ||
-    generalForm.slug !== (overview?.league.slug ?? slug)
+    generalForm.slug !== (overview?.league.slug ?? slug) ||
+    normalizedFormDescription !== currentDescription
 
   const isGeneralLoading = generalMutation.isPending || isAuthLoading
 
@@ -179,6 +191,7 @@ export function LeagueSettingsPage(): ReactElement {
 
     const trimmedName = generalForm.name.trim()
     const sanitizedSlug = sanitizeSlug(generalForm.slug)
+    const trimmedDescription = generalForm.description.trim()
 
     const nextErrors: GeneralErrors = {}
     if (!trimmedName) {
@@ -188,6 +201,9 @@ export function LeagueSettingsPage(): ReactElement {
       nextErrors.slug = 'Slug is required.'
     } else if (!SLUG_PATTERN.test(sanitizedSlug)) {
       nextErrors.slug = 'Use lowercase letters, numbers, and single hyphens.'
+    }
+    if (trimmedDescription.length > 1000) {
+      nextErrors.description = 'Limit the description to 1,000 characters.'
     }
 
     setGeneralErrors(nextErrors)
@@ -208,12 +224,14 @@ export function LeagueSettingsPage(): ReactElement {
     const payload: UpdateLeagueGeneralRequest = {
       name: trimmedName,
       slug: sanitizedSlug,
+      description: trimmedDescription ? trimmedDescription : null,
     }
 
     if (!accessToken) {
       setGeneralForm({
         name: trimmedName,
         slug: sanitizedSlug,
+        description: trimmedDescription,
       })
       showToast({
         title: 'League updated (demo)',
@@ -245,6 +263,7 @@ export function LeagueSettingsPage(): ReactElement {
               ...cast.league,
               name: updated.name,
               slug: updated.slug,
+              description: updated.description ?? null,
             },
           }
         },
@@ -278,6 +297,7 @@ export function LeagueSettingsPage(): ReactElement {
         setGeneralForm({
           name: updated.name,
           slug: updated.slug,
+          description: updated.description ?? '',
         })
       }
     } catch (error) {
@@ -620,6 +640,35 @@ export function LeagueSettingsPage(): ReactElement {
               ) : null}
             </label>
           </div>
+
+          <label className="block space-y-2 text-sm text-slate-300">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              League description
+            </span>
+            <textarea
+              value={generalForm.description}
+              onChange={(event) => {
+                setGeneralForm((current) => ({
+                  ...current,
+                  description: event.target.value,
+                }))
+              }}
+              disabled={!canEditGeneralSettings || isGeneralLoading}
+              maxLength={1000}
+              rows={6}
+              className="w-full rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 outline-none focus:border-sky-500/70 focus:ring-2 focus:ring-sky-500/40 disabled:opacity-60"
+              placeholder="Share what makes your championship unique. Markdown supported."
+            />
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>Supports **bold**, _italics_, and bullet lists.</span>
+              <span>{generalForm.description.trim().length}/1000</span>
+            </div>
+            {generalErrors.description ? (
+              <span className="text-xs text-rose-300">
+                {generalErrors.description}
+              </span>
+            ) : null}
+          </label>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-slate-500">

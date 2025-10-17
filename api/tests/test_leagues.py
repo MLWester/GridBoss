@@ -199,6 +199,89 @@ class TestLeaguesRoutes:
         assert patch_resp.status_code == HTTPStatus.OK
         assert patch_resp.json()["name"] == "Updated"
 
+    def test_owner_can_update_description(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = stub_user(database_session, "owner")
+        with override_user(owner):
+            create_resp = client.post(
+                "/leagues",
+                json={"name": "League", "slug": "league-1"},
+            )
+        league_id = UUID(create_resp.json()["id"])
+
+        payload = {
+            "description": "Meet at **GridHub** every Friday. <script>alert('x')</script>",
+        }
+
+        with override_user(owner):
+            patch_resp = client.patch(
+                f"/leagues/{league_id}",
+                json=payload,
+            )
+
+        assert patch_resp.status_code == HTTPStatus.OK
+        body = patch_resp.json()
+        assert body["description"] == "Meet at **GridHub** every Friday."
+
+        refreshed = database_session.get(League, league_id)
+        assert refreshed.description == "Meet at **GridHub** every Friday."
+
+    def test_description_over_max_length_rejected(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = stub_user(database_session, "owner")
+        with override_user(owner):
+            create_resp = client.post(
+                "/leagues",
+                json={"name": "League", "slug": "league-1"},
+            )
+        league_id = UUID(create_resp.json()["id"])
+
+        too_long = "a" * 1001
+
+        with override_user(owner):
+            patch_resp = client.patch(
+                f"/leagues/{league_id}",
+                json={"description": too_long},
+            )
+
+        assert patch_resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+    def test_blank_description_clears_value(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = stub_user(database_session, "owner")
+        with override_user(owner):
+            create_resp = client.post(
+                "/leagues",
+                json={
+                    "name": "League",
+                    "slug": "league-1",
+                    "description": "Active league",
+                },
+            )
+        league_id = UUID(create_resp.json()["id"])
+
+        with override_user(owner):
+            patch_resp = client.patch(
+                f"/leagues/{league_id}",
+                json={"description": "   "},
+            )
+
+        assert patch_resp.status_code == HTTPStatus.OK
+        body = patch_resp.json()
+        assert body["description"] is None
+
+        refreshed = database_session.get(League, league_id)
+        assert refreshed.description is None
+
     def test_non_owner_cannot_update_or_delete(
         self,
         client: TestClient,
