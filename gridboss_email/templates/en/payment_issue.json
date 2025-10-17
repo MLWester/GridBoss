@@ -1,0 +1,5 @@
+{
+  "subject": "Payment issue for your GridBoss {plan_name} plan",
+  "html": "<p>Hi {owner_name},</p><p>We were unable to process the latest payment for your <strong>{plan_name}</strong> subscription. Some features may be at risk if the issue is not resolved.</p><p>Please review your billing details at <a href=\"{billing_url}\">{billing_url}</a>.</p><p>If you have already updated your payment method, you can ignore this message.</p>",
+  "text": "Hi {owner_name},\n\nWe were unable to process the latest payment for your {plan_name} subscription. Some features may be at risk if the issue is not resolved.\n\nReview your billing details: {billing_url}\n\nIf you have already updated your payment method, you can ignore this message."
+}

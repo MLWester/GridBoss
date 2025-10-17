@@ -1,0 +1,5 @@
+{
+  "subject": "You have been invited to {league_name} on GridBoss",
+  "html": "<p>Hi {display_name},</p><p>{inviter_name} invited you to join the <strong>{league_name}</strong> league on GridBoss.</p><p>Accept the invite and see upcoming events at <a href=\"{league_url}\">{league_url}</a>.</p><p>See you on the grid!</p>",
+  "text": "Hi {display_name},\n\n{inviter_name} invited you to join the {league_name} league on GridBoss.\n\nAccept the invite: {league_url}\n\nSee you on the grid!"
+}
