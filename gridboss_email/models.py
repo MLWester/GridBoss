@@ -15,6 +15,7 @@ class EmailEnvelope:
     locale: str = "en"
     league_id: str | None = None
     actor_id: str | None = None
+    request_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -25,6 +26,7 @@ class EmailEnvelope:
             "locale": self.locale,
             "league_id": self.league_id,
             "actor_id": self.actor_id,
+            "request_id": self.request_id,
         }
 
     @classmethod
@@ -37,6 +39,7 @@ class EmailEnvelope:
             locale=data.get("locale", "en"),
             league_id=data.get("league_id"),
             actor_id=data.get("actor_id"),
+            request_id=data.get("request_id"),
         )
 
 

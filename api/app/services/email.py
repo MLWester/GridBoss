@@ -4,6 +4,7 @@ import logging
 from typing import Any
 from uuid import UUID, uuid4
 
+from app.core.observability import get_request_id
 from app.core.settings import get_settings
 from app.db.session import get_sessionmaker
 from app.services.audit import record_audit_log
@@ -70,6 +71,7 @@ def queue_transactional_email(
             locale=resolved_locale,
             league_id=league_id,
             actor_id=actor_id,
+            request_id=get_request_id(),
         )
         try:
             email_jobs.send_transactional_email.send(envelope.to_dict())

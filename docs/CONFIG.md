@@ -44,6 +44,8 @@ GridBoss services share a single configuration surface driven by environment var
 | `S3_SECRET_KEY` | string | _empty_ | Secret key for storage provider. |
 | `SENTRY_DSN` | URL \| empty | _empty_ | Optional Sentry DSN for error reporting. |
 | `SENTRY_TRACES_SAMPLE_RATE` | float | `0.0` | Sampling rate for Sentry performance traces. |
+| `VITE_SENTRY_DSN` | string | _empty_ | Frontend DSN used by the React bundle (when unset, Sentry is disabled). Prefixed with `VITE_` for Vite exposure. |
+| `VITE_SENTRY_TRACES_SAMPLE_RATE` | float | `0` | Optional client-side traces sampling rate; ignored when DSN is empty. |
 | `OTEL_ENABLED` | bool | `false` | Toggles OpenTelemetry exporters. |
 | `OTEL_EXPORTER_ENDPOINT` | URL \| empty | _empty_ | Collector endpoint when OTEL is enabled. |
 | `OTEL_SERVICE_NAME` | string | `gridboss-api` | Service name reported to OTEL/Sentry. |
