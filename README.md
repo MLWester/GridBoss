@@ -130,6 +130,20 @@ Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml 
 - API format: `.venv\Scripts\black .`
 - API unit tests (placeholder): `.venv\Scripts\pytest`
 
+## Transactional Email
+- Enable transactional email by supplying `EMAIL_ENABLED=true`, `SENDGRID_API_KEY=<key>`, and `EMAIL_FROM_ADDRESS=<verified@domain>` in `.env` (or your deployment secrets). The worker automatically prefers SendGrid when both SMTP and SendGrid credentials are present.
+- Verify your sending domain with SendGrid (SPF include, DKIM CNAMEs, optional DMARC record). Deployment checklists should confirm the DNS status is “verified” before flipping `EMAIL_ENABLED` in production.
+- Run `pytest gridboss_email` to exercise the provider adapters. To perform an end-to-end smoke test, start the stack (`docker compose ... up`), open a Python shell, and call:
+  ```python
+  from app.services.email import queue_transactional_email
+  queue_transactional_email(
+      template_id="welcome",
+      recipient="sandbox@example.com",
+      context={"display_name": "Driver", "app_url": "https://app.grid-boss.com"},
+  )
+  ```
+  Check SendGrid’s activity log for the delivery and inspect the `audit_logs` table for the `email_sent` entry.
+
 ## Deployment Notes
 - **Container Builds**: Production images are defined in `infra/`. Inject secrets (Stripe, Discord, database) via your deployment platform instead of committing them to `.env`.
 - **Database Migrations**: Use Alembic (`api/alembic.ini`). From `api/`, run `alembic revision --autogenerate -m "<summary>"` then `alembic upgrade head` before promoting a release.

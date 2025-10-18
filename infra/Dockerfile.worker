@@ -5,9 +5,18 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY worker/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# Install shared API dependencies so worker can import app modules
+COPY api/requirements.txt /tmp/api-requirements.txt
+RUN pip install --no-cache-dir -r /tmp/api-requirements.txt
 
+# Worker-specific extras
+COPY worker/requirements.txt /tmp/worker-requirements.txt
+RUN pip install --no-cache-dir -r /tmp/worker-requirements.txt
+
+# Copy runtime code (overridden by bind mounts in development)
+COPY api/app /app/app
+COPY gridboss_config /app/gridboss_config
+COPY gridboss_email /app/gridboss_email
 COPY worker /app/worker
 
 CMD ["python", "-m", "worker.main"]

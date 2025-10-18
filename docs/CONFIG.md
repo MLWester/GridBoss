@@ -1,4 +1,4 @@
-# Configuration Reference
+﻿# Configuration Reference
 
 GridBoss services share a single configuration surface driven by environment variables. Values are loaded via `pydantic-settings` (see `gridboss_config/__init__.py`) and validated at start-up. The table below lists every supported key, its type, default value (used for development/test), and guidance for production deployments.
 
@@ -10,7 +10,7 @@ GridBoss services share a single configuration surface driven by environment var
 | `API_PORT` | int | `8000` | Local port used by the API container/process. |
 | `ADMIN_MODE` | bool | `false` | Enables founder-only admin console features. |
 | `CORS_ORIGINS` | CSV string | `http://localhost:5173` | Comma-separated origins allowed by CORS middleware. |
-| `JWT_SECRET` | string | `dev-jwt-secret` | **Required** – change in production. Used to sign access/refresh tokens. |
+| `JWT_SECRET` | string | `dev-jwt-secret` | **Required** â€“ change in production. Used to sign access/refresh tokens. |
 | `JWT_ACCESS_TTL_MIN` | int | `15` | Access token lifetime in minutes. |
 | `JWT_REFRESH_TTL_DAYS` | int | `14` | Refresh token lifetime in days. |
 | `DATABASE_URL` | string | `postgresql+psycopg://postgres:postgres@localhost:5432/gridboss` | SQLAlchemy DSN for the primary database. |
@@ -34,8 +34,8 @@ GridBoss services share a single configuration surface driven by environment var
 | `ANALYTICS_SALT` | string | _empty_ | Required when analytics are enabled; salt for hashing user IDs. |
 | `EMAIL_ENABLED` | bool | `false` | Enables transactional email sending. |
 | `SMTP_URL` | URL | _empty_ | SMTP connection string used when `EMAIL_ENABLED=true`. Optional if SendGrid is used. |
-| `SENDGRID_API_KEY` | string | _empty_ | Alternative provider when email is enabled. Provide either SMTP or SendGrid credentials. |
-| `EMAIL_FROM_ADDRESS` | string | `notifications@example.com` | Default “From” address for transactional email. |
+| `SENDGRID_API_KEY` | string | _empty_ | Alternative provider when email is enabled. Domain must be verified in SendGrid (SPF/DKIM/DMARC) before enabling. |
+| `EMAIL_FROM_ADDRESS` | string | `notifications@example.com` | Default 'From' address for transactional email. |
 | `S3_ENABLED` | bool | `false` | Enables S3-compatible storage for assets/exports. |
 | `S3_ENDPOINT` | URL | _empty_ | Required when S3 is enabled (supports AWS S3, MinIO, etc.). |
 | `S3_REGION` | string | `us-east-1` | Region identifier used by the storage provider. |
@@ -53,7 +53,7 @@ GridBoss services share a single configuration surface driven by environment var
 
 - The settings loader raises a validation error if any required key is blank or if production (`APP_ENV=production`) still uses the development sentinel values (`dev-jwt-secret`, `sk_test_placeholder`, etc.).
 - When `ANALYTICS_ENABLED=true`, `ANALYTICS_SALT` must be supplied.
-- When `EMAIL_ENABLED=true`, configure either `SMTP_URL` or `SENDGRID_API_KEY` (or both) and supply `EMAIL_FROM_ADDRESS`.
+| `EMAIL_FROM_ADDRESS` | string | `notifications@example.com` | Default 'From' address for transactional email. |
 - When `S3_ENABLED=true`, all of `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, and `S3_SECRET_KEY` must be set.
 
 Refer to `.env.example` for commented examples. Services can access configuration via `gridboss_config.get_settings()`, which returns the singleton `Settings` instance.
