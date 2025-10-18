@@ -57,15 +57,33 @@ def _check_redis(redis_url: str) -> dict[str, Any]:
     return {"status": "ok"}
 
 
+def _check_sentry(settings: Settings) -> dict[str, Any]:
+    if not settings.sentry_dsn:
+        return {"status": "skipped"}
+    try:
+        import sentry_sdk
+
+        client = sentry_sdk.Hub.current.client  # type: ignore[attr-defined]
+        if client is None:
+            return {"status": "error", "message": "sentry client not initialised"}
+    except ImportError:
+        return {"status": "error", "message": "sentry-sdk not installed"}
+    except Exception as exc:  # pragma: no cover - unexpected integration failure
+        return {"status": "error", "message": str(exc)}
+    return {"status": "ok"}
+
+
 def _build_ready_payload(session: Session, settings: Settings) -> dict[str, Any]:
     database_check = _check_database(session)
     redis_check = _check_redis(settings.redis_url)
     migration_check = _check_migrations(session)
+    sentry_check = _check_sentry(settings)
 
     checks = {
         "database": database_check,
         "redis": redis_check,
         "migrations": migration_check,
+        "sentry": sentry_check,
     }
     overall = "ok" if not any(item["status"] == "error" for item in checks.values()) else "degraded"
     return {"status": overall, "checks": checks}

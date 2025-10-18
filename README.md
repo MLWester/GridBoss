@@ -175,6 +175,7 @@ Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml 
 For questions or clarifications, update the relevant PBI or expand the documentation so decisions remain transparent to the team.
 ## Observability Configuration
 - Logs are emitted as structured JSON and include `X-Request-ID`, `user_id`, and `league_id` context where available.
-- Set `SENTRY_DSN` and optional `SENTRY_TRACES_SAMPLE_RATE` to forward exceptions to Sentry.
-- Enable OpenTelemetry exports with `OTEL_ENABLED=true` and optionally configure `OTEL_EXPORTER_ENDPOINT` and `OTEL_SERVICE_NAME`.
+- Set `SENTRY_DSN` and optional `SENTRY_TRACES_SAMPLE_RATE` to forward API/worker exceptions to Sentry. The worker automatically adopts the same DSN and app environment.
+- Frontend telemetry is controlled via Vite env keys: `VITE_SENTRY_DSN` and optional `VITE_SENTRY_TRACES_SAMPLE_RATE`. When unset, the bundle skips Sentry at runtime.
+- Enable OpenTelemetry exports with `OTEL_ENABLED=true` and optionally configure `OTEL_EXPORTER_ENDPOINT` and `OTEL_SERVICE_NAME`. The worker reports spans using the same configuration (it suffixes `-worker` to the service name).
 - Configure health check caching with `HEALTH_CACHE_SECONDS` to reduce probe load; the default disables caching for immediate feedback.

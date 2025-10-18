@@ -5,6 +5,7 @@ from uuid import UUID
 
 import dramatiq
 
+from app.core.observability import bind_request_id, clear_context
 from app.core.settings import get_settings
 from app.db.session import get_sessionmaker
 from app.services.audit import record_audit_log
@@ -66,6 +67,8 @@ def send_transactional_email(payload: dict[str, object]) -> None:
     envelope = EmailEnvelope.from_dict(payload)
     settings = get_settings()
     session = SessionLocal()
+
+    bind_request_id(envelope.request_id)
 
     try:
         provider = get_email_provider(
@@ -137,6 +140,7 @@ def send_transactional_email(payload: dict[str, object]) -> None:
         raise
     finally:
         session.close()
+        clear_context()
 
 
 __all__ = ["send_transactional_email"]

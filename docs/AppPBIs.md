@@ -691,7 +691,7 @@ Stand up S3 and wire uploads for avatars/exports.
 
 ---
 
-## PBI-072 — Observability Env & Hooks (`ops/observability-env`)
+## PBI-072 — Observability Env & Hooks (`ops/observability-env`) (complete)
 **Goal**  
 Wire Sentry and optional OTEL via env toggles.
 
@@ -701,11 +701,12 @@ Wire Sentry and optional OTEL via env toggles.
 - Logger middleware adds `x-request-id` and correlates jobs.
 
 **Acceptance**
-- Exceptions in API/Worker appear in Sentry with releases and traces (if sampling on).
-- `/readyz` includes `sentry_ok` when DSN set.
+- API and worker bootstrap Sentry/OTEL when DSN/toggles are provided, and worker logs inherit `X-Request-ID`.
+- `/readyz` now reports a `sentry` check with `status=ok` when Sentry is configured, `skipped` when not.
+- Frontend bundle initialises Sentry via `VITE_SENTRY_DSN`/`VITE_SENTRY_TRACES_SAMPLE_RATE` and avoids shipping the client when unset.
 
 **Tests**
-- Manual throw route behind admin flag; verify Sentry receives event.
+- `pytest` exercises the updated observability helpers; manual check: trigger `/__debug/sentry` style route (or local exception) and confirm the event reaches Sentry, inspect worker logs for propagated request IDs.
 
 ---
 
