@@ -33,6 +33,7 @@ services:
       - "${API_PORT}:8000"
     volumes:
       - ../api:/app
+      - ../gridboss_config:/app/gridboss_config
     depends_on:
       db:
         condition: service_healthy
@@ -53,6 +54,9 @@ services:
     command: python -m worker.main
     volumes:
       - ../worker:/app/worker
+      - ../gridboss_config:/app/gridboss_config
+      - ../api/app:/app/app
+      - ../gridboss_email:/app/gridboss_email
     depends_on:
       redis:
         condition: service_healthy
@@ -66,6 +70,7 @@ services:
     command: python -m bot.main
     volumes:
       - ../bot:/app/bot
+      - ../gridboss_config:/app/gridboss_config
     depends_on:
       redis:
         condition: service_healthy

@@ -516,7 +516,7 @@ Acceptance Criteria:
 Dependencies: PBI-015, PBI-021
 Branch: pbi/050-email-connection
 
-## PBI-051 - League Description Field ( still needs checking (some work done from cloud agent))
+## PBI-051 - League Description Field ( complete )
 Summary: Allow leagues to publish rich descriptions safely.
 Scope: Backend, Frontend
 Acceptance Criteria:
@@ -538,11 +538,11 @@ Acceptance Criteria:
 Dependencies: PBI-012, PBI-018, PBI-020
 Branch: pbi/052-health-selftest
 
-# GridBoss - New Product Backlog Items (starting at PBI-065)
+# GridBoss — New Product Backlog Items (starting at PBI-065)
 
 ---
 
-## PBI-065 - Env Keys Audit & Secrets Wiring (`ops/env-keys-audit`)
+## PBI-065 — Env Keys Audit & Secrets Wiring (`ops/env-keys-audit`)
 **Goal**  
 Ensure every required env key exists, is validated at boot, and all secrets are actually used by the code paths that need them.
 
@@ -558,121 +558,121 @@ Ensure every required env key exists, is validated at boot, and all secrets are 
   - S3: `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_ENDPOINT?`
   - Observability: `SENTRY_DSN?`, `SENTRY_TRACES_SAMPLE_RATE?`, `OTEL_ENABLED?`, `OTEL_EXPORTER_ENDPOINT?`, `OTEL_SERVICE_NAME?`
   - App/Origin: `APP_ENV`, `APP_URL`, `API_URL`, `CORS_ORIGINS`
-- Generate a markdown table in `docs/ConfigMatrix.md` describing each key, defaults, and environments (dev/staging/prod).
-- Worker/bot reuse shared settings module; env var drift detected during startup and logged.
+- Add a startup log “config summary” (redacting secrets) and a `/configz` guarded endpoint (admin only) returning which keys are set (no values).
 
 **Acceptance**
-- Missing critical env vars abort application startup with actionable error messages.
-- `ConfigMatrix` stays in sync with settings module (pre-commit protects drift).
-- Secrets are read from env only in the settings layer; no ad-hoc `os.getenv` calls remain in codebase.
+- App refuses to start with a clear message if a mandatory key is missing/invalid.
+- `.env.example` mirrors 100% of required keys.
+- `/readyz` includes a “config_ok=true” signal.
 
 **Tests**
-- Unit tests for settings validation (factory to override env).
-- CLI smoke: `scripts/check_env.py` reports unset keys and mismatched configs.
+- Unit: valid/missing/invalid-type env parsing.
+- E2E: boot with minimal vs full env sets.
 
 ---
 
-## PBI-066 - Stripe Webhook Hardening (`ops/stripe-webhook-handoff`)
+## PBI-066 — JWT Session Policy Update (`be/jwt-policy-update`)
 **Goal**  
-Lock down Stripe webhooks and provide replay tooling.
+Extend access token lifetime while keeping security strong via refresh-rotation and reuse detection.
 
 **Scope**
-- Rotate `STRIPE_WEBHOOK_SECRET` per environment; store in secrets manager.
-- Proxy webhooks via Render cron job fallback; implement signature validation and idempotency keys.
-- Add `scripts/replay_stripe_webhook.py` to fetch and replay payloads for debugging.
+- Make `JWT_ACCESS_TTL_MIN` configurable (default **30 minutes**), keep refresh 14 days.
+- Implement **refresh token rotation** with server-side session family (Redis): `jti`, `family_id`, reuse detection → revoke family.
+- Add grace window (e.g., 30s) for clock skew.
+- `/logout` revokes family and clears cookie.
 
 **Acceptance**
-- Webhook endpoint rejects unsigned/expired payloads (unit tests and manual Stripe CLI).
-- Replay script can target staging/prod with dry-run toggle.
-- Audit logs record webhook outcomes and replay attempts.
+- Access token expires per `JWT_ACCESS_TTL_MIN`.
+- Using an old refresh after rotation yields 401 and revokes the session family.
+- `/me` works via refresh cookie without leaking tokens to FE storage.
 
 **Tests**
-- Integration tests hitting `/webhooks/stripe` with signed payloads.
-- Replay script exercised against fixture payloads.
+- Unit: rotation, reuse detection, ttl math.
+- E2E: login → rotate → reuse old refresh → blocked.
 
 ---
 
-## PBI-067 - League Onboarding Wizard (`fe/league-onboarding`)
+## PBI-067 — Production Postgres Provisioning (`ops/postgres-setup`)
 **Goal**  
-Guide new league owners through critical setup steps.
+Create and wire a managed Postgres instance with least-privilege credentials.
 
 **Scope**
-- Multi-step modal after first login: league basics, drivers import, schedule skeleton, Discord linking, billing plan.
-- Progress indicator with ability to skip/return later; store completion state per user.
-- Contextual docs links and short explainer videos.
+- Create DB `gridboss_prod`, user `gridboss_app` with randomly generated password, limited to that DB.
+- Enforce TLS; restrict network to hosting provider egress if possible.
+- Document connection string in secrets manager and `Render` env: `postgresql+psycopg://gridboss_app:<pass>@<host>/<db>`
+- Run Alembic migrations on first deploy; add read-only check on `/readyz` that verifies schema version.
 
 **Acceptance**
-- Wizard appears once per owner until completed or dismissed.
-- Completing steps updates corresponding backend resources.
-- Analytics events fire for each step (Segment stub for now).
+- DB reachable over TLS; `/readyz` shows `db_ok=true` and migration head hash.
+- Writes and reads succeed; role has no superuser privileges.
 
 **Tests**
-- Cypress flow covering happy path and skip path.
-- Vitest unit tests for state machine/controller logic.
+- Migration dry-run in CI; smoke test against a temporary DB.
 
 ---
 
-## PBI-068 - Standings Calculation Engine V2 (`be/standings-v2`)
+## PBI-068 — Redis Connection & Usage (`ops/redis-setup`)
 **Goal**  
-Handle complex points systems and tiebreakers per season.
+Back the cache/queue/idempotency/session with a managed Redis.
 
 **Scope**
-- Support per-event weighting, drop-week rules, fastest lap bonuses, and team vs. driver aggregation.
-- Configurable tiebreaker stack (wins, podiums, average finish, qualifying, best result last race).
-- Materialized standings persisted per event/season to speed dashboard queries.
+- Provision Redis (Upstash/ElastiCache). Use `rediss://` (TLS) if available.
+- Namespaced keys:
+  - `idemp:<key>` (TTL 10m)
+  - `standings:<seasonId>:<mode>:<classId?>` (TTL 300s)
+  - `sess:<family_id>:<jti>` for refresh tokens
+  - Job queues (Dramatiq/RQ)
+- Health check: ping in `/healthz` and report `redis_ok` in `/readyz`.
 
 **Acceptance**
-- Worker job recomputes standings on result submission; admin UI shows calculation timestamp.
-- Tiebreakers align with configurable priority order.
-- Regression fixtures cover current leagues.
+- Cache hits observed for standings after second request.
+- Idempotency prevents duplicate writes on repeated POST with same key.
 
 **Tests**
-- Extensive unit tests for `standings.calculate()` permutations.
-- Integration test hitting `/leagues/{id}/standings` after ingesting fixture events.
+- Unit: cache layer; Integration: idempotent POST retry.
 
 ---
 
-## PBI-069 - Admin Console 1.0 (`fe/admin-console`)
+## PBI-069 — Discord Dev Keys & Local OAuth (`be/discord-dev-keys`)
 **Goal**  
-Ship an internal admin console for support operations.
+Discord login is fully working in **dev** with correct keys and redirects.
 
 **Scope**
-- Protected route `/admin` with feature flag and RBAC.
-- Search users/leagues, view audit log timeline, impersonation flow (read-only).
-- Support actions: resend invite, trigger billing sync, toggle league status.
+- Ensure `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_REDIRECT_URI=http://localhost:8000/auth/discord/callback` in dev env.
+- Implement `/auth/discord/start` + `/auth/discord/callback` (state param, token exchange).
+- FE button to kick off login.
+- Doc a one-page “Discord Dev Setup”.
 
 **Acceptance**
-- Only staff users (role `STAFF`) reach the console.
-- Actions log to `audit_logs` with actor metadata.
-- Console has responsive layout with dark theme parity.
+- Dev login flow yields a valid user in `/me`.
+- CSRF state required; failures produce standard error envelope.
 
 **Tests**
-- Vitest/RTL coverage for console components.
-- API contract tests for impersonation and support actions.
+- Unit: state validation & token failures.
+- E2E: happy path with test Discord account.
 
 ---
 
-## PBI-070 - League Onboarding Content Refresh (`content/onboarding-refresh`)
+## PBI-070 — Pre-Prod Analytics Enablement (`be/analytics-preprod`)
 **Goal**  
-Update email and in-app copy for first-week retention.
+Enable analytics **before** production to validate event schema.
 
 **Scope**
-- Rewrite welcome email, day 3 checklist, day 7 power tips.
-- In-app empty states tailored by league size/plan; embed quick actions.
-- Add video walkthrough placeholders with tracking for clicks.
+- `ANALYTICS_ENABLED=true` in staging; `ANALYTICS_SALT` required.
+- Track: login, league_created, driver_added, event_scheduled, results_posted, discord_posted, subscription_updated.
+- Owner/Admin staging dashboard for last 30d.
 
 **Acceptance**
-- Content reviewed by marketing; translations placeholders preserved.
-- Copy references current product terminology.
-- Click tracking wired via analytic events.
+- Turning flag off stops writes.
+- user_id stored as salted hash; no PII in props.
 
 **Tests**
-- Manual review checklist.
-- Snapshot tests for empty-state components.
+- Unit: event writer & hashing.
+- E2E: events show in staging dashboard.
 
 ---
 
-## PBI-071 - S3 Asset Uploads (`ops/s3-assets`)
+## PBI-071 — S3 Storage & Uploads (`ops/s3-assets`)
 **Goal**  
 Stand up S3 and wire uploads for avatars/exports.
 
@@ -683,17 +683,15 @@ Stand up S3 and wire uploads for avatars/exports.
 - Env keys: `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_ENDPOINT?`.
 
 **Acceptance**
-- Upload and retrieval flows succeed; signed URLs expire after configured TTL.
-- Exports written to S3 and downloadable from admin.
-- No public ACLs; buckets enforce least-privilege policy.
+- Upload + retrieve avatars; signed URLs expire; public ACLs not used.
+- Exports written to S3 and downloadable.
 
 **Tests**
-- Unit tests for validators and S3 adapter.
-- Integration smoke hitting localstack or moto.
+- Unit: validators; Integration: signed URL lifecycle.
 
 ---
 
-## PBI-072 - Observability Env & Hooks (`ops/observability-env`)
+## PBI-072 — Observability Env & Hooks (`ops/observability-env`)
 **Goal**  
 Wire Sentry and optional OTEL via env toggles.
 
@@ -705,35 +703,32 @@ Wire Sentry and optional OTEL via env toggles.
 **Acceptance**
 - Exceptions in API/Worker appear in Sentry with releases and traces (if sampling on).
 - `/readyz` includes `sentry_ok` when DSN set.
-- OTEL exporters can be toggled without code changes.
 
 **Tests**
 - Manual throw route behind admin flag; verify Sentry receives event.
-- Unit tests for logger middleware when headers missing.
 
 ---
 
-## PBI-073 - Cloudflare Cutover Finalization (`ops/cloudflare-finalize`)
+## PBI-073 — Cloudflare Cutover Finalization (`ops/cloudflare-finalize`)
 **Goal**  
 Finish Cloudflare setup once nameservers are active.
 
 **Scope**
-- DNS: `CNAME app -> <vercel target>`, `CNAME api -> <render target>`, TXT `_vercel` verify; optional `CNAME cdn -> <cloudfront>`.
-- Redirect apex and `www` to `https://app.grid-boss.com` (via Cloudflare Rules or Vercel redirects).
-- SSL/TLS: Mode Full; Always Use HTTPS ON; cache rule to bypass `api.grid-boss.com/*`.
+- DNS: `CNAME app → <vercel target>`, `CNAME api → <render target>`, TXT `_vercel` verify; optional `CNAME cdn → <cloudfront>`.
+- Redirect apex & `www` → `https://app.grid-boss.com` (via Cloudflare Rules **or** Vercel redirects).
+- SSL/TLS: Mode **Full**; **Always Use HTTPS** ON; cache rule to **Bypass** for `api.grid-boss.com/*`.
 
 **Acceptance**
-- `https://app.grid-boss.com` serves frontend; apex and www 301 to app.
-- `https://api.grid-boss.com/healthz` returns 200.
+- `https://app.grid-boss.com` serves FE; apex & www 301 to app.
+- `https://api.grid-boss.com/healthz` 200.
 - Universal certificate active.
 
 **Tests**
-- `curl -I` checks for redirects and cache headers.
-- Cloudflare analytics show cache bypass for API.
+- curl `-I` checks; headers verified.
 
 ---
 
-## PBI-074 - Favicon & App Icons (`fe/favicon-icons`)
+## PBI-074 — Favicon & App Icons (`fe/favicon-icons`)
 **Goal**  
 Replace Vite icon with GridBoss monogram in all places.
 
@@ -742,17 +737,15 @@ Replace Vite icon with GridBoss monogram in all places.
 - Add `manifest.webmanifest` and `<link rel="icon">`/`<link rel="apple-touch-icon">` to `index.html`.
 
 **Acceptance**
-- Browser tab shows GridBoss icon; PWA audit clean.
+- Browser tab shows GridBoss icon; PWA audit clean (optional).
 - Icons look crisp on iOS/Android.
-- Manifest passes Lighthouse checks.
 
 **Tests**
-- Lighthouse audit fixtures.
-- Visual QA on primary devices.
+- Lighthouse checks.
 
 ---
 
-## PBI-075 - Git Hygiene: .gitignore & Secret Scanning (`ops/gitignore-secrets`) (complete)
+## PBI-075 — Git Hygiene: .gitignore & Secret Scanning (`ops/gitignore-secrets`) (copmleted)
 **Goal**  
 Prevent accidental commits of secrets/build artifacts.
 
@@ -762,16 +755,15 @@ Prevent accidental commits of secrets/build artifacts.
 - Add **gitleaks** to CI and a one-shot scan script.
 
 **Acceptance**
-- `.gitignore` now covers environment files, caches, build outputs, and local tooling artifacts.
-- Pre-commit runs Ruff, Black, ESLint, and Prettier before every commit.
-- CI executes `gitleaks` on each push and pull request.
+- Committing `.env` or secrets triggers pre-commit block with guidance.
+- CI fails on leaks.
 
 **Tests**
-- Manual: `pre-commit run --all-files` and `./scripts/gitleaks-scan.sh` (or `./scripts/gitleaks-scan.ps1`) pass after the updates.
+- Try to commit `.env` in a test branch → blocked.
 
 ---
 
-## PBI-076 - Discord Linking Finalization & Prod Redirect URI (`be/discord-finalize`)
+## PBI-076 — Discord Linking Finalization & Prod Redirect URI (`be/discord-finalize`)
 **Goal**  
 Finish Discord integration for production.
 
@@ -781,33 +773,30 @@ Finish Discord integration for production.
 - `/discord/test` posts to the configured channel; mark integration inactive on 403/404.
 
 **Acceptance**
-- Removing the bot flips `is_active=false` and returns actionable error to UI.
-- Linking flow works in production with PRO-gated test post.
-- Audit logs capture link/unlink and failure scenarios.
+- Removing the bot flips `is_active=false` & returns actionable error to UI.
+- Linking flow works in prod with PRO-gated test post.
 
 **Tests**
 - Integration tests with mocked Discord API.
-- Manual verification against staging guild.
 
 ---
 
-## PBI-077 - SendGrid Email Enablement (`be/email-sendgrid`)
+## PBI-077 — SendGrid Email Enablement (`be/email-sendgrid`)
 **Goal**  
 Complete SendGrid setup and send transactional emails.
 
 **Scope**
 - Env: `EMAIL_ENABLED=true`, `SENDGRID_API_KEY`, `EMAIL_FROM_ADDRESS`.
-- Verify domain DNS (SPF include, DKIM CNAMEs, DMARC TXT to be added in Cloudflare when active).
-- API adapter for SendGrid (retry three times, log metadata only).
+- Verify domain (DNS: SPF include, DKIM CNAMEs, DMARC TXT to be added in Cloudflare when active).
+- API adapter for SendGrid (retry 3×, log metadata only).
 - Templates: welcome, league invite, payment issue, results summary (store as files with variables).
 
 **Acceptance**
 - Emails send when `EMAIL_ENABLED=true`; failures retried and surfaced in Admin.
 - Provider dashboard shows verified domain (SPF/DKIM/DMARC pass).
-- Templates stored in repo with placeholders, no secrets.
 
 **Tests**
-- Unit tests for adapter and template rendering.
-- End-to-end test sends to sandbox inbox.
+- Unit: adapter; E2E: send to test inbox / sandbox.
 
 ---
+
