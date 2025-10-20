@@ -117,6 +117,11 @@ Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml 
   ```
   Hooks run Ruff (lint), Black (format), ESLint, and Prettier before every commit.
 - To run hooks across the whole repo manually, execute `pre-commit run --all-files`.
+
+## Demo Data
+- Populate a reusable demo league by running `python scripts/seed_demo.py` from the repository root.
+- Add `--dry-run` to inspect changes without committing, or `--json` to emit a machine-readable summary.
+- The script is idempotent; rerunning it updates the existing demo league without creating duplicates (see `api/tests/test_seed_demo.py` for coverage).
 - Scan for leaked secrets locally with the helper script:
   - Unix/macOS: `./scripts/gitleaks-scan.sh`
   - Windows PowerShell: `./scripts/gitleaks-scan.ps1`
@@ -149,6 +154,14 @@ Stop the stack with `docker compose --env-file .env -f infra/docker-compose.yml 
 - **Database Migrations**: Use Alembic (`api/alembic.ini`). From `api/`, run `alembic revision --autogenerate -m "<summary>"` then `alembic upgrade head` before promoting a release.
 - **Static Assets**: `npm run build` outputs to `frontend/dist/`; serve this folder via CDN or static hosting in production.
 - **Observability**: Set `SENTRY_DSN`, `OTEL_ENABLED=true`, and `OTEL_EXPORTER_ENDPOINT` in production manifests to emit telemetry.
+- **DNS Cutover**: When switching nameservers to Cloudflare, follow `docs/cloudflare-cutover.md` for the CNAME setup, redirects, HTTPS enforcement, and cache rules.
+
+## Object Storage (S3)
+- Populate the S3 settings in `.env`/Render (bucket, region, access/secret keys, optional custom endpoint). Set `S3_ENABLED=true` in environments that should support uploads.
+- Create the bucket (for example `gridboss-prod-assets`) and IAM user/role with `s3:PutObject`, `s3:GetObject`, and `s3:ListBucket` on that bucket only. Block public ACLs; grant access through pre-signed URLs.
+- Optional: front the bucket with CloudFront (`cdn.grid-boss.com`) for caching/static delivery.
+- The API exposes `/uploads/sign` for pre-signed POSTs, `/uploads/complete` to validate uploads (size/MIME, EXIF stripping for avatars), and `/uploads/download` to mint short-lived GET URLs. Avatars remain capped at ≤ 2 MiB (JPEG/PNG/WebP); exports at ≤ 25 MiB (CSV/JSON/PDF/ZIP).
+- See `docs/s3-assets.md` for bucket/IAM runbooks and CDN guidance.
 - **Rollbacks**: Maintain database backups alongside release tags; if rollout fails, redeploy the previous image and run `alembic downgrade` to the prior revision.
 
 ## Development Workflow

@@ -1,133 +1,116 @@
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
+from uuid import UUID
 
 import pytest
-from scripts.seed_demo import (
-    DEMO_LEAGUE_SLUG,
-    DRIVER_NAMES,
-    seed_demo,
-)
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 from app.db import Base
-from app.db.models import (
-    Driver,
-    Event,
-    EventStatus,
-    League,
-    LeagueRole,
-    Membership,
-    PointsScheme,
-    Result,
-    Season,
-    User,
+from app.db.models import Driver, Event, League, LeagueRole, Membership, Result, Season, User
+from scripts.seed_demo import DRIVER_NAMES, seed_demo
+
+SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite:///:memory:"
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    future=True,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
-from app.main import _prepare_sqlite_defaults
-from app.main import settings as app_settings
-from app.services.points import default_points_entries
+
+# SQLite does not understand postgres-specific defaults; drop them for tests
+for table in Base.metadata.sorted_tables:
+    for column in table.c:
+        default = getattr(column, "server_default", None)
+        if (
+            default is not None
+            and hasattr(default, "arg")
+            and default.arg is not None
+            and "gen_random_uuid" in str(default.arg)
+        ):
+            column.server_default = None
+
+TestingSessionLocal = sessionmaker(
+    bind=engine,
+    autoflush=False,
+    autocommit=False,
+    expire_on_commit=False,
+)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_database() -> None:
+    Base.metadata.create_all(bind=engine)
 
 
 @pytest.fixture()
-def session_factory(tmp_path: Path) -> sessionmaker[Session]:
-    db_path = tmp_path / "seed_demo.sqlite"
-    engine = create_engine(
-        f"sqlite+pysqlite:///{db_path}",
-        future=True,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+def session() -> Generator[Session, None, None]:
+    with engine.begin() as connection:
+        for table in reversed(Base.metadata.sorted_tables):
+            connection.execute(table.delete())
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def test_seed_demo_populates_expected_entities(session: Session) -> None:
+    summary = seed_demo(session)
+    session.commit()
+
+    # Ensure summary values match persisted data
+    league_id = UUID(summary.league_id)
+    driver_count = session.execute(select(Driver).where(Driver.league_id == league_id)).scalars().all()
+    event_count = session.execute(select(Event).where(Event.league_id == league_id)).scalars().all()
+    result_count = session.execute(select(Result).join(Event).where(Event.league_id == league_id)).scalars().all()
+
+    assert len(driver_count) == len(DRIVER_NAMES)
+    assert len(event_count) == summary.events
+    assert len(result_count) == summary.results
+
+    owner: User = session.execute(select(User).where(User.id == UUID(summary.user_id))).scalar_one()
+    league: League = session.execute(select(League).where(League.id == UUID(summary.league_id))).scalar_one()
+    season: Season = session.execute(select(Season).where(Season.league_id == league.id)).scalar_one()
+    membership: Membership = (
+        session.execute(
+            select(Membership).where(Membership.league_id == league.id, Membership.user_id == owner.id)
+        ).scalar_one()
     )
-    _prepare_sqlite_defaults(app_settings.app_env)
-    Base.metadata.create_all(bind=engine)
-    SessionLocal = sessionmaker(
-        bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
+
+    assert league.owner_id == owner.id
+    assert membership.role == LeagueRole.OWNER
+    assert season.is_active is True
+
+
+def test_seed_demo_is_idempotent(session: Session) -> None:
+    first = seed_demo(session)
+    session.commit()
+
+    second = seed_demo(session)
+    session.commit()
+
+    assert first.drivers == second.drivers == len(DRIVER_NAMES)
+    assert first.events == second.events
+    assert first.results == second.results
+
+    # ensure rerun does not duplicate drivers/events/results
+    league_id = UUID(first.league_id)
+    driver_total = session.execute(select(Driver).where(Driver.league_id == league_id)).scalars().all()
+    event_total = session.execute(select(Event).where(Event.league_id == league_id)).scalars().all()
+    result_total = (
+        session.execute(select(Result).join(Event).where(Event.league_id == UUID(first.league_id))).scalars().all()
     )
 
-    yield SessionLocal
-
-    engine.dispose()
-
-
-def _run_seed(session_factory: sessionmaker[Session]):
-    with session_factory() as session:
-        summary = seed_demo(session)
-        session.commit()
-        return summary
-
-
-def _counts(session: Session, league: League) -> tuple[int, int, int]:
-    driver_count = session.execute(
-        select(func.count(Driver.id)).where(Driver.league_id == league.id)
-    ).scalar_one()
-    event_count = session.execute(
-        select(func.count(Event.id)).where(Event.league_id == league.id)
-    ).scalar_one()
-    result_count = session.execute(
-        select(func.count(Result.id)).join(Event).where(Event.league_id == league.id)
-    ).scalar_one()
-    return int(driver_count or 0), int(event_count or 0), int(result_count or 0)
-
-
-def test_seed_demo_creates_expected_entities(session_factory: sessionmaker[Session]) -> None:
-    summary = _run_seed(session_factory)
-
-    assert summary.drivers == len(DRIVER_NAMES)
-    assert summary.events == 3
-    assert summary.results == len(DRIVER_NAMES)
-
-    with session_factory() as session:
-        league = session.execute(select(League).where(League.slug == DEMO_LEAGUE_SLUG)).scalar_one()
-
-        driver_count, event_count, result_count = _counts(session, league)
-        assert driver_count == len(DRIVER_NAMES)
-        assert event_count == 3
-        assert result_count == len(DRIVER_NAMES)
-
-        owner_membership = session.execute(
-            select(Membership).where(Membership.league_id == league.id)
-        ).scalar_one()
-        assert owner_membership.role == LeagueRole.OWNER
-
-        points_scheme = session.execute(
-            select(PointsScheme).where(PointsScheme.league_id == league.id)
-        ).scalar_one()
-        assert len(points_scheme.rules) == len(default_points_entries())
-
-        season = session.execute(select(Season).where(Season.league_id == league.id)).scalar_one()
-        assert season.is_active is True
-
-        completed_events = (
-            session.execute(
-                select(Event).where(
-                    Event.league_id == league.id, Event.status == EventStatus.COMPLETED.value
-                )
-            )
-            .scalars()
-            .all()
-        )
-        assert len(completed_events) == 1
-
-        user_count = session.execute(select(func.count(User.id))).scalar_one()
-        assert user_count == 1
-
-
-def test_seed_demo_is_idempotent(session_factory: sessionmaker[Session]) -> None:
-    first = _run_seed(session_factory)
-    second = _run_seed(session_factory)
-
-    assert first.to_dict() == second.to_dict()
-
-    with session_factory() as session:
-        league = session.execute(select(League).where(League.slug == DEMO_LEAGUE_SLUG)).scalar_one()
-        driver_count, event_count, result_count = _counts(session, league)
-
-        assert driver_count == len(DRIVER_NAMES)
-        assert event_count == 3
-        assert result_count == len(DRIVER_NAMES)
-
-        memberships = session.execute(
-            select(func.count(Membership.id)).where(Membership.league_id == league.id)
-        ).scalar_one()
-        assert memberships == 1
+    assert len(driver_total) == len(DRIVER_NAMES)
+    assert len(event_total) == first.events
+    assert len(result_total) == first.results

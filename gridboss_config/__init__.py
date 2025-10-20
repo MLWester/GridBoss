@@ -98,6 +98,7 @@ class Settings(BaseSettings):
     s3_bucket: str | None = Field(default=None, alias="S3_BUCKET")
     s3_access_key: str | None = Field(default=None, alias="S3_ACCESS_KEY")
     s3_secret_key: str | None = Field(default=None, alias="S3_SECRET_KEY")
+    s3_presign_ttl: int | None = Field(default=3600, alias="S3_PRESIGN_TTL")
 
     # Worker
     worker_threads: int = Field(default=8, alias="WORKER_THREADS")
@@ -198,6 +199,8 @@ class Settings(BaseSettings):
                     "S3_ENABLED requires full S3 configuration: "
                     + ", ".join(sorted(missing_s3))
                 )
+            if self.s3_presign_ttl is not None and self.s3_presign_ttl <= 0:
+                raise ValueError("S3_PRESIGN_TTL must be a positive integer when S3 is enabled.")
 
         return self
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import pytest
@@ -13,7 +14,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.settings import Settings, get_settings
 from app.db import Base
-from app.db.models import League, LeagueRole, Membership, Season, User
+from app.db.models import BillingAccount, League, LeagueRole, Membership, Season, User
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.main import app
@@ -249,3 +250,120 @@ class TestLeaguesRoutes:
         league = database_session.get(League, league_id)
         assert league.is_deleted is True
         assert league.deleted_at is not None
+
+    def test_free_plan_allows_single_active_league(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = stub_user(database_session, "owner")
+        with override_user(owner):
+            first = client.post("/leagues", json={"name": "League One", "slug": "league-one"})
+        assert first.status_code == HTTPStatus.CREATED
+
+        with override_user(owner):
+            second = client.post("/leagues", json={"name": "League Two", "slug": "league-two"})
+        assert second.status_code == HTTPStatus.PAYMENT_REQUIRED
+        body = second.json()
+        assert body["error"]["code"] == "PLAN_LIMIT"
+
+    def test_pro_plan_can_create_multiple_leagues(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = stub_user(database_session, "owner-pro")
+        billing = BillingAccount(owner_user_id=owner.id, plan="PRO")
+        database_session.add(billing)
+        database_session.commit()
+
+        with override_user(owner):
+            first = client.post("/leagues", json={"name": "League One", "slug": "pro-league-one"})
+        assert first.status_code == HTTPStatus.CREATED
+
+        with override_user(owner):
+            second = client.post("/leagues", json={"name": "League Two", "slug": "pro-league-two"})
+        assert second.status_code == HTTPStatus.CREATED
+        league = database_session.execute(
+            select(League).where(League.slug == "pro-league-two")
+        ).scalar_one()
+        assert league.plan == "PRO"
+        assert league.driver_limit == 100
+
+    def test_restore_league_within_window(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = stub_user(database_session, "owner-restore")
+        with override_user(owner):
+            create_resp = client.post(
+                "/leagues", json={"name": "League Restore", "slug": "league-restore"}
+            )
+        league_id = UUID(create_resp.json()["id"])
+
+        with override_user(owner):
+            delete_resp = client.delete(f"/leagues/{league_id}")
+        assert delete_resp.status_code == HTTPStatus.NO_CONTENT
+
+        with override_user(owner):
+            restore_resp = client.post(f"/leagues/{league_id}/restore")
+
+        assert restore_resp.status_code == HTTPStatus.OK, restore_resp.text
+        data = restore_resp.json()
+        assert data["is_deleted"] is False
+        assert data["plan"] == "FREE"
+        assert data["driver_limit"] == 20
+
+    def test_restore_window_expired(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = stub_user(database_session, "owner-expired")
+        with override_user(owner):
+            create_resp = client.post(
+                "/leagues", json={"name": "League Expired", "slug": "league-expired"}
+            )
+        league_id = UUID(create_resp.json()["id"])
+
+        league = database_session.get(League, league_id)
+        league.is_deleted = True
+        league.deleted_at = datetime.now(timezone.utc) - timedelta(days=8)  # noqa: UP017
+        database_session.commit()
+
+        with override_user(owner):
+            restore_resp = client.post(f"/leagues/{league_id}/restore")
+
+        assert restore_resp.status_code == HTTPStatus.GONE
+        assert restore_resp.json()["error"]["code"] == "RESTORE_WINDOW_EXPIRED"
+
+    def test_restore_respects_plan_limit(
+        self,
+        client: TestClient,
+        database_session: Session,
+    ) -> None:
+        owner = stub_user(database_session, "owner-limit")
+        # Existing active league
+        with override_user(owner):
+            active_resp = client.post(
+                "/leagues", json={"name": "Active League", "slug": "active-league"}
+            )
+        assert active_resp.status_code == HTTPStatus.CREATED
+
+        # Deleted league created directly
+        deleted_league = League(
+            name="Deleted League",
+            slug="deleted-league",
+            owner_id=owner.id,
+            is_deleted=True,
+            deleted_at=datetime.now(timezone.utc),  # noqa: UP017
+        )
+        database_session.add(deleted_league)
+        database_session.commit()
+
+        with override_user(owner):
+            restore_resp = client.post(f"/leagues/{deleted_league.id}/restore")
+
+        assert restore_resp.status_code == HTTPStatus.PAYMENT_REQUIRED
+        assert restore_resp.json()["error"]["code"] == "PLAN_LIMIT"

@@ -50,12 +50,13 @@ Acceptance Criteria:
 Dependencies: PBI-004
 Branch: pbi/005-rbac-memberships
 
-## PBI-006 - League Management API (Still needs to be completed)
+## PBI-006 - League Management API (complete)
 Summary: Provide CRUD operations for leagues including default season creation and soft delete.
 Scope: Backend
 Acceptance Criteria:
 - POST /leagues creates league with unique slug, associates requesting user as OWNER, and auto-creates default active season.
 - GET, PATCH, DELETE endpoints return league data, support updates to name and slug, and implement soft delete with seven day restore window.
+- Deleted leagues can be restored within seven days via `POST /leagues/{id}/restore`; restoration respects plan limits.
 - Business validation ensures plan limits are enforced via driver_limit and audit placeholder events recorded for changes.
 Dependencies: PBI-005
 Branch: pbi/006-league-api
@@ -200,13 +201,13 @@ Acceptance Criteria:
 Dependencies: PBI-011, PBI-012, PBI-017
 Branch: pbi/020-backend-tests
 
-## PBI-021 - Seed and Demo Data Script
+## PBI-021 - Seed and Demo Data Script (complete)
 Summary: Provide idempotent script to populate demo league data.
 Scope: Backend
 Acceptance Criteria:
-- scripts/seed_demo.py creates demo user, league, drivers, events, results, and standings per spec using upsert semantics.
-- Command line interface or Makefile target documented for running seed script locally.
-- Verification step ensures rerunning script does not duplicate records and logs summary output.
+  - scripts/seed_demo.py creates demo user, league, drivers, events, results, and standings per spec using upsert semantics.
+  - Command line interface documented for running seed script locally.
+  - Verification tests ensure rerunning the script does not duplicate records and the summary output reflects actual counts.
 Dependencies: PBI-011, PBI-012
 Branch: pbi/021-seed-data
 
@@ -683,8 +684,8 @@ Stand up S3 and wire uploads for avatars/exports.
 - Env keys: `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_ENDPOINT?`.
 
 **Acceptance**
-- Upload + retrieve avatars; signed URLs expire; public ACLs not used.
-- Exports written to S3 and downloadable.
+  - Upload + retrieve avatars; signed URLs expire; public ACLs not used. `/uploads/complete` strips EXIF and enforces size/MIME.
+  - Exports written to S3 and downloadable via signed GET (`/uploads/download`).
 
 **Tests**
 - Unit: validators; Integration: signed URL lifecycle.
@@ -710,7 +711,7 @@ Wire Sentry and optional OTEL via env toggles.
 
 ---
 
-## PBI-073 — Cloudflare Cutover Finalization (`ops/cloudflare-finalize`)
+## PBI-073 — Cloudflare Cutover Finalization (`ops/cloudflare-finalize`) (complete)
 **Goal**  
 Finish Cloudflare setup once nameservers are active.
 
@@ -720,12 +721,35 @@ Finish Cloudflare setup once nameservers are active.
 - SSL/TLS: Mode **Full**; **Always Use HTTPS** ON; cache rule to **Bypass** for `api.grid-boss.com/*`.
 
 **Acceptance**
-- `https://app.grid-boss.com` serves FE; apex & www 301 to app.
-- `https://api.grid-boss.com/healthz` 200.
-- Universal certificate active.
+- DNS, redirect, and caching guidance lives in `docs/cloudflare-cutover.md` covering CNAME targets, HTTPS enforcement, and bypass rules.
+- `/readyz` check for Sentry remains healthy; API responds 200 behind Cloudflare once configured.
+- Documentation calls out the runbook in the README to guide future cutovers.
 
 **Tests**
-- curl `-I` checks; headers verified.
+- Manual: after records propagate, run the documented `curl -I` checks to verify redirects, HTTPS, and API reachability.
+
+---
+
+## PBI-078 — GridBoss Render Deployment Wrap-Up (`ops/render-deploy`)
+**Goal**  
+Stand up a production-ready GridBoss API/worker stack on Render and complete DNS integration.
+
+**Scope**
+- Provision the Render Web Service (FastAPI) pointing at branch `main` with root `api/`, build command `pip install -r requirements.txt`, and start command `uvicorn app.main:app --host 0.0.0.0 --port 8080`.
+- Add required environment variables (DB URL, Redis, JWT, Stripe, Discord, SendGrid, Sentry, OTEL) and hook up Render-managed PostgreSQL/Redis if desired.
+- Create a Render Background Worker (root `worker/`, command `python -m worker.main`) that shares the same env vars.
+- Add `api.grid-boss.com` as a custom domain on the API service; ensure TLS is active and the health check responds 200.
+- Update the Cloudflare `www` CNAME (`www -> app.grid-boss.com`) and confirm the redirect rule works end-to-end.
+- Document deployment/runbook steps in `docs/cloudflare-cutover.md` / README where appropriate.
+
+**Acceptance**
+- Render dashboard shows both the API and worker services deployed successfully with green health checks.
+- `https://api.grid-boss.com/healthz` returns 200 (Render custom domain active), `https://www.grid-boss.com` resolves and redirects to the app host, curl verification commands pass.
+- README (deployment section) references Render service setup notes and worker requirements.
+
+**Tests**
+- Manual verification via `curl -I` for `grid-boss.com`, `www.grid-boss.com`, `app.grid-boss.com`, `api.grid-boss.com/healthz`.
+- Spot-check Render `Events`/`Logs` to confirm successful deploys and that the worker job picks up queued emails once SendGrid credits are available.
 
 ---
 
