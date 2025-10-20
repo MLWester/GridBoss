@@ -29,6 +29,7 @@ from app.routes import (
     standings,
     teams,
     webhooks,
+    uploads,
 )
 
 logger = logging.getLogger("app.main")
@@ -96,6 +97,7 @@ app.include_router(standings.router)
 app.include_router(seasons.router)
 app.include_router(points.router)
 app.include_router(webhooks.router)
+app.include_router(uploads.router)
 app.include_router(teams.router)
 
 

@@ -17,6 +17,7 @@ from . import (
     standings,
     teams,
     webhooks,
+    uploads,
 )
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "standings",
     "teams",
     "webhooks",
+    "uploads",
 ]

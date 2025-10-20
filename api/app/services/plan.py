@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.db.models import BillingAccount, League
 
 PLAN_DRIVER_LIMITS: Final[dict[str, int]] = {"FREE": 20, "PRO": 100, "ELITE": 9999}
+PLAN_LEAGUE_LIMITS: Final[dict[str, int | None]] = {"FREE": 1, "PRO": None, "ELITE": None}
 _PLAN_ORDER: Final[tuple[str, ...]] = ("FREE", "PRO", "ELITE")
 DEFAULT_PLAN: Final[str] = "FREE"
 GRACE_PERIOD_DAYS: Final[int] = 7
@@ -86,6 +87,15 @@ def effective_driver_limit(
     return limit
 
 
+def league_limit(plan: str | None) -> int | None:
+    return PLAN_LEAGUE_LIMITS.get(normalize_plan(plan), PLAN_LEAGUE_LIMITS[DEFAULT_PLAN])
+
+
+def is_league_limit_reached(plan: str | None, active_league_count: int) -> bool:
+    limit = league_limit(plan)
+    return limit is not None and active_league_count >= limit
+
+
 def get_billing_account_for_owner(
     session: Session,
     owner_id: UUID,
@@ -100,10 +110,13 @@ def get_billing_account_for_owner(
 __all__ = [
     "DEFAULT_PLAN",
     "GRACE_PERIOD_DAYS",
+    "PLAN_LEAGUE_LIMITS",
     "PLAN_DRIVER_LIMITS",
     "effective_driver_limit",
     "effective_plan",
     "get_billing_account_for_owner",
+    "is_league_limit_reached",
     "is_plan_sufficient",
+    "league_limit",
     "normalize_plan",
 ]
